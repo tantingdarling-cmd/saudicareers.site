@@ -1,0 +1,53 @@
+:root {
+  --g950: #001a0d;
+  --g900: #003D2B;
+  --g800: #004D33;
+  --g700: #006644;
+  --g600: #1B7A52;
+  --g500: #238C5E;
+  --g400: #3AAF7A;
+  --g200: #A8D5BC;
+  --g100: #D4EDE0;
+  --g50:  #EDF7F2;
+  --gold700: #8B6914;
+  --gold600: #A67C1A;
+  --gold500: #C5A059;
+  --gold400: #D4B478;
+  --gold300: #E8CFA0;
+  --gold100: #FAF3E0;
+  --white: #FFFFFF;
+  --gray50: #F8FAFA;
+  --gray100: #EEF2F0;
+  --gray200: #D9E2DC;
+  --gray400: #8FA69A;
+  --gray600: #4A6358;
+  --gray800: #1E3028;
+  --font-ar: 'IBM Plex Sans Arabic', sans-serif;
+  --font-en: 'Plus Jakarta Sans', sans-serif;
+  --r-sm: 8px; --r-md: 12px; --r-lg: 18px; --r-xl: 24px;
+  --shadow-sm: 0 1px 4px rgba(0,61,43,0.08);
+  --shadow-md: 0 4px 16px rgba(0,61,43,0.10);
+  --shadow-lg: 0 12px 40px rgba(0,61,43,0.14);
+  --shadow-gold: 0 4px 20px rgba(197,160,89,0.3);
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; font-size:16px; }
+
+body {
+  font-family: var(--font-ar);
+  background: var(--white);
+  color: var(--gray800);
+  line-height: 1.75;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { text-decoration: none; color: inherit; }
+button { cursor: pointer; font-family: var(--font-ar); }
+img { max-width: 100%; display: block; }
+
+/* scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--gray50); }
+::-webkit-scrollbar-thumb { background: var(--g400); border-radius: 3px; }
