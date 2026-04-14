@@ -41,11 +41,20 @@ export default function Footer() {
           <div>
             <div style={{ fontSize:12, fontWeight:700, color:'var(--white)', marginBottom:16, textTransform:'uppercase', letterSpacing:1 }}>تواصل معنا</div>
             <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-              {['saudicareers.site','سياسة الخصوصية','شروط الاستخدام','اتصل بنا'].map(l => (
-                <a key={l} href="#" style={{ fontSize:14, color:'rgba(255,255,255,0.5)', transition:'color 0.2s' }}
-                  onMouseEnter={e => e.target.style.color='var(--gold400)'}
-                  onMouseLeave={e => e.target.style.color='rgba(255,255,255,0.5)'}>{l}</a>
-              ))}
+              {[
+                { label:'saudicareers.site', href:'https://saudicareers.site' },
+                { label:'سياسة الخصوصية',   href:'/privacy',  internal:true },
+                { label:'شروط الاستخدام',   href:'/terms',    internal:true },
+                { label:'اتصل بنا',          href:'mailto:hello@saudicareers.site' },
+              ].map(({ label, href, internal }) =>
+                internal
+                  ? <Link key={label} to={href} style={{ fontSize:14, color:'rgba(255,255,255,0.5)', transition:'color 0.2s', textDecoration:'none' }}
+                      onMouseEnter={e => e.currentTarget.style.color='var(--gold400)'}
+                      onMouseLeave={e => e.currentTarget.style.color='rgba(255,255,255,0.5)'}>{label}</Link>
+                  : <a key={label} href={href} style={{ fontSize:14, color:'rgba(255,255,255,0.5)', transition:'color 0.2s', textDecoration:'none' }}
+                      onMouseEnter={e => e.target.style.color='var(--gold400)'}
+                      onMouseLeave={e => e.target.style.color='rgba(255,255,255,0.5)'}>{label}</a>
+              )}
             </div>
           </div>
         </div>

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
 import { CheckCircle, XCircle, AlertTriangle, ArrowLeft, RotateCcw } from 'lucide-react'
+import HRTemplateCard, { HR_TEMPLATES } from '../components/HRTemplateCard.jsx'
 
 // ── Helpers ──────────────────────────────────────────────────────────
 const toAr = n => String(n).replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d])
@@ -326,6 +327,38 @@ export default function ResumeResults() {
               </div>
             </FadeIn>
           )}
+
+          {/* ── Layer 3.5: خارطة الطريق — HR Templates ── */}
+          <FadeIn delay={175}>
+            <div style={{
+              background: 'var(--white)', border: '1.5px solid var(--gray200)',
+              borderRadius: 'var(--r-xl)', padding: 'clamp(20px,4vw,28px)',
+              boxShadow: 'var(--shadow-sm)', marginBottom: 20,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+                <span style={{ fontSize: 20 }}>🗺️</span>
+                <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--g950)' }}>
+                  خارطة طريقك التالية
+                </div>
+              </div>
+              <div style={{ fontSize: 12, color: 'var(--gray400)', marginBottom: 20, paddingRight: 30 }}>
+                ٣ أدوات عملية لتحويل نتائج التحليل إلى إجراءات فعلية — اضغط على أي بطاقة للتوسيع
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {HR_TEMPLATES.map(t => (
+                  <HRTemplateCard
+                    key={t.id}
+                    title={t.title}
+                    icon={t.icon}
+                    description={t.description}
+                    checklist={t.checklist}
+                    tips={t.tips}
+                    redFlags={t.redFlags}
+                  />
+                ))}
+              </div>
+            </div>
+          </FadeIn>
 
           {/* ── Layer 4: CTA ── */}
           <FadeIn delay={200}>

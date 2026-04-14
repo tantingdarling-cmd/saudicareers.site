@@ -70,19 +70,26 @@ function UploadZone({ onFile }) {
   )
 }
 
+const CONSENT_VERSION = '1.0'
+
 /* ── Main Page ─────────────────────────────── */
 export default function ResumeAnalyzer() {
   const [phase, setPhase]       = useState('idle')  // idle | uploading | error
   const [progress, setProgress] = useState(0)
   const [errorMsg, setErrorMsg] = useState('')
+  const [consent, setConsent]   = useState(false)
   const navigate = useNavigate()
 
   const handleFile = file => {
+    if (!consent) return  // guard: لا يُمكن الوصول هنا إلا بعد الموافقة
     setPhase('uploading')
     setProgress(0)
 
     const formData = new FormData()
     formData.append('file', file)
+    formData.append('consent', '1')
+    formData.append('consent_version', CONSENT_VERSION)
+    formData.append('consent_at', new Date().toISOString())
 
     const xhr = new XMLHttpRequest()
     xhr.open('POST', `${API_BASE}/v1/resume/analyze`)
@@ -172,7 +179,49 @@ export default function ResumeAnalyzer() {
         </div>
 
         {/* Content */}
-        {phase === 'idle' && <UploadZone onFile={handleFile} />}
+        {phase === 'idle' && (
+          <>
+            {/* ── PDPL Consent Block ── */}
+            <div style={{ maxWidth:460, margin:'0 auto 20px' }}>
+              <label style={{
+                display:'flex', alignItems:'flex-start', gap:12,
+                cursor:'pointer',
+                background: consent ? 'var(--g50)' : 'var(--gray50)',
+                border: `1.5px solid ${consent ? 'var(--g300)' : 'var(--gray200)'}`,
+                borderRadius:'var(--r-lg)', padding:'16px 18px',
+                transition:'all 0.2s',
+              }}>
+                <input
+                  type="checkbox"
+                  checked={consent}
+                  onChange={e => setConsent(e.target.checked)}
+                  id="ai-analysis-consent"
+                  style={{ marginTop:3, accentColor:'var(--g700)', width:16, height:16, flexShrink:0, cursor:'pointer' }}
+                />
+                <span style={{ fontSize:13, color:'var(--gray600)', lineHeight:1.75 }}>
+                  أوافق على{' '}
+                  <Link to="/privacy" target="_blank" style={{ color:'var(--g700)', fontWeight:600 }}>
+                    سياسة الخصوصية
+                  </Link>
+                  {' '}وأمنح الإذن لتحليل سيرتي الذاتية آلياً.
+                  {' '}<span style={{ color:'var(--gray400)' }}>
+                    الملف يُحذف فور اكتمال التحليل ولا يُحفظ على خوادمنا. (PDPL v{CONSENT_VERSION})
+                  </span>
+                </span>
+              </label>
+            </div>
+
+            {/* ── Upload Zone (disabled until consent) ── */}
+            <div style={{ opacity: consent ? 1 : 0.45, transition:'opacity 0.3s', pointerEvents: consent ? 'auto' : 'none' }}>
+              <UploadZone onFile={handleFile} />
+            </div>
+            {!consent && (
+              <p style={{ textAlign:'center', fontSize:12, color:'var(--gray400)', marginTop:12 }}>
+                يجب الموافقة على سياسة الخصوصية لتفعيل رفع الملف
+              </p>
+            )}
+          </>
+        )}
         {phase === 'uploading' && <ProgressBar percent={progress} />}
         {phase === 'error' && (
           <div style={{ maxWidth:460, margin:'0 auto', textAlign:'center' }}>

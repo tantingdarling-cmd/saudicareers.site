@@ -14,6 +14,7 @@ Feature: Resume ATS Analyzer — Upload & Results Flow
   # ── Scenario 1: الصفحة تُحمّل صحيحاً ─────────────────────────────
 
   @smoke
+@active
   Scenario: Page renders correctly in idle state
     Then the page title is "افحص سيرتك ضد ATS مجاناً | سعودي كارييرز"
     And the heading contains "اختبر سيرتك ضد"
@@ -26,6 +27,7 @@ Feature: Resume ATS Analyzer — Upload & Results Flow
   # ── Scenario 2: رفع PDF صالح → الانتقال لصفحة النتائج ────────────
 
   @smoke @critical
+@active
   Scenario: Valid PDF upload triggers analysis and redirects to results
     Given I have a PDF file named "test-cv.pdf" smaller than 2MB
     When I attach "test-cv.pdf" to "input[type='file']"
@@ -38,6 +40,7 @@ Feature: Resume ATS Analyzer — Upload & Results Flow
   # ── Scenario 3: صفحة النتائج تعرض المكونات الصحيحة ────────────────
 
   @smoke @critical
+@active
   Scenario: Results page displays all 4 layers from API contract
     Given I have already analyzed a PDF and am on "/resume-results/:id"
     Then a circular SVG score ring is visible and animates from 0
@@ -52,6 +55,7 @@ Feature: Resume ATS Analyzer — Upload & Results Flow
   # ── Scenario 4: رفع ملف غير PDF → يُرفض ─────────────────────────
 
   @validation
+@active
   Scenario: Non-PDF file is silently rejected by file input filter
     When I try to attach a ".docx" file to "input[type='file']"
     Then the file input rejects it (accept=".pdf" filter)
@@ -61,6 +65,7 @@ Feature: Resume ATS Analyzer — Upload & Results Flow
   # ── Scenario 5: PDF أكبر من 2MB → خطأ 422 ───────────────────────
 
   @validation @edge-case
+@active
   Scenario: PDF over 2MB shows 422 error message
     Given I have a PDF file named "large-cv.pdf" larger than 2MB
     When I attach "large-cv.pdf" to "input[type='file']"
@@ -72,6 +77,7 @@ Feature: Resume ATS Analyzer — Upload & Results Flow
   # ── Scenario 6: تجاوز الحد → خطأ 429 ────────────────────────────
 
   @edge-case
+@active
   Scenario: 4th upload attempt within 1 minute shows 429 error
     Given I have successfully submitted 3 PDF analysis requests within 1 minute
     When I submit a 4th request
@@ -81,11 +87,13 @@ Feature: Resume ATS Analyzer — Upload & Results Flow
   # ── Scenario 7: refresh على صفحة النتائج ─────────────────────────
 
   @edge-case
+@active
   Scenario: Hard refresh on results page with valid localStorage ID
     Given I am on "/resume-results/:id" with a valid entry in localStorage
     When I hard refresh the page (F5)
     Then the results are still displayed correctly (loaded from localStorage)
 
+@active
   Scenario: Hard refresh on results page with missing/expired ID
     Given I navigate directly to "/resume-results/invalid-id-xyz"
     Then I am redirected to "/resume-analyzer" automatically
@@ -94,12 +102,14 @@ Feature: Resume ATS Analyzer — Upload & Results Flow
   # ── Scenario 8: التنقل من صفحة النتائج ──────────────────────────
 
   @navigation
+@active
   Scenario: Navbar scroll buttons work from results page
     Given I am on "/resume-results/:id"
     When I click the nav button "الوظائف"
     Then the URL changes to "/"
     And the page scrolls to the jobs section
 
+@active
   Scenario: CTA button navigates to home signup section
     Given I am on "/resume-results/:id"
     When I click "سجّل واحصل على التحسين الكامل"
@@ -109,6 +119,7 @@ Feature: Resume ATS Analyzer — Upload & Results Flow
   # ── Scenario 9: حجم الـ bundle (من نتائج build الفعلية) ──────────
 
   @performance
+@active
   Scenario: Route chunk size within acceptable limits
     # Based on actual npm run build output — do not adjust without re-running build
     Then the chunk "ResumeAnalyzer" is ≤ 6KB gzipped    # actual: 2.78KB

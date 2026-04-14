@@ -113,9 +113,25 @@ function StatItem({ val, prefix = '', accent, label }) {
 }
 
 /* ── Signup form ─────────────────────────── */
+// ── Progressive Reveal helper ─────────────────
+function RevealField({ show, children }) {
+  return (
+    <div style={{
+      overflow:'hidden',
+      maxHeight: show ? '120px' : '0px',
+      opacity: show ? 1 : 0,
+      transform: show ? 'translateY(0)' : 'translateY(-6px)',
+      transition: 'max-height 0.35s ease, opacity 0.3s ease, transform 0.3s ease',
+    }}>
+      {children}
+    </div>
+  )
+}
+
 function SignupForm({ id }) {
-  const [form, setForm] = useState({ name:'', email:'', field:'' })
-  const [done, setDone] = useState(false)
+  const [form, setForm]     = useState({ name:'', email:'', field:'' })
+  const [step, setStep]     = useState(1)   // 1=name, 2=email, 3=field+submit
+  const [done, setDone]     = useState(false)
   const [loading, setLoading] = useState(false)
 
   const submit = async () => {
@@ -125,10 +141,7 @@ function SignupForm({ id }) {
       await subscribersApi.subscribe({ name: form.name, email: form.email, field: form.field })
       setDone(true)
     } catch (err) {
-      // إذا كان البريد مسجلاً مسبقاً نعتبره نجاحاً
-      if (err.message?.includes('unique') || err.message?.includes('already')) {
-        setDone(true)
-      }
+      if (err.message?.includes('unique') || err.message?.includes('already')) setDone(true)
     } finally {
       setLoading(false)
     }
@@ -142,12 +155,14 @@ function SignupForm({ id }) {
     outline:'none', textAlign:'right', direction:'rtl',
   }
 
+  const onNameBlur = () => { if (form.name.trim().length >= 2) setStep(s => Math.max(s, 2)) }
+  const onEmailBlur = () => { if (form.email.includes('@') && form.email.includes('.')) setStep(s => Math.max(s, 3)) }
+
   return (
     <div id={id} style={{
       background:'var(--white)', border:'1.5px solid var(--gray200)',
       borderRadius:'var(--r-xl)', padding:'clamp(24px,4vw,36px) clamp(24px,4vw,40px)',
-      width:'100%', maxWidth:500,
-      boxShadow:'var(--shadow-lg)', marginBottom:32,
+      width:'100%', maxWidth:500, boxShadow:'var(--shadow-lg)', marginBottom:32,
     }}>
       <div style={{ fontSize:16, fontWeight:600, color:'var(--g900)', marginBottom:6 }}>
         احصل على تحسين سيرتك الذاتية مجاناً
@@ -158,37 +173,63 @@ function SignupForm({ id }) {
 
       {!done ? (
         <>
+          {/* Step 1: الاسم — دائماً ظاهر */}
           <input type="text" placeholder="اسمك الكريم"
-            value={form.name} onChange={e => setForm(p=>({...p,name:e.target.value}))}
+            value={form.name}
+            onChange={e => setForm(p=>({...p,name:e.target.value}))}
+            onBlur={onNameBlur}
+            onKeyDown={e => e.key==='Enter' && onNameBlur()}
             style={inputStyle}
+            autoComplete="name"
             onFocus={e=>{e.target.style.borderColor='var(--g600)';e.target.style.background='var(--white)'}}
-            onBlur={e=>{e.target.style.borderColor='var(--gray200)';e.target.style.background='var(--gray50)'}}
           />
-          <input type="email" placeholder="بريدك الإلكتروني"
-            value={form.email} onChange={e => setForm(p=>({...p,email:e.target.value}))}
-            style={inputStyle}
-            onFocus={e=>{e.target.style.borderColor='var(--g600)';e.target.style.background='var(--white)'}}
-            onBlur={e=>{e.target.style.borderColor='var(--gray200)';e.target.style.background='var(--gray50)'}}
-          />
-          <select value={form.field} onChange={e=>setForm(p=>({...p,field:e.target.value}))}
-            style={{ ...inputStyle, cursor:'pointer', appearance:'none' }}>
-            <option value="" disabled>مجالك المهني</option>
-            {['تقنية المعلومات','المالية والمحاسبة','الموارد البشرية','الهندسة','التسويق والمبيعات','الصحة','التعليم','أخرى'].map(o=>(
-              <option key={o}>{o}</option>
-            ))}
-          </select>
 
-          <button onClick={submit} disabled={loading} style={{
-            width:'100%', padding:14, marginTop:4,
-            background: loading ? 'var(--g600)' : 'var(--g900)', color:'var(--white)',
-            border:'none', borderRadius:'var(--r-md)',
-            fontSize:15, fontWeight:600, transition:'all 0.2s',
-          }}
-          onMouseEnter={e=>!loading&&(e.target.style.background='var(--g700)')}
-          onMouseLeave={e=>!loading&&(e.target.style.background='var(--g900)')}>
-            {loading ? '...جارٍ التسجيل' : 'احصل على تحسين سيرتك مجاناً ←'}
-          </button>
-          <p style={{ fontSize:12, color:'var(--gray400)', textAlign:'center', marginTop:12 }}>
+          {/* Step 2: البريد — يظهر بعد إدخال الاسم */}
+          <RevealField show={step >= 2}>
+            <input type="email" placeholder="بريدك الإلكتروني"
+              value={form.email}
+              onChange={e => setForm(p=>({...p,email:e.target.value}))}
+              onBlur={onEmailBlur}
+              onKeyDown={e => e.key==='Enter' && onEmailBlur()}
+              style={inputStyle}
+              autoComplete="email"
+              autoFocus={step === 2}
+              onFocus={e=>{e.target.style.borderColor='var(--g600)';e.target.style.background='var(--white)'}}
+            />
+          </RevealField>
+
+          {/* Step 3: المجال + زر الإرسال — يظهر بعد إدخال البريد */}
+          <RevealField show={step >= 3}>
+            <select value={form.field} onChange={e=>setForm(p=>({...p,field:e.target.value}))}
+              style={{ ...inputStyle, cursor:'pointer', appearance:'none' }}>
+              <option value="" disabled>مجالك المهني</option>
+              {['تقنية المعلومات','المالية والمحاسبة','الموارد البشرية','الهندسة','التسويق والمبيعات','الصحة','التعليم','أخرى'].map(o=>(
+                <option key={o}>{o}</option>
+              ))}
+            </select>
+            <button onClick={submit} disabled={loading} style={{
+              width:'100%', padding:14, marginTop:4,
+              background: loading ? 'var(--g600)' : 'var(--g900)', color:'var(--white)',
+              border:'none', borderRadius:'var(--r-md)',
+              fontSize:15, fontWeight:600, transition:'all 0.2s', cursor:'pointer',
+            }}
+            onMouseEnter={e=>!loading&&(e.currentTarget.style.background='var(--g700)')}
+            onMouseLeave={e=>!loading&&(e.currentTarget.style.background='var(--g900)')}>
+              {loading ? '...جارٍ التسجيل' : 'احصل على تحسين سيرتك مجاناً ←'}
+            </button>
+          </RevealField>
+
+          {/* progress dots */}
+          <div style={{ display:'flex', justifyContent:'center', gap:6, marginTop:16 }}>
+            {[1,2,3].map(n => (
+              <div key={n} style={{
+                width: step >= n ? 20 : 6, height:6, borderRadius:3,
+                background: step >= n ? 'var(--g700)' : 'var(--gray200)',
+                transition:'all 0.3s ease',
+              }}/>
+            ))}
+          </div>
+          <p style={{ fontSize:12, color:'var(--gray400)', textAlign:'center', marginTop:10 }}>
             لا رسائل مزعجة · يمكنك إلغاء الاشتراك في أي وقت · خصوصيتك محفوظة
           </p>
         </>
@@ -259,53 +300,102 @@ export default function Home() {
 
   return (
     <>
-      {/* ── HERO ── */}
+      {/* ── HERO (Minimalist) ── */}
       <section style={{
-        minHeight:'100vh',
-        padding:'120px clamp(1rem,4vw,3rem) 80px',
-        display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
-        textAlign:'center',
-        background:'radial-gradient(ellipse 80% 60% at 50% -10%, rgba(0,61,43,0.09) 0%, transparent 65%), linear-gradient(180deg, var(--g50) 0%, var(--white) 60%)',
-        position:'relative', overflow:'hidden',
+        minHeight: '100vh',
+        padding: '120px clamp(1rem,4vw,3rem) 80px',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+        textAlign: 'center',
+        background: '#FAFAF9',
+        position: 'relative', overflow: 'hidden',
       }}>
-        <div style={{
-          position:'absolute', inset:0, zIndex:0,
-          backgroundImage:'radial-gradient(circle at 20% 50%, rgba(0,61,43,0.04) 0%, transparent 40%), radial-gradient(circle at 80% 20%, rgba(197,160,89,0.05) 0%, transparent 35%)',
-        }}/>
-        <div style={{ position:'relative', zIndex:1, display:'flex', flexDirection:'column', alignItems:'center' }}>
-          <img src="/saudi.png" alt="Saudi Careers" style={{
-            width:'clamp(100px,16vw,140px)', height:'clamp(100px,16vw,140px)',
-            borderRadius:'50%', objectFit:'cover',
-            boxShadow:'0 8px 40px rgba(0,61,43,0.2)',
-            marginBottom:28,
-            animation:'float 6s ease-in-out infinite',
-          }}/>
-          <div style={{ display:'inline-flex', alignItems:'center', gap:8, background:'var(--gold100)', color:'var(--gold700)', border:'1px solid rgba(197,160,89,0.3)', padding:'6px 18px', borderRadius:50, fontSize:13, fontWeight:600, marginBottom:24 }}>
-            <span style={{ width:7, height:7, background:'var(--gold500)', borderRadius:'50%', animation:'pulse 2s infinite', display:'block' }}/>
-            قريباً — سجّل للوصول المبكر المجاني
+        {/* خط عرضي خفيف في الأعلى */}
+        <div style={{ position:'absolute', top:0, left:0, right:0, height:3, background:'linear-gradient(90deg, transparent, var(--g700) 40%, var(--gold500) 70%, transparent)' }}/>
+
+        <div style={{ position:'relative', zIndex:1, display:'flex', flexDirection:'column', alignItems:'center', maxWidth:680 }}>
+
+          {/* badge */}
+          <div style={{
+            display:'inline-flex', alignItems:'center', gap:8,
+            background:'var(--white)', color:'var(--g800)',
+            border:'1px solid var(--gray200)',
+            padding:'5px 16px 5px 12px', borderRadius:50,
+            fontSize:13, fontWeight:500, marginBottom:32,
+            boxShadow:'0 1px 4px rgba(0,61,43,0.06)',
+          }}>
+            <span style={{ width:7, height:7, background:'var(--g600)', borderRadius:'50%', animation:'pulse 2s infinite', display:'block' }}/>
+            وصول مبكر مجاني — سجّل الآن
           </div>
-          <h1 style={{ fontSize:'clamp(2rem,5.5vw,3.6rem)', fontWeight:700, lineHeight:1.2, color:'var(--g950)', maxWidth:820, marginBottom:20, letterSpacing:'-0.5px' }}>
-            طريقك للفرصة<br />
-            <span style={{ color:'var(--g700)' }}>في سوق العمل </span>
-            <span style={{ background:'linear-gradient(135deg, var(--gold600), var(--gold400))', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>السعودي</span>
+
+          {/* heading */}
+          <h1 style={{
+            fontSize: 'clamp(2.2rem,5.5vw,3.8rem)',
+            fontWeight: 700,
+            lineHeight: 1.2,
+            color: 'var(--g950)',
+            maxWidth: 640,
+            marginBottom: 20,
+            letterSpacing: '-0.5px',
+            fontFamily: 'var(--font-ar)',
+          }}>
+            طريقك للفرصة
+            <span style={{ display:'block', color:'var(--g600)', fontWeight:600 }}>في سوق العمل السعودي</span>
           </h1>
-          <p style={{ fontSize:'clamp(1rem,2vw,1.15rem)', color:'var(--gray600)', maxWidth:560, marginBottom:48, lineHeight:1.85 }}>
-            المنصة الوحيدة التي تجمع تحسين سيرتك الذاتية مجاناً، أفضل الوظائف من كبرى الشركات، ونصائح موثوقة من خبراء الموارد البشرية.
+
+          {/* sub */}
+          <p style={{
+            fontSize: 'clamp(1rem,2vw,1.1rem)',
+            color: 'var(--gray600)',
+            maxWidth: 520,
+            marginBottom: 44,
+            lineHeight: 1.9,
+            fontFamily: 'var(--font-ar)',
+          }}>
+            افحص سيرتك الذاتية مجاناً، اكتشف أفضل الوظائف، واحصل على نصائح موثوقة من خبراء الموارد البشرية.
           </p>
-          <SignupForm id="signup" />
+
+          {/* CTA buttons */}
+          <div style={{ display:'flex', gap:12, flexWrap:'wrap', justifyContent:'center', marginBottom:48 }}>
+            <Link to="/resume-analyzer" style={{
+              display:'inline-flex', alignItems:'center', gap:8,
+              background:'var(--g900)', color:'var(--white)',
+              padding:'13px 28px', borderRadius:'var(--r-md)',
+              fontSize:15, fontWeight:600, textDecoration:'none',
+              transition:'background 0.2s',
+            }}
+            onMouseEnter={e=>e.currentTarget.style.background='var(--g700)'}
+            onMouseLeave={e=>e.currentTarget.style.background='var(--g900)'}
+            >
+              افحص سيرتك مجاناً ✦
+            </Link>
+            <button onClick={() => document.getElementById('jobs')?.scrollIntoView({ behavior:'smooth' })} style={{
+              display:'inline-flex', alignItems:'center', gap:8,
+              background:'var(--white)', color:'var(--g900)',
+              padding:'13px 28px', borderRadius:'var(--r-md)',
+              fontSize:15, fontWeight:600, border:'1.5px solid var(--gray200)',
+              cursor:'pointer', transition:'border-color 0.2s',
+            }}
+            onMouseEnter={e=>e.currentTarget.style.borderColor='var(--g600)'}
+            onMouseLeave={e=>e.currentTarget.style.borderColor='var(--gray200)'}
+            >
+              تصفّح الوظائف
+            </button>
+          </div>
+
+          {/* social proof */}
           <div style={{ display:'flex', alignItems:'center', gap:12, fontSize:13, color:'var(--gray400)' }}>
             <div style={{ display:'flex', direction:'ltr' }}>
               {['أح','سم','عب','+'].map((t,i) => (
                 <div key={i} style={{
-                  width:30, height:30, borderRadius:'50%', border:'2.5px solid var(--white)',
-                  marginRight:-9, display:'flex', alignItems:'center', justifyContent:'center',
+                  width:28, height:28, borderRadius:'50%', border:'2px solid #FAFAF9',
+                  marginRight:-8, display:'flex', alignItems:'center', justifyContent:'center',
                   fontSize:10, fontWeight:700,
                   background: i===3 ? 'var(--g900)' : ['var(--g100)','var(--gold100)','var(--g200)'][i],
                   color: i===3 ? 'var(--white)' : ['var(--g800)','var(--gold700)','var(--g900)'][i],
                 }}>{t}</div>
               ))}
             </div>
-            انضم أكثر من <strong style={{ color:'var(--g800)', margin:'0 3px' }}>120+</strong> محترف بالفعل
+            <span>انضم أكثر من <strong style={{ color:'var(--g800)' }}>120+</strong> محترف</span>
           </div>
         </div>
       </section>

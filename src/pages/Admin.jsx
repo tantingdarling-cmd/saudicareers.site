@@ -47,6 +47,7 @@ export default function Admin() {
   const [subscribers, setSubscribers] = useState([])
   const [loadingSubs, setLoadingSubs] = useState(false)
   const [subsCopied, setSubsCopied] = useState(false)
+  const [peek, setPeek]             = useState(null)   // { type:'job'|'app', item }
 
   const empty = {
     title:'', title_en:'', company:'', location:'',
@@ -214,6 +215,15 @@ export default function Admin() {
     }
   }
 
+  const withdrawData = async (id) => {
+    if (!confirm('سيُعلَّم هذا الطلب كـ "مسحوب" ولن تُعالَج بياناته. هل أنت متأكد؟ (PDPL)')) return
+    try {
+      await applicationsApi.updateStatus(id, 'withdrawn', 'طلب حذف البيانات - PDPL')
+      fetchApplications()
+      setPeek(null)
+    } catch (err) { alert(err.message || 'فشل سحب البيانات') }
+  }
+
   const getStatusBadge = (status) => {
     const styles = {
       pending:   { bg: '#FEF3C7', color: '#92400E', icon: <Clock size={12}/> },
@@ -221,9 +231,10 @@ export default function Admin() {
       interview: { bg: '#EDE9FE', color: '#5B21B6', icon: <FileText size={12}/> },
       accepted:  { bg: '#D1FAE5', color: '#065F46', icon: <CheckCircle size={12}/> },
       rejected:  { bg: '#FEE2E2', color: '#991B1B', icon: <XCircle size={12}/> },
+      withdrawn: { bg: '#F3F4F6', color: '#6B7280', icon: <XCircle size={12}/> },
     }
     const s = styles[status] || styles.pending
-    const labels = { pending: 'قيد المراجعة', reviewed: 'تمت المراجعة', interview: 'مقابلة', accepted: 'مقبول', rejected: 'مرفوض' }
+    const labels = { pending: 'قيد المراجعة', reviewed: 'تمت المراجعة', interview: 'مقابلة', accepted: 'مقبول', rejected: 'مرفوض', withdrawn: 'مسحوب (PDPL)' }
     return (
       <span style={{ display:'inline-flex', alignItems:'center', gap:4, padding:'4px 10px', borderRadius:50, fontSize:11, fontWeight:600, background:s.bg, color:s.color }}>
         {s.icon} {labels[status] || status}
@@ -347,90 +358,137 @@ export default function Admin() {
         </div>
 
         {activeTab === 'jobs' && (
-          <div style={{ background:'var(--white)', border:'1.5px solid var(--gray200)', borderRadius:'var(--r-lg)', overflow:'hidden', boxShadow:'var(--shadow-sm)' }}>
-            <div style={{ display:'grid', gridTemplateColumns:'2fr 1.5fr 1fr 1fr 1fr auto', gap:0, borderBottom:'1.5px solid var(--gray200)', padding:'12px 20px', background:'var(--gray50)' }}>
-              {['المسمى الوظيفي','الشركة','الموقع','النوع','التصنيف',''].map(h => (
-                <div key={h} style={{ fontSize:12, fontWeight:700, color:'var(--gray400)', textTransform:'uppercase', letterSpacing:0.8 }}>{h}</div>
+          jobs.length === 0 ? (
+            <div style={{ padding:60, textAlign:'center', color:'var(--gray400)', background:'var(--white)', borderRadius:'var(--r-lg)', border:'1.5px solid var(--gray200)' }}>
+              لا توجد وظائف. أضف وظيفة جديدة للبدء.
+            </div>
+          ) : (
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(300px,1fr))', gap:16 }}>
+              {jobs.map(job => (
+                <div key={job.id}
+                  onClick={() => setPeek({ type:'job', item: job })}
+                  style={{
+                    background:'var(--white)', border:'1.5px solid var(--gray200)',
+                    borderRadius:'var(--r-xl)', padding:'20px', cursor:'pointer',
+                    transition:'all 0.18s', position:'relative',
+                    boxShadow: peek?.item?.id === job.id ? 'var(--shadow-md)' : 'var(--shadow-sm)',
+                    outline: peek?.item?.id === job.id ? '2px solid var(--g400)' : 'none',
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.boxShadow='var(--shadow-md)'}
+                  onMouseLeave={e => e.currentTarget.style.boxShadow= peek?.item?.id === job.id ? 'var(--shadow-md)' : 'var(--shadow-sm)'}
+                >
+                  {/* featured badge */}
+                  {job.is_featured && (
+                    <span style={{ position:'absolute', top:14, left:14, fontSize:10, fontWeight:700, background:'var(--gold100)', color:'var(--gold700)', border:'1px solid var(--gold300)', padding:'2px 8px', borderRadius:50 }}>
+                      مميزة ⭐
+                    </span>
+                  )}
+
+                  {/* active dot */}
+                  <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:12 }}>
+                    <span style={{ width:7, height:7, borderRadius:'50%', background: job.is_active ? 'var(--g500)' : 'var(--gray300)', display:'block' }}/>
+                    <span style={{ fontSize:11, color: job.is_active ? 'var(--g600)' : 'var(--gray400)' }}>
+                      {job.is_active ? 'نشطة' : 'غير نشطة'}
+                    </span>
+                  </div>
+
+                  <div style={{ fontWeight:700, fontSize:15, color:'var(--g950)', marginBottom:4, lineHeight:1.3 }}>{job.title}</div>
+                  <div style={{ fontSize:13, color:'var(--gray500)', marginBottom:14 }}>{job.company} · {job.location}</div>
+
+                  <div style={{ display:'flex', flexWrap:'wrap', gap:6, marginBottom:16 }}>
+                    <span style={{ fontSize:11, background:'var(--g50)', color:'var(--g700)', border:'1px solid var(--g100)', padding:'3px 10px', borderRadius:50 }}>
+                      {CATEGORIES.find(c => c.key === job.category)?.label || job.category}
+                    </span>
+                    <span style={{ fontSize:11, background:'var(--gray100)', color:'var(--gray600)', padding:'3px 10px', borderRadius:50 }}>
+                      {JOB_TYPES.find(t => t.key === job.job_type)?.label || job.job_type}
+                    </span>
+                    {(job.salary_min || job.salary_max) && (
+                      <span style={{ fontSize:11, background:'var(--gold100)', color:'var(--gold700)', padding:'3px 10px', borderRadius:50 }}>
+                        {job.salary_min && job.salary_max
+                          ? `${Number(job.salary_min).toLocaleString('ar')} – ${Number(job.salary_max).toLocaleString('ar')} ر.س`
+                          : job.salary_min ? `من ${Number(job.salary_min).toLocaleString('ar')} ر.س` : `حتى ${Number(job.salary_max).toLocaleString('ar')} ر.س`}
+                      </span>
+                    )}
+                  </div>
+
+                  <div style={{ display:'flex', gap:8 }} onClick={e => e.stopPropagation()}>
+                    <button onClick={() => openEdit(job)} style={{ flex:1, padding:'8px', borderRadius:'var(--r-sm)', background:'var(--g50)', border:'1px solid var(--g100)', display:'flex', alignItems:'center', justifyContent:'center', gap:6, color:'var(--g700)', fontSize:12, fontWeight:600, cursor:'pointer' }}>
+                      <Pencil size={13}/> تعديل
+                    </button>
+                    <button onClick={() => del(job.id)} disabled={deleting === job.id} style={{ flex:1, padding:'8px', borderRadius:'var(--r-sm)', background:'rgba(220,38,38,0.06)', border:'1px solid rgba(220,38,38,0.15)', display:'flex', alignItems:'center', justifyContent:'center', gap:6, color:'#B91C1C', fontSize:12, fontWeight:600, cursor:'pointer' }}>
+                      {deleting === job.id ? <Loader size={13}/> : <Trash2 size={13}/>} حذف
+                    </button>
+                  </div>
+                </div>
               ))}
             </div>
-            
-            {jobs.length === 0 ? (
-              <div style={{ padding:40, textAlign:'center', color:'var(--gray400)' }}>
-                لا توجد وظائف. أضف وظيفة جديدة للبدء.
-              </div>
-            ) : jobs.map((job, i) => (
-              <div key={job.id} style={{
-                display:'grid', gridTemplateColumns:'2fr 1.5fr 1fr 1fr 1fr auto',
-                gap:16, padding:'14px 20px', alignItems:'center',
-                borderBottom: i < jobs.length-1 ? '1px solid var(--gray100)' : 'none',
-              }}>
-                <div style={{ fontWeight:600, color:'var(--g950)', fontSize:14 }}>{job.title}</div>
-                <div style={{ fontSize:13, color:'var(--gray600)' }}>{job.company}</div>
-                <div style={{ fontSize:13, color:'var(--gray600)' }}>{job.location}</div>
-                <div style={{ fontSize:12, color:'var(--gray400)' }}>
-                  {JOB_TYPES.find(t => t.key === job.job_type)?.label || job.job_type}
-                </div>
-                <div style={{ fontSize:12, background:'var(--g50)', color:'var(--g700)', padding:'3px 10px', borderRadius:50, display:'inline-block', width:'fit-content' }}>
-                  {CATEGORIES.find(c => c.key === job.category)?.label || job.category}
-                </div>
-                <div style={{ display:'flex', gap:8 }}>
-                  <button onClick={() => openEdit(job)} style={{ width:32, height:32, borderRadius:'var(--r-sm)', background:'var(--g50)', border:'1px solid var(--g100)', display:'flex', alignItems:'center', justifyContent:'center', color:'var(--g700)' }}>
-                    <Pencil size={14}/>
-                  </button>
-                  <button onClick={() => del(job.id)} disabled={deleting === job.id} style={{ width:32, height:32, borderRadius:'var(--r-sm)', background:'rgba(220,38,38,0.07)', border:'1px solid rgba(220,38,38,0.15)', display:'flex', alignItems:'center', justifyContent:'center', color:'#B91C1C' }}>
-                    {deleting === job.id ? <Loader size={14} className="animate-spin"/> : <Trash2 size={14}/>}
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
+          )
         )}
 
         {activeTab === 'applications' && (
           loadingApps ? (
             <div style={{ display:'flex', justifyContent:'center', padding:60 }}>
-              <Loader size={32} className="animate-spin" color="var(--g600)"/>
+              <Loader size={32} color="var(--g600)" style={{ animation:'spin 1s linear infinite' }}/>
+            </div>
+          ) : applications.length === 0 ? (
+            <div style={{ padding:60, textAlign:'center', color:'var(--gray400)', background:'var(--white)', borderRadius:'var(--r-lg)', border:'1.5px solid var(--gray200)' }}>
+              لا توجد تقديمات حتى الآن.
             </div>
           ) : (
-            <div style={{ background:'var(--white)', border:'1.5px solid var(--gray200)', borderRadius:'var(--r-lg)', overflow:'hidden', boxShadow:'var(--shadow-sm)' }}>
-              <div style={{ display:'grid', gridTemplateColumns:'1.5fr 2fr 1.5fr 1fr 1fr auto', gap:0, borderBottom:'1.5px solid var(--gray200)', padding:'12px 20px', background:'var(--gray50)' }}>
-                {['الاسم','البريد','الوظيفة','الهاتف','الحالة',''].map(h => (
-                  <div key={h} style={{ fontSize:12, fontWeight:700, color:'var(--gray400)', textTransform:'uppercase', letterSpacing:0.8 }}>{h}</div>
-                ))}
-              </div>
-              
-              {applications.length === 0 ? (
-                <div style={{ padding:40, textAlign:'center', color:'var(--gray400)' }}>
-                  لا توجد تقديمات حتى الآن.
-                </div>
-              ) : applications.map((app, i) => (
-                <div key={app.id} style={{
-                  display:'grid', gridTemplateColumns:'1.5fr 2fr 1.5fr 1fr 1fr auto',
-                  gap:16, padding:'14px 20px', alignItems:'center',
-                  borderBottom: i < applications.length-1 ? '1px solid var(--gray100)' : 'none',
-                }}>
-                  <div style={{ fontWeight:600, color:'var(--g950)', fontSize:14 }}>{app.name}</div>
-                  <div style={{ fontSize:13, color:'var(--gray600)' }}>{app.email}</div>
-                  <div style={{ fontSize:13, color:'var(--g700)', fontWeight:500 }}>{app.job?.title || '—'}</div>
-                  <div style={{ fontSize:12, color:'var(--gray500)' }}>{app.phone || '—'}</div>
-                  <div>{getStatusBadge(app.status)}</div>
-                  <div style={{ display:'flex', gap:4 }}>
-                    {(app.status === 'pending' || app.status === 'reviewed') && (
-                      <>
-                        <button onClick={() => updateAppStatus(app.id, 'interview')} title="مقابلة" style={{ width:28, height:28, borderRadius:'var(--r-sm)', background:'#EDE9FE', border:'1px solid #C4B5FD', display:'flex', alignItems:'center', justifyContent:'center', color:'#5B21B6', cursor:'pointer' }}>
-                          <FileText size={13}/>
-                        </button>
-                        <button onClick={() => updateAppStatus(app.id, 'accepted')} title="قبول" style={{ width:28, height:28, borderRadius:'var(--r-sm)', background:'var(--g50)', border:'1px solid var(--g100)', display:'flex', alignItems:'center', justifyContent:'center', color:'var(--g600)', cursor:'pointer' }}>
-                          <CheckCircle size={13}/>
-                        </button>
-                        <button onClick={() => updateAppStatus(app.id, 'rejected')} title="رفض" style={{ width:28, height:28, borderRadius:'var(--r-sm)', background:'rgba(220,38,38,0.07)', border:'1px solid rgba(220,38,38,0.15)', display:'flex', alignItems:'center', justifyContent:'center', color:'#B91C1C', cursor:'pointer' }}>
-                          <XCircle size={13}/>
-                        </button>
-                      </>
-                    )}
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))', gap:14 }}>
+              {applications.map(app => {
+                const initials = (app.name || '؟').split(' ').map(w=>w[0]).join('').slice(0,2)
+                const dateStr  = app.created_at
+                  ? new Date(app.created_at).toLocaleDateString('ar-SA',{ year:'numeric', month:'short', day:'numeric' })
+                  : null
+                const isWithdrawn = app.status === 'withdrawn'
+                return (
+                  <div key={app.id}
+                    onClick={() => !isWithdrawn && setPeek({ type:'app', item: app })}
+                    style={{
+                      background: isWithdrawn ? 'var(--gray50)' : 'var(--white)',
+                      border:`1.5px solid ${peek?.item?.id===app.id ? 'var(--g400)' : 'var(--gray200)'}`,
+                      borderRadius:'var(--r-xl)', padding:'18px',
+                      cursor: isWithdrawn ? 'default' : 'pointer',
+                      transition:'all 0.18s', opacity: isWithdrawn ? 0.6 : 1,
+                      outline: peek?.item?.id===app.id ? '2px solid var(--g300)' : 'none',
+                    }}
+                    onMouseEnter={e => !isWithdrawn && (e.currentTarget.style.boxShadow='var(--shadow-md)')}
+                    onMouseLeave={e => e.currentTarget.style.boxShadow='none'}
+                  >
+                    {/* Avatar + name */}
+                    <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:12 }}>
+                      <div style={{ width:38, height:38, borderRadius:'50%', background:'var(--g100)', color:'var(--g800)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, fontWeight:700, flexShrink:0 }}>
+                        {initials}
+                      </div>
+                      <div style={{ flex:1, minWidth:0 }}>
+                        <div style={{ fontWeight:700, fontSize:14, color:'var(--g950)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{app.name}</div>
+                        <div style={{ fontSize:12, color:'var(--gray400)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{app.email}</div>
+                      </div>
+                    </div>
+
+                    {/* Job title */}
+                    <div style={{ fontSize:13, color:'var(--g700)', fontWeight:500, marginBottom:10,
+                      whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>
+                      📌 {app.job?.title || '—'}
+                    </div>
+
+                    {/* Badges row */}
+                    <div style={{ display:'flex', alignItems:'center', gap:6, flexWrap:'wrap' }}>
+                      {getStatusBadge(app.status)}
+                      {/* PDPL badge */}
+                      {!isWithdrawn && (
+                        <span style={{ fontSize:10, fontWeight:700, background:'var(--g50)', color:'var(--g600)', border:'1px solid var(--g200)', padding:'2px 8px', borderRadius:50 }}>
+                          PDPL ✓
+                        </span>
+                      )}
+                      {dateStr && (
+                        <span style={{ fontSize:11, color:'var(--gray400)', marginRight:'auto' }}>{dateStr}</span>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           )
         )}
@@ -512,6 +570,162 @@ export default function Admin() {
             </>
           )
         )}
+
+      {/* ── Side-peek Backdrop ── */}
+      {peek && (
+        <div onClick={() => setPeek(null)} style={{
+          position:'fixed', inset:0, zIndex:498,
+          background:'rgba(0,26,13,0.25)',
+        }}/>
+      )}
+
+      {/* ── Side-peek Panel ── */}
+      {peek && (
+        <div style={{
+          position:'fixed', top:0, right:0, bottom:0,
+          width:'clamp(300px,38vw,440px)',
+          background:'var(--white)',
+          borderLeft:'1.5px solid var(--gray200)',
+          boxShadow:'-8px 0 32px rgba(0,26,13,0.12)',
+          zIndex:499, overflowY:'auto',
+          display:'flex', flexDirection:'column',
+          animation:'slideInRight 0.22s ease',
+        }}>
+          <style>{`@keyframes slideInRight{from{transform:translateX(24px);opacity:0}to{transform:translateX(0);opacity:1}}`}</style>
+
+          {/* Header */}
+          <div style={{ padding:'20px 22px 16px', borderBottom:'1px solid var(--gray100)', display:'flex', alignItems:'center', gap:12, position:'sticky', top:0, background:'var(--white)', zIndex:1 }}>
+            <button onClick={() => setPeek(null)} style={{ width:30, height:30, borderRadius:'50%', background:'var(--gray100)', border:'none', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', flexShrink:0 }}>
+              <X size={14}/>
+            </button>
+            <div style={{ fontSize:14, fontWeight:700, color:'var(--g950)' }}>
+              {peek.type === 'job' ? 'تفاصيل الوظيفة' : 'ملف المتقدم'}
+            </div>
+          </div>
+
+          <div style={{ padding:'22px', flex:1 }}>
+
+            {/* ── Job Peek ── */}
+            {peek.type === 'job' && (() => { const j = peek.item; return (
+              <>
+                <div style={{ fontSize:18, fontWeight:700, color:'var(--g950)', marginBottom:6 }}>{j.title}</div>
+                {j.title_en && <div style={{ fontSize:13, color:'var(--gray400)', marginBottom:14, direction:'ltr' }}>{j.title_en}</div>}
+
+                <div style={{ display:'flex', flexWrap:'wrap', gap:6, marginBottom:18 }}>
+                  {[
+                    { v: j.company, bg:'var(--g50)', c:'var(--g700)' },
+                    { v: j.location, bg:'var(--gray100)', c:'var(--gray600)' },
+                    { v: CATEGORIES.find(x=>x.key===j.category)?.label, bg:'var(--g50)', c:'var(--g700)' },
+                    { v: JOB_TYPES.find(x=>x.key===j.job_type)?.label, bg:'var(--gray100)', c:'var(--gray600)' },
+                  ].filter(x=>x.v).map((x,i) => (
+                    <span key={i} style={{ fontSize:12, background:x.bg, color:x.c, padding:'4px 12px', borderRadius:50, border:'1px solid var(--gray200)' }}>{x.v}</span>
+                  ))}
+                  <span style={{ fontSize:12, background: j.is_active?'var(--g50)':'var(--gray100)', color: j.is_active?'var(--g600)':'var(--gray400)', padding:'4px 12px', borderRadius:50, border:'1px solid var(--gray200)' }}>
+                    {j.is_active ? '🟢 نشطة' : '⚫ غير نشطة'}
+                  </span>
+                </div>
+
+                {(j.salary_min || j.salary_max) && (
+                  <div style={{ background:'var(--gold100)', border:'1px solid var(--gold300)', borderRadius:'var(--r-md)', padding:'12px 16px', marginBottom:16, fontSize:13, color:'var(--gold700)', fontWeight:600 }}>
+                    💰 {j.salary_min&&j.salary_max ? `${Number(j.salary_min).toLocaleString('ar')} – ${Number(j.salary_max).toLocaleString('ar')} ر.س` : j.salary_min ? `من ${Number(j.salary_min).toLocaleString('ar')} ر.س` : `حتى ${Number(j.salary_max).toLocaleString('ar')} ر.س`}
+                  </div>
+                )}
+
+                {j.description && (
+                  <div style={{ marginBottom:16 }}>
+                    <div style={{ fontSize:11, fontWeight:700, color:'var(--gray400)', textTransform:'uppercase', letterSpacing:1, marginBottom:8 }}>الوصف</div>
+                    <div style={{ fontSize:13, color:'var(--gray700)', lineHeight:1.8, whiteSpace:'pre-wrap' }}>{j.description}</div>
+                  </div>
+                )}
+
+                {j.requirements && (
+                  <div style={{ marginBottom:20 }}>
+                    <div style={{ fontSize:11, fontWeight:700, color:'var(--gray400)', textTransform:'uppercase', letterSpacing:1, marginBottom:8 }}>المتطلبات</div>
+                    <div style={{ fontSize:13, color:'var(--gray700)', lineHeight:1.8, whiteSpace:'pre-wrap' }}>{j.requirements}</div>
+                  </div>
+                )}
+
+                <div style={{ display:'flex', gap:10, marginTop:'auto', paddingTop:16, borderTop:'1px solid var(--gray100)' }}>
+                  <button onClick={() => { openEdit(j); setPeek(null) }} style={{ flex:1, padding:'10px', background:'var(--g900)', color:'var(--white)', border:'none', borderRadius:'var(--r-md)', fontSize:13, fontWeight:600, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
+                    <Pencil size={13}/> تعديل
+                  </button>
+                  <button onClick={() => { del(j.id); setPeek(null) }} style={{ padding:'10px 18px', background:'rgba(220,38,38,0.07)', color:'#B91C1C', border:'1px solid rgba(220,38,38,0.2)', borderRadius:'var(--r-md)', fontSize:13, fontWeight:600, cursor:'pointer' }}>
+                    <Trash2 size={13}/>
+                  </button>
+                </div>
+              </>
+            )})()}
+
+            {/* ── Application Peek ── */}
+            {peek.type === 'app' && (() => { const a = peek.item; const consentDate = a.created_at ? new Date(a.created_at).toLocaleString('ar-SA') : '—'; return (
+              <>
+                {/* Avatar */}
+                <div style={{ display:'flex', alignItems:'center', gap:14, marginBottom:20 }}>
+                  <div style={{ width:52, height:52, borderRadius:'50%', background:'var(--g100)', color:'var(--g800)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:18, fontWeight:700, flexShrink:0 }}>
+                    {(a.name||'؟').split(' ').map(w=>w[0]).join('').slice(0,2)}
+                  </div>
+                  <div>
+                    <div style={{ fontSize:17, fontWeight:700, color:'var(--g950)' }}>{a.name}</div>
+                    <div style={{ fontSize:13, color:'var(--gray500)' }}>{a.email}</div>
+                    {a.phone && <div style={{ fontSize:12, color:'var(--gray400)' }}>{a.phone}</div>}
+                  </div>
+                </div>
+
+                {/* Job */}
+                <div style={{ background:'var(--g50)', border:'1px solid var(--g100)', borderRadius:'var(--r-md)', padding:'12px 16px', marginBottom:16 }}>
+                  <div style={{ fontSize:11, fontWeight:700, color:'var(--gray400)', textTransform:'uppercase', letterSpacing:1, marginBottom:4 }}>الوظيفة المُقدَّم عليها</div>
+                  <div style={{ fontSize:14, fontWeight:600, color:'var(--g700)' }}>{a.job?.title || '—'}</div>
+                </div>
+
+                {/* Status */}
+                <div style={{ marginBottom:16 }}>
+                  <div style={{ fontSize:11, fontWeight:700, color:'var(--gray400)', textTransform:'uppercase', letterSpacing:1, marginBottom:8 }}>الحالة</div>
+                  {getStatusBadge(a.status)}
+                </div>
+
+                {/* Status actions */}
+                {(a.status === 'pending' || a.status === 'reviewed') && (
+                  <div style={{ display:'flex', gap:8, marginBottom:16 }}>
+                    <button onClick={() => { updateAppStatus(a.id,'interview'); setPeek(p => ({...p, item:{...p.item,status:'interview'}})) }} style={{ flex:1, padding:'8px', borderRadius:'var(--r-sm)', background:'#EDE9FE', border:'1px solid #C4B5FD', color:'#5B21B6', fontSize:12, fontWeight:600, cursor:'pointer' }}>مقابلة</button>
+                    <button onClick={() => { updateAppStatus(a.id,'accepted'); setPeek(p => ({...p, item:{...p.item,status:'accepted'}})) }} style={{ flex:1, padding:'8px', borderRadius:'var(--r-sm)', background:'var(--g50)', border:'1px solid var(--g100)', color:'var(--g600)', fontSize:12, fontWeight:600, cursor:'pointer' }}>قبول</button>
+                    <button onClick={() => { updateAppStatus(a.id,'rejected'); setPeek(p => ({...p, item:{...p.item,status:'rejected'}})) }} style={{ flex:1, padding:'8px', borderRadius:'var(--r-sm)', background:'rgba(220,38,38,0.07)', border:'1px solid rgba(220,38,38,0.15)', color:'#B91C1C', fontSize:12, fontWeight:600, cursor:'pointer' }}>رفض</button>
+                  </div>
+                )}
+
+                {/* ── PDPL Consent Traceability ── */}
+                <div style={{ background:'var(--g50)', border:'1.5px solid var(--g200)', borderRadius:'var(--r-lg)', padding:'16px', marginBottom:16 }}>
+                  <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:10 }}>
+                    <CheckCircle size={16} color="var(--g600)"/>
+                    <span style={{ fontSize:13, fontWeight:700, color:'var(--g800)' }}>سجل الموافقة القانونية (PDPL)</span>
+                  </div>
+                  <div style={{ fontSize:12, color:'var(--gray600)', lineHeight:1.8 }}>
+                    <div>📅 <strong>تاريخ الموافقة:</strong> {consentDate}</div>
+                    <div>📋 <strong>نوع الموافقة:</strong> موافقة ضمنية بتقديم الطلب</div>
+                    <div>🔖 <strong>نسخة السياسة:</strong> v1.0</div>
+                    <div style={{ marginTop:8, fontSize:11, color:'var(--gray400)', borderTop:'1px solid var(--g100)', paddingTop:8 }}>
+                      بتقديم الطلب، وافق المستخدم صراحةً على معالجة بياناته لأغراض التوظيف وفق نظام PDPL السعودي.
+                    </div>
+                  </div>
+                </div>
+
+                {/* Delete Data */}
+                <button onClick={() => withdrawData(a.id)} style={{
+                  width:'100%', padding:'11px', borderRadius:'var(--r-md)',
+                  background:'rgba(220,38,38,0.06)', color:'#991B1B',
+                  border:'1.5px solid rgba(220,38,38,0.2)',
+                  fontSize:13, fontWeight:600, cursor:'pointer',
+                  display:'flex', alignItems:'center', justifyContent:'center', gap:6,
+                }}>
+                  <Trash2 size={13}/> سحب البيانات (PDPL)
+                </button>
+                <p style={{ fontSize:11, color:'var(--gray400)', textAlign:'center', marginTop:6, lineHeight:1.5 }}>
+                  يُعلّم الطلب كـ "مسحوب" ويمنع أي معالجة مستقبلية للبيانات
+                </p>
+              </>
+            )})()}
+          </div>
+        </div>
+      )}
 
       {showForm && (
         <div onClick={e => e.target===e.currentTarget && setShowForm(false)} style={{

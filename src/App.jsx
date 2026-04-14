@@ -13,6 +13,8 @@ const TipDetail      = lazy(() => import('./pages/TipDetail.jsx'))
 const Admin          = lazy(() => import('./pages/Admin.jsx'))
 const ResumeAnalyzer = lazy(() => import('./pages/ResumeAnalyzer.jsx'))
 const ResumeResults  = lazy(() => import('./pages/ResumeResults.jsx'))
+const Privacy        = lazy(() => import('./pages/Privacy.jsx'))
+const Terms          = lazy(() => import('./pages/Terms.jsx'))
 
 export default function App() {
   return (
@@ -28,6 +30,8 @@ export default function App() {
             <Route path="/admin"                element={<Admin />} />
             <Route path="/resume-analyzer"     element={<ResumeAnalyzer />} />
             <Route path="/resume-results/:id"  element={<ResumeResults />} />
+            <Route path="/privacy"             element={<Privacy />} />
+            <Route path="/terms"               element={<Terms />} />
           </Routes>
         </Suspense>
       </main>
