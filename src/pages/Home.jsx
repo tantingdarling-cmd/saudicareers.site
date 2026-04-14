@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { Link } from 'react-router-dom'
 import { CheckCircle, FileText, Briefcase, Lightbulb, ArrowLeft, Clock } from 'lucide-react'
 import JobCard from '../components/JobCard.jsx'
 import ApplyModal from '../components/ApplyModal.jsx'
@@ -484,9 +485,11 @@ function TipCard({ tip }) {
         <span style={{ display:'flex', alignItems:'center', gap:4, fontSize:12, color:'rgba(255,255,255,0.3)' }}>
           <Clock size={12}/> {tip.readTime}
         </span>
-        <a href="#" style={{ fontSize:13, fontWeight:600, color:'var(--gold400)', display:'flex', alignItems:'center', gap:4, transition:'color 0.2s' }}>
+        <Link to={`/tips/${tip.slug}`} style={{ fontSize:13, fontWeight:600, color:'var(--gold400)', display:'flex', alignItems:'center', gap:4, transition:'color 0.2s', textDecoration:'none' }}
+          onMouseEnter={e => e.currentTarget.style.color='var(--gold300)'}
+          onMouseLeave={e => e.currentTarget.style.color='var(--gold400)'}>
           اقرأ المقال <ArrowLeft size={14}/>
-        </a>
+        </Link>
       </div>
     </div>
   )
