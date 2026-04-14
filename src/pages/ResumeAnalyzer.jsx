@@ -1,161 +1,9 @@
 import { useState, useRef } from 'react'
 import { Helmet } from 'react-helmet-async'
-import { UploadCloud, CheckCircle, XCircle, AlertCircle, ArrowLeft } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { UploadCloud, XCircle, ArrowLeft } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
 
 const API_BASE = import.meta.env.VITE_API_URL || 'https://saudicareers.site/api'
-
-/* ── Score Ring (SVG) ──────────────────────── */
-function ScoreRing({ score }) {
-  const r       = 54
-  const circ    = 2 * Math.PI * r
-  const offset  = circ - (score / 100) * circ
-  const color   = score >= 70 ? 'var(--g500)'
-                : score >= 45 ? 'var(--gold500)'
-                : '#ef4444'
-  const label   = score >= 70 ? 'ممتاز' : score >= 45 ? 'متوسط' : 'يحتاج تحسين'
-
-  return (
-    <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:8 }}>
-      <svg width={130} height={130} style={{ transform:'rotate(-90deg)' }}>
-        <circle cx={65} cy={65} r={r} fill="none" stroke="var(--gray200)" strokeWidth={10} />
-        <circle cx={65} cy={65} r={r} fill="none" stroke={color} strokeWidth={10}
-          strokeDasharray={circ} strokeDashoffset={offset}
-          strokeLinecap="round"
-          style={{ transition:'stroke-dashoffset 1s ease' }}
-        />
-      </svg>
-      <div style={{ marginTop:-110, textAlign:'center', position:'relative', zIndex:1 }}>
-        <div style={{ fontSize:30, fontWeight:800, color:'var(--g950)', fontFamily:'var(--font-en)' }}>{score}</div>
-        <div style={{ fontSize:11, color:'var(--gray500)', fontWeight:600 }}>/ 100</div>
-      </div>
-      <div style={{
-        fontSize:13, fontWeight:700, color, marginTop:8,
-        background: score >= 70 ? 'var(--g50)' : score >= 45 ? 'var(--gold100)' : '#fef2f2',
-        padding:'4px 16px', borderRadius:50,
-        border: `1px solid ${score >= 70 ? 'var(--g200)' : score >= 45 ? 'var(--gold300)' : '#fecaca'}`,
-      }}>{label}</div>
-    </div>
-  )
-}
-
-/* ── Check Item ────────────────────────────── */
-const CHECK_LABELS = {
-  has_contact:       'معلومات التواصل',
-  standard_headings: 'عناوين قياسية (ATS)',
-  good_keywords:     'كثافة الكلمات المفتاحية',
-}
-
-function CheckItem({ id, passed }) {
-  const Icon = passed ? CheckCircle : XCircle
-  const color = passed ? 'var(--g600)' : '#ef4444'
-  return (
-    <div style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 0',
-      borderBottom:'1px solid var(--gray100)' }}>
-      <Icon size={18} color={color} style={{ flexShrink:0 }} />
-      <span style={{ fontSize:14, color:'var(--g950)', flex:1 }}>{CHECK_LABELS[id] || id}</span>
-      <span style={{ fontSize:12, fontWeight:600, color }}>{passed ? 'اجتاز' : 'لم يجتز'}</span>
-    </div>
-  )
-}
-
-/* ── Results View ──────────────────────────── */
-function ResultsView({ data, onReset }) {
-  const allChecks = [...(data.passed || []), ...(data.failed || [])]
-
-  return (
-    <div style={{ maxWidth:560, margin:'0 auto', textAlign:'right' }}>
-      {/* Score */}
-      <div style={{
-        background:'var(--white)', border:'1.5px solid var(--gray200)',
-        borderRadius:'var(--r-xl)', padding:'32px 28px',
-        boxShadow:'var(--shadow-lg)', marginBottom:20,
-        display:'flex', flexDirection:'column', alignItems:'center',
-      }}>
-        <ScoreRing score={data.score} />
-        <p style={{ fontSize:14, color:'var(--gray600)', marginTop:16, textAlign:'center', lineHeight:1.75, maxWidth:380 }}>
-          سيرتك الذاتية تجتاز <strong style={{ color:'var(--g800)' }}>{data.score}٪</strong> من معايير أنظمة الفرز الآلي (ATS).
-          {data.score < 60 && ' معظم الشركات الكبرى ترفض السير التي تقل عن 60٪ قبل أن يقرأها أحد.'}
-        </p>
-      </div>
-
-      {/* Checks */}
-      <div style={{
-        background:'var(--white)', border:'1.5px solid var(--gray200)',
-        borderRadius:'var(--r-xl)', padding:'24px 28px',
-        boxShadow:'var(--shadow-sm)', marginBottom:20,
-      }}>
-        <div style={{ fontSize:15, fontWeight:700, color:'var(--g950)', marginBottom:16 }}>
-          نتيجة فحص المعايير
-        </div>
-        {allChecks.map(id => (
-          <CheckItem key={id} id={id} passed={(data.passed || []).includes(id)} />
-        ))}
-      </div>
-
-      {/* Recommendations */}
-      {data.recommendations?.length > 0 && (
-        <div style={{
-          background:'var(--g50)', border:'1px solid var(--g200)',
-          borderRadius:'var(--r-xl)', padding:'24px 28px',
-          boxShadow:'var(--shadow-sm)', marginBottom:24,
-        }}>
-          <div style={{ display:'flex', alignItems:'center', gap:8,
-            fontSize:15, fontWeight:700, color:'var(--g950)', marginBottom:14 }}>
-            <AlertCircle size={18} color="var(--g600)" />
-            توصيات التحسين
-          </div>
-          {data.recommendations.map((tip, i) => (
-            <div key={i} style={{ display:'flex', gap:10, marginBottom:10, alignItems:'flex-start' }}>
-              <span style={{ width:6, height:6, borderRadius:'50%', background:'var(--g500)',
-                flexShrink:0, marginTop:7 }} />
-              <span style={{ fontSize:14, color:'var(--gray700)', lineHeight:1.75 }}>{tip}</span>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* CTA */}
-      <div style={{
-        background:'var(--g900)', borderRadius:'var(--r-xl)', padding:'28px',
-        textAlign:'center', color:'var(--white)',
-      }}>
-        <div style={{ fontSize:18, fontWeight:700, marginBottom:8 }}>
-          احصل على التقرير الكامل
-        </div>
-        <div style={{ fontSize:14, color:'rgba(255,255,255,0.7)', marginBottom:20, lineHeight:1.75 }}>
-          التقرير المجاني يُظهر المشكلة — التقرير الكامل يعطيك الحل التفصيلي والسيرة المُعدّلة.
-        </div>
-        <a href="#signup" onClick={e => {
-          e.preventDefault()
-          document.getElementById('signup')?.scrollIntoView({ behavior:'smooth' })
-          window.history.pushState({}, '', '/#signup')
-        }} style={{
-          display:'inline-block',
-          background:'var(--gold500)', color:'var(--g950)',
-          padding:'12px 32px', borderRadius:50,
-          fontSize:15, fontWeight:700, textDecoration:'none',
-          transition:'background 0.2s',
-        }}>
-          سجّل واحصل على التقرير الكامل مجاناً ←
-        </a>
-      </div>
-
-      {/* Retry */}
-      <button onClick={onReset} style={{
-        display:'block', width:'100%', marginTop:16,
-        background:'none', border:'1.5px solid var(--gray200)',
-        borderRadius:'var(--r-md)', padding:'11px',
-        fontSize:14, color:'var(--gray600)', cursor:'pointer',
-        transition:'all 0.2s',
-      }}
-      onMouseEnter={e => { e.target.style.borderColor='var(--g400)'; e.target.style.color='var(--g700)' }}
-      onMouseLeave={e => { e.target.style.borderColor='var(--gray200)'; e.target.style.color='var(--gray600)' }}>
-        تحليل سيرة أخرى
-      </button>
-    </div>
-  )
-}
 
 /* ── Progress Bar ──────────────────────────── */
 function ProgressBar({ percent }) {
@@ -224,10 +72,10 @@ function UploadZone({ onFile }) {
 
 /* ── Main Page ─────────────────────────────── */
 export default function ResumeAnalyzer() {
-  const [phase, setPhase]       = useState('idle')  // idle | uploading | error | done
+  const [phase, setPhase]       = useState('idle')  // idle | uploading | error
   const [progress, setProgress] = useState(0)
-  const [result, setResult]     = useState(null)
   const [errorMsg, setErrorMsg] = useState('')
+  const navigate = useNavigate()
 
   const handleFile = file => {
     setPhase('uploading')
@@ -248,8 +96,10 @@ export default function ResumeAnalyzer() {
       try {
         const res = JSON.parse(xhr.responseText)
         if (xhr.status === 200) {
-          setResult(res)
-          setPhase('done')
+          // حفظ النتيجة مؤقتاً والانتقال للوحة النتائج
+          const id = Date.now().toString(36)
+          try { localStorage.setItem(`resume_result_${id}`, JSON.stringify(res)) } catch (_) {}
+          navigate(`/resume-results/${id}`)
         } else if (xhr.status === 422) {
           const messages = res.errors?.file?.[0] || res.message || 'الملف غير صالح'
           setErrorMsg(messages)
@@ -277,7 +127,6 @@ export default function ResumeAnalyzer() {
 
   const reset = () => {
     setPhase('idle')
-    setResult(null)
     setProgress(0)
     setErrorMsg('')
   }
@@ -344,7 +193,6 @@ export default function ResumeAnalyzer() {
             </button>
           </div>
         )}
-        {phase === 'done' && result && <ResultsView data={result} onReset={reset} />}
       </div>
     </>
   )

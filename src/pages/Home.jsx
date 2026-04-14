@@ -375,12 +375,12 @@ export default function Home() {
           </Reveal>
           <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,300px),1fr))', gap:24 }}>
             {[
-              { emoji:'📄', title:'تحسين السيرة الذاتية', desc:'مراجعة احترافية تضمن أن سيرتك تتجاوز أنظمة الفحص الآلي وتصل للمسؤولين الفعليين — مجاناً.', features:['توافق مع معايير ATS','صياغة بالعربية والإنجليزية','مراجعة خلال 48 ساعة'], tag:'مجاني عند التسجيل', tagGold:false, accent:'var(--gold400)', featured:true, delay:0 },
+              { emoji:'📄', title:'تحسين السيرة الذاتية', desc:'مراجعة احترافية تضمن أن سيرتك تتجاوز أنظمة الفحص الآلي وتصل للمسؤولين الفعليين — مجاناً.', features:['توافق مع معايير ATS','صياغة بالعربية والإنجليزية','مراجعة خلال 48 ساعة'], tag:'مجاني عند التسجيل', tagGold:false, accent:'var(--gold400)', featured:true, delay:0, ctaLink:'/resume-analyzer', ctaText:'افحص سيرتك الآن ✦' },
               { emoji:'💼', title:'وظائف ودورات موثّقة', desc:'نجمع الفرص من كبرى الشركات السعودية ونتحقق من مصداقيتها قبل نشرها.', features:['وظائف من نيوم وأرامكو وPIF','دورات معتمدة ومموّلة','تحديث يومي للفرص'], tag:'مصادر رسمية موثوقة', tagGold:true, accent:'var(--gold500)', featured:false, delay:100 },
               { emoji:'🎯', title:'نصائح مهنية موثوقة', desc:'محتوى مبني على أبحاث الموارد البشرية لبناء حضور مهني قوي في السوق السعودي.', features:['نصائح مقابلات الوظائف','تطوير ملف LinkedIn','مخصصة للسوق السعودي'], tag:'محتوى حصري', tagGold:false, accent:'var(--g400)', featured:false, delay:200 },
-            ].map(({ emoji, title, desc, features, tag, tagGold, accent, featured, delay }) => (
+            ].map(({ emoji, title, desc, features, tag, tagGold, accent, featured, delay, ctaLink, ctaText }) => (
               <Reveal key={title} delay={delay}>
-                <ServiceCard emoji={emoji} title={title} desc={desc} features={features} tag={tag} tagGold={tagGold} accent={accent} featured={featured} />
+                <ServiceCard emoji={emoji} title={title} desc={desc} features={features} tag={tag} tagGold={tagGold} accent={accent} featured={featured} ctaLink={ctaLink} ctaText={ctaText} />
               </Reveal>
             ))}
           </div>
@@ -470,7 +470,7 @@ export default function Home() {
 }
 
 /* ── Sub-components ────────────────────── */
-function ServiceCard({ emoji, title, desc, features, tag, tagGold, accent, featured = false }) {
+function ServiceCard({ emoji, title, desc, features, tag, tagGold, accent, featured = false, ctaLink, ctaText }) {
   const [hovered, setHovered] = useState(false)
 
   if (featured) {
@@ -482,7 +482,7 @@ function ServiceCard({ emoji, title, desc, features, tag, tagGold, accent, featu
         transition: 'all 0.3s', position: 'relative', overflow: 'hidden',
         transform: hovered ? 'translateY(-6px)' : 'none',
         boxShadow: hovered ? '0 20px 60px rgba(0,0,0,0.25)' : '0 8px 32px rgba(0,0,0,0.15)',
-        height: '100%',
+        height: '100%', display:'flex', flexDirection:'column',
       }}>
         {/* شريط علوي ذهبي */}
         <div style={{ position:'absolute', top:0, insetInline:0, height:3, background:'linear-gradient(90deg, var(--gold500), var(--gold300))', borderRadius:'var(--r-lg) var(--r-lg) 0 0' }}/>
@@ -499,12 +499,26 @@ function ServiceCard({ emoji, title, desc, features, tag, tagGold, accent, featu
             {f}
           </div>
         ))}
-        <span style={{
-          marginTop:24, display:'inline-block',
-          fontSize:12, fontWeight:700, padding:'6px 18px', borderRadius:50,
-          background:'rgba(197,160,89,0.2)', color:'var(--gold300)',
-          border:'1px solid rgba(197,160,89,0.3)',
-        }}>{tag}</span>
+        <div style={{ marginTop:'auto', paddingTop:24, display:'flex', alignItems:'center', gap:12, flexWrap:'wrap' }}>
+          {ctaLink && (
+            <Link to={ctaLink} style={{
+              display:'inline-flex', alignItems:'center', gap:6,
+              background:'var(--gold500)', color:'var(--g950)',
+              padding:'10px 22px', borderRadius:50,
+              fontSize:13, fontWeight:700, textDecoration:'none',
+              transition:'background 0.2s', flexShrink:0,
+            }}
+            onMouseEnter={e => e.currentTarget.style.background='var(--gold400)'}
+            onMouseLeave={e => e.currentTarget.style.background='var(--gold500)'}>
+              {ctaText}
+            </Link>
+          )}
+          <span style={{
+            fontSize:12, fontWeight:700, padding:'6px 18px', borderRadius:50,
+            background:'rgba(197,160,89,0.2)', color:'var(--gold300)',
+            border:'1px solid rgba(197,160,89,0.3)',
+          }}>{tag}</span>
+        </div>
         <div style={{ position:'absolute', bottom:0, insetInline:0, height: hovered ? 4 : 3, background:accent, borderRadius:'0 0 var(--r-lg) var(--r-lg)', transition:'height 0.3s' }}/>
       </div>
     )

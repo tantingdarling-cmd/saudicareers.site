@@ -12,6 +12,7 @@ const JobDetail      = lazy(() => import('./pages/JobDetail.jsx'))
 const TipDetail      = lazy(() => import('./pages/TipDetail.jsx'))
 const Admin          = lazy(() => import('./pages/Admin.jsx'))
 const ResumeAnalyzer = lazy(() => import('./pages/ResumeAnalyzer.jsx'))
+const ResumeResults  = lazy(() => import('./pages/ResumeResults.jsx'))
 
 export default function App() {
   return (
@@ -24,8 +25,9 @@ export default function App() {
             <Route path="/"           element={<Home />} />
             <Route path="/jobs/:id"   element={<JobDetail />} />
             <Route path="/tips/:slug" element={<TipDetail />} />
-            <Route path="/admin"           element={<Admin />} />
-            <Route path="/resume-analyzer" element={<ResumeAnalyzer />} />
+            <Route path="/admin"                element={<Admin />} />
+            <Route path="/resume-analyzer"     element={<ResumeAnalyzer />} />
+            <Route path="/resume-results/:id"  element={<ResumeResults />} />
           </Routes>
         </Suspense>
       </main>

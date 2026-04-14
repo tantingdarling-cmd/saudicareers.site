@@ -51,3 +51,28 @@ img { max-width: 100%; display: block; }
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--gray50); }
 ::-webkit-scrollbar-thumb { background: var(--g400); border-radius: 3px; }
+
+/* ── Fade-in on scroll (useFadeIn hook) ── */
+.fade-in-section {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s cubic-bezier(0.19, 1, 0.22, 1),
+              transform 0.8s cubic-bezier(0.19, 1, 0.22, 1);
+  will-change: opacity, transform;
+}
+.fade-in-section.is-visible {
+  opacity: 1;
+  transform: none;
+}
+.fade-in-section.delay-1 { transition-delay: 100ms; }
+.fade-in-section.delay-2 { transition-delay: 200ms; }
+.fade-in-section.delay-3 { transition-delay: 300ms; }
+
+/* ── View Transitions (progressive enhancement) ── */
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 0.25s;
+    animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+  }
+}
