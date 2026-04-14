@@ -1,8 +1,51 @@
 import { useState, useEffect, useRef } from 'react'
 import { CheckCircle, FileText, Briefcase, Lightbulb, ArrowLeft, Clock } from 'lucide-react'
-import JobCard from '../components/JobCard'
-import ApplyModal from '../components/ApplyModal'
-import { JOBS, TIPS, CATEGORIES } from '../data'
+import JobCard from '../components/JobCard.jsx'
+import ApplyModal from '../components/ApplyModal.jsx'
+import JobStructuredData from '../components/JobStructuredData.jsx'
+import { JOBS as FALLBACK_JOBS, TIPS as FALLBACK_TIPS, CATEGORIES } from '../data'
+import { jobsApi, tipsApi, subscribersApi } from '../services/api'
+
+const CATEGORY_ICONS = {
+  tech: '💻', finance: '🏦', energy: '⚡', construction: '🏗️',
+  hr: '👥', marketing: '📣', healthcare: '🏥', education: '🎓', other: '💼',
+}
+
+const EXP_LABELS = {
+  entry: 'مبتدئ', mid: 'متوسط', senior: 'خبير', lead: 'قائد', executive: 'تنفيذي',
+}
+
+function normalizeJob(job) {
+  const tags = [job.category_label, EXP_LABELS[job.experience_level], job.job_type_label]
+    .filter(Boolean).slice(0, 3)
+  return {
+    id: job.id,
+    company: job.company,
+    icon: CATEGORY_ICONS[job.category] || '💼',
+    title: job.title,
+    location: job.location,
+    type: job.job_type_label || job.job_type,
+    salary: job.salary || 'يُحدد عند التواصل',
+    tags,
+    badge: job.is_featured ? 'featured' : '',
+    badgeText: job.is_featured ? 'حصرية' : '',
+    posted: job.posted_at || 'حديثاً',
+    category: job.category,
+    description: job.description,
+  }
+}
+
+function normalizeTip(tip) {
+  return {
+    id: tip.id,
+    category: tip.category_label || tip.category,
+    title: tip.title,
+    excerpt: tip.excerpt,
+    readTime: '5 دقائق',
+    tag: '',
+    slug: tip.slug,
+  }
+}
 
 /* ── Reveal hook ─────────────────────────── */
 function useReveal() {
@@ -36,10 +79,20 @@ function SignupForm({ id }) {
   const [done, setDone] = useState(false)
   const [loading, setLoading] = useState(false)
 
-  const submit = () => {
-    if (!form.email.includes('@')) return
+  const submit = async () => {
+    if (!form.name.trim() || !form.email.includes('@')) return
     setLoading(true)
-    setTimeout(() => { setLoading(false); setDone(true) }, 800)
+    try {
+      await subscribersApi.subscribe({ name: form.name, email: form.email, field: form.field })
+      setDone(true)
+    } catch (err) {
+      // إذا كان البريد مسجلاً مسبقاً نعتبره نجاحاً
+      if (err.message?.includes('unique') || err.message?.includes('already')) {
+        setDone(true)
+      }
+    } finally {
+      setLoading(false)
+    }
   }
 
   const inputStyle = {
@@ -119,8 +172,34 @@ function SignupForm({ id }) {
 export default function Home() {
   const [activeCategory, setActiveCategory] = useState('all')
   const [selectedJob, setSelectedJob] = useState(null)
+  const [jobs, setJobs] = useState(FALLBACK_JOBS)
+  const [tips, setTips] = useState(FALLBACK_TIPS)
+  const [loadingJobs, setLoadingJobs] = useState(true)
 
-  const filteredJobs = activeCategory === 'all' ? JOBS : JOBS.filter(j => j.category === activeCategory)
+  useEffect(() => {
+    jobsApi.getAll({ per_page: 50, active: 1 })
+      .then(res => {
+        const apiJobs = res?.data
+        if (Array.isArray(apiJobs) && apiJobs.length > 0) {
+          setJobs(apiJobs.map(normalizeJob))
+        }
+      })
+      .catch(() => {/* keep fallback */})
+      .finally(() => setLoadingJobs(false))
+
+    tipsApi.getAll({ per_page: 6 })
+      .then(res => {
+        const apiTips = res?.data
+        if (Array.isArray(apiTips) && apiTips.length > 0) {
+          setTips(apiTips.map(normalizeTip))
+        }
+      })
+      .catch(() => {/* keep fallback */})
+  }, [])
+
+  const filteredJobs = activeCategory === 'all'
+    ? jobs
+    : jobs.filter(j => j.category === activeCategory)
 
   const sectionTitle = { fontSize:'clamp(1.6rem,3.5vw,2.4rem)', fontWeight:700, color:'var(--g950)', lineHeight:1.25, marginBottom:14 }
   const sectionSub = { fontSize:'1rem', color:'var(--gray600)', maxWidth:540, lineHeight:1.85, marginBottom:48 }
@@ -224,12 +303,27 @@ export default function Home() {
           </Reveal>
 
           <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(min(100%,320px),1fr))', gap:20 }}>
-            {filteredJobs.map((job, i) => (
-              <Reveal key={job.id} delay={i * 60}>
-                <JobCard job={job} onApply={setSelectedJob} />
-              </Reveal>
-            ))}
+            {loadingJobs
+              ? Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} style={{
+                    background:'var(--white)', border:'1.5px solid var(--gray200)',
+                    borderRadius:'var(--r-lg)', padding:24, height:240,
+                    animation:'shimmer 1.5s infinite',
+                  }}/>
+                ))
+              : filteredJobs.map((job, i) => (
+                  <Reveal key={job.id} delay={i * 60}>
+                    <JobCard job={job} onApply={setSelectedJob} />
+                  </Reveal>
+                ))
+            }
           </div>
+          <style>{`
+            @keyframes shimmer {
+              0%,100% { opacity:1 }
+              50% { opacity:0.4 }
+            }
+          `}</style>
         </div>
       </section>
 
@@ -296,7 +390,7 @@ export default function Home() {
             </p>
           </Reveal>
           <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,300px),1fr))', gap:20 }}>
-            {TIPS.map((tip, i) => (
+            {tips.map((tip, i) => (
               <Reveal key={tip.id} delay={i * 60}>
                 <TipCard tip={tip} />
               </Reveal>
@@ -325,6 +419,9 @@ export default function Home() {
 
       {/* Apply Modal */}
       {selectedJob && <ApplyModal job={selectedJob} onClose={() => setSelectedJob(null)} />}
+
+      {/* Google Jobs Structured Data */}
+      <JobStructuredData jobs={jobs} />
 
       <style>{`
         @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
@@ -399,6 +496,7 @@ function FooterSignupForm() {
   const [email, setEmail] = useState('')
   const [name, setName] = useState('')
   const [done, setDone] = useState(false)
+  const [loading, setLoading] = useState(false)
 
   const inputStyle = {
     padding:'14px 20px', border:'1.5px solid var(--gray200)',
@@ -406,6 +504,21 @@ function FooterSignupForm() {
     color:'var(--gray800)', background:'var(--white)',
     outline:'none', textAlign:'right', direction:'rtl', width:'100%',
     marginBottom:12,
+  }
+
+  const submit = async () => {
+    if (!name.trim() || !email.includes('@')) return
+    setLoading(true)
+    try {
+      await subscribersApi.subscribe({ name, email })
+      setDone(true)
+    } catch (err) {
+      if (err.message?.includes('unique') || err.message?.includes('already')) {
+        setDone(true)
+      }
+    } finally {
+      setLoading(false)
+    }
   }
 
   if (done) return (
@@ -418,16 +531,19 @@ function FooterSignupForm() {
     <>
       <input type="text" placeholder="اسمك" value={name} onChange={e=>setName(e.target.value)} style={inputStyle}
         onFocus={e=>{e.target.style.borderColor='var(--g600)'}} onBlur={e=>{e.target.style.borderColor='var(--gray200)'}}/>
-      <input type="email" placeholder="بريدك الإلكتروني" value={email} onChange={e=>setEmail(e.target.value)} style={inputStyle}
+      <input type="email" placeholder="بريدك الإلكتروني" value={email} onChange={e=>setEmail(e.target.value)}
+        onKeyDown={e => e.key === 'Enter' && submit()}
+        style={inputStyle}
         onFocus={e=>{e.target.style.borderColor='var(--g600)'}} onBlur={e=>{e.target.style.borderColor='var(--gray200)'}}/>
-      <button onClick={() => email.includes('@') && setDone(true)} style={{
-        width:'100%', padding:14, background:'var(--gold500)', color:'var(--white)',
-        border:'none', borderRadius:'var(--r-md)', fontSize:15, fontWeight:700,
-        boxShadow:'var(--shadow-gold)', transition:'all 0.25s',
+      <button onClick={submit} disabled={loading} style={{
+        width:'100%', padding:14,
+        background: loading ? 'var(--gold400)' : 'var(--gold500)',
+        color:'var(--white)', border:'none', borderRadius:'var(--r-md)',
+        fontSize:15, fontWeight:700, boxShadow:'var(--shadow-gold)', transition:'all 0.25s',
       }}
-      onMouseEnter={e=>e.target.style.background='var(--gold600)'}
-      onMouseLeave={e=>e.target.style.background='var(--gold500)'}>
-        احجز مكانك الآن ←
+      onMouseEnter={e=>!loading&&(e.target.style.background='var(--gold600)')}
+      onMouseLeave={e=>!loading&&(e.target.style.background='var(--gold500)')}>
+        {loading ? '...جارٍ التسجيل' : 'احجز مكانك الآن ←'}
       </button>
       <p style={{ fontSize:12, color:'var(--gray400)', marginTop:14 }}>بياناتك آمنة ولن تُشارك مع أي طرف ثالث</p>
     </>

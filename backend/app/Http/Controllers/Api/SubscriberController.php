@@ -15,6 +15,7 @@ class SubscriberController extends Controller
             'email' => 'required|email|unique:subscribers,email',
             'name' => 'nullable|string|max:255',
             'phone' => 'nullable|string|max:20',
+            'field' => 'nullable|string|max:100',
         ]);
         
         $subscriber = Subscriber::create([

@@ -1,12 +1,19 @@
 const API_BASE = import.meta.env.VITE_API_URL || 'https://saudicareers.site/api';
 
+const getToken = () => localStorage.getItem('auth_token');
+const setToken = (token) => localStorage.setItem('auth_token', token);
+const removeToken = () => localStorage.removeItem('auth_token');
+
 class ApiService {
   async request(endpoint, options = {}) {
     const url = `${API_BASE}${endpoint}`;
+    const token = getToken();
+    
     const config = {
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
+        ...(token && { 'Authorization': `Bearer ${token}` }),
         ...options.headers,
       },
       ...options,
@@ -23,6 +30,10 @@ class ApiService {
       const data = await response.json();
       
       if (!response.ok) {
+        if (response.status === 401) {
+          removeToken();
+          window.location.href = '/admin';
+        }
         throw new Error(data.message || data.error || 'حدث خطأ غير متوقع');
       }
       
@@ -59,6 +70,26 @@ class ApiService {
 }
 
 export const api = new ApiService();
+
+export const authApi = {
+  login: async (email, password, deviceName = 'admin') => {
+    const data = await api.post('/v1/login', { email, password, device_name: deviceName });
+    setToken(data.token);
+    localStorage.setItem('user', JSON.stringify(data.user));
+    return data;
+  },
+  logout: () => {
+    return api.post('/logout').finally(() => {
+      removeToken();
+      localStorage.removeItem('user');
+    });
+  },
+  getUser: () => {
+    const user = localStorage.getItem('user');
+    return user ? JSON.parse(user) : null;
+  },
+  isAuthenticated: () => !!getToken(),
+};
 
 export const jobsApi = {
   getAll: (params = {}) => api.get('/v1/jobs', params),

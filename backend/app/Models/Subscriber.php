@@ -13,6 +13,7 @@ class Subscriber extends Model
         'name',
         'email',
         'phone',
+        'field',
         'cv_path',
         'is_active',
     ];

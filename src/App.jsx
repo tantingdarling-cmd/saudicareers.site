@@ -1,8 +1,9 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import Navbar from './components/Navbar'
-import Footer from './components/Footer'
-import Home from './pages/Home'
-import Admin from './pages/Admin'
+import Navbar from './components/Navbar.jsx'
+import Footer from './components/Footer.jsx'
+import Home from './pages/Home.jsx'
+import Admin from './pages/Admin.jsx'
+import JobDetail from './pages/JobDetail.jsx'
 
 export default function App() {
   return (
@@ -11,6 +12,7 @@ export default function App() {
       <main>
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/jobs/:id" element={<JobDetail />} />
           <Route path="/admin" element={<Admin />} />
         </Routes>
       </main>

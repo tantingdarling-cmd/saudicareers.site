@@ -54,11 +54,6 @@ export default function Footer() {
           <p style={{ fontSize:13, color:'rgba(255,255,255,0.3)' }}>
             © 2025 <a href="https://saudicareers.site" style={{ color:'rgba(255,255,255,0.5)' }}>SaudiCareers.site</a> — جميع الحقوق محفوظة
           </p>
-          <Link to="/admin" style={{ fontSize:12, color:'rgba(255,255,255,0.2)', transition:'color 0.2s' }}
-            onMouseEnter={e => e.target.style.color='rgba(255,255,255,0.5)'}
-            onMouseLeave={e => e.target.style.color='rgba(255,255,255,0.2)'}>
-            لوحة التحكم
-          </Link>
         </div>
       </div>
 

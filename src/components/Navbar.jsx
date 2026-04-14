@@ -58,7 +58,6 @@ export default function Navbar() {
               {label}
             </button>
           ))}
-          <Link to="/admin" style={{ fontSize:13, color:'var(--gray400)', padding:'7px 10px', borderRadius:'var(--r-sm)' }}>لوحة التحكم</Link>
         </div>
 
         <div style={{ display:'flex', alignItems:'center', gap:10 }}>

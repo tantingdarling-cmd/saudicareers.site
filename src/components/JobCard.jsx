@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { MapPin, Briefcase, Coins } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { MapPin, Briefcase, Coins, ArrowLeft } from 'lucide-react'
 
 export default function JobCard({ job, onApply, delay = 0 }) {
   const [hovered, setHovered] = useState(false)
@@ -25,6 +26,7 @@ export default function JobCard({ job, onApply, delay = 0 }) {
         transform: hovered ? 'translateY(-4px)' : 'translateY(0)',
         boxShadow: hovered ? 'var(--shadow-lg)' : 'var(--shadow-sm)',
         animationDelay: `${delay}ms`,
+        position: 'relative',
       }}>
 
       {/* Top row */}
@@ -50,10 +52,18 @@ export default function JobCard({ job, onApply, delay = 0 }) {
         )}
       </div>
 
-      {/* Title */}
-      <div style={{ fontSize:16, fontWeight:700, color:'var(--g950)', marginBottom:14, lineHeight:1.35 }}>
+      {/* Title — clickable link to job detail */}
+      <Link
+        to={`/jobs/${job.id}`}
+        style={{
+          fontSize:16, fontWeight:700, color:'var(--g950)', marginBottom:14,
+          lineHeight:1.35, textDecoration:'none', display:'block',
+        }}
+        onMouseEnter={e => e.currentTarget.style.color = 'var(--g600)'}
+        onMouseLeave={e => e.currentTarget.style.color = 'var(--g950)'}
+      >
         {job.title}
-      </div>
+      </Link>
 
       {/* Meta */}
       <div style={{ display:'flex', flexWrap:'wrap', gap:10, marginBottom:16 }}>
@@ -84,20 +94,36 @@ export default function JobCard({ job, onApply, delay = 0 }) {
         {job.salary} <span style={{ fontSize:12, fontWeight:400, color:'var(--gray400)' }}>ر.س / شهرياً</span>
       </div>
 
-      {/* Apply */}
-      <button
-        onClick={() => onApply(job)}
-        style={{
-          padding:'11px 0', background:'var(--g900)', color:'var(--white)',
-          border:'none', borderRadius:'var(--r-md)',
-          fontSize:14, fontWeight:600, marginTop:'auto',
-          transition:'all 0.2s',
-        }}
-        onMouseEnter={e => e.target.style.background='var(--g700)'}
-        onMouseLeave={e => e.target.style.background='var(--g900)'}
-      >
-        التقديم على الوظيفة ←
-      </button>
+      {/* Actions */}
+      <div style={{ display:'flex', gap:8, marginTop:'auto' }}>
+        <button
+          onClick={() => onApply(job)}
+          style={{
+            flex:1, padding:'11px 0', background:'var(--g900)', color:'var(--white)',
+            border:'none', borderRadius:'var(--r-md)',
+            fontSize:14, fontWeight:600,
+            transition:'all 0.2s', cursor:'pointer',
+          }}
+          onMouseEnter={e => e.currentTarget.style.background='var(--g700)'}
+          onMouseLeave={e => e.currentTarget.style.background='var(--g900)'}
+        >
+          التقديم ←
+        </button>
+        <Link
+          to={`/jobs/${job.id}`}
+          style={{
+            display:'flex', alignItems:'center', justifyContent:'center', gap:5,
+            padding:'11px 14px', background:'var(--g50)', color:'var(--g800)',
+            border:'1.5px solid var(--g200)', borderRadius:'var(--r-md)',
+            fontSize:13, fontWeight:600, textDecoration:'none', whiteSpace:'nowrap',
+            transition:'all 0.2s',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.background='var(--g100)'; e.currentTarget.style.borderColor='var(--g400)' }}
+          onMouseLeave={e => { e.currentTarget.style.background='var(--g50)'; e.currentTarget.style.borderColor='var(--g200)' }}
+        >
+          <ArrowLeft size={13} /> التفاصيل
+        </Link>
+      </div>
     </div>
   )
 }

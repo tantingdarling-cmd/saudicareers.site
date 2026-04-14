@@ -1,24 +1,50 @@
 import { useState, useEffect } from 'react'
 import { X, CheckCircle } from 'lucide-react'
+import { applicationsApi } from '../services/api'
 
 export default function ApplyModal({ job, onClose }) {
   const [form, setForm] = useState({ name:'', email:'', phone:'' })
+  const [cvFile, setCvFile] = useState(null)
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     document.body.style.overflow = 'hidden'
     return () => { document.body.style.overflow = '' }
   }, [])
 
-  const handleSubmit = () => {
-    if (!form.email.includes('@')) return
+  const handleSubmit = async () => {
+    if (!form.name.trim()) {
+      setError('الرجاء إدخال اسمك')
+      return
+    }
+    if (!form.email.includes('@')) {
+      setError('الرجاء إدخال بريد إلكتروني صحيح')
+      return
+    }
+    if (cvFile && cvFile.size > 5 * 1024 * 1024) {
+      setError('حجم الملف يجب أن لا يتجاوز 5 ميغابايت')
+      return
+    }
     setLoading(true)
-    setTimeout(() => {
-      setLoading(false)
+    setError('')
+    try {
+      const payload = new FormData()
+      payload.append('job_id', job.id)
+      payload.append('name', form.name)
+      payload.append('email', form.email)
+      payload.append('phone', form.phone || '')
+      if (cvFile) payload.append('cv', cvFile)
+
+      await applicationsApi.submit(payload)
       setSubmitted(true)
       setTimeout(onClose, 2200)
-    }, 900)
+    } catch (err) {
+      setError(err.message || 'حدث خطأ أثناء الإرسال')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -84,6 +110,23 @@ export default function ApplyModal({ job, onClose }) {
               />
             ))}
 
+            {/* CV Upload */}
+            <div style={{ marginBottom:12 }}>
+              <label style={{
+                display:'block', padding:'12px 18px',
+                border:'1.5px dashed var(--gray200)', borderRadius:'var(--r-md)',
+                background:'var(--gray50)', cursor:'pointer', textAlign:'right',
+                fontSize:14, color: cvFile ? 'var(--g700)' : 'var(--gray400)',
+              }}>
+                {cvFile ? `✓ ${cvFile.name}` : 'رفع السيرة الذاتية (PDF/DOC — اختياري)'}
+                <input
+                  type="file" accept=".pdf,.doc,.docx"
+                  onChange={e => setCvFile(e.target.files[0] || null)}
+                  style={{ display:'none' }}
+                />
+              </label>
+            </div>
+
             <button onClick={handleSubmit} disabled={loading} style={{
               width:'100%', padding:14, marginTop:4,
               background: loading ? 'var(--g600)' : 'var(--g900)', color:'var(--white)',
@@ -92,6 +135,7 @@ export default function ApplyModal({ job, onClose }) {
             }}>
               {loading ? '...جارٍ الإرسال' : 'تأكيد التقديم النهائي ←'}
             </button>
+            {error && <p style={{ fontSize:12, color:'#E24B4A', textAlign:'center', marginTop:8 }}>{error}</p>}
             <p style={{ fontSize:12, color:'var(--gray400)', textAlign:'center', marginTop:12 }}>
               بياناتك ستُشارك مع جهة العمل المعنية فقط
             </p>
