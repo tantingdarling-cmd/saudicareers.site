@@ -10,7 +10,7 @@ echo "Starting deployment for saudicareers.site..."
 
 # ── Cloudways paths ────────────────────────────────────────
 APP_DIR="/home/1600726.cloudwaysapps.com/gaczagbrjk/public_html"
-PUBLIC_DIR="$APP_DIR/public"
+PUBLIC_DIR="$APP_DIR"          # ← Cloudways webroot IS public_html/ directly
 BACKEND_DIR="$APP_DIR/backend"
 
 cd "$APP_DIR"
@@ -69,18 +69,24 @@ cd "$APP_DIR"
 npm ci --prefer-offline
 npm run build
 
-# Copy React app → public/
+# Copy React index.html → webroot
 cp dist/index.html "$PUBLIC_DIR/index.html"
 
-# Sync assets (delete old, copy new — avoids stale JS filenames)
+# Sync assets (wipe old hashed filenames, copy fresh ones)
 rm -rf "$PUBLIC_DIR/assets"
 cp -r dist/assets "$PUBLIC_DIR/assets"
 chmod -R 755 "$PUBLIC_DIR/assets"
 
-# Copy static files (robots, sitemap, images, etc.)
-for f in dist/*.txt dist/*.xml dist/*.svg dist/*.png dist/*.ico; do
+# Copy static files (robots, sitemap, og-image, favicon, etc.)
+for f in dist/*.txt dist/*.xml dist/*.svg dist/*.png dist/*.ico dist/*.webmanifest; do
     [ -f "$f" ] && cp "$f" "$PUBLIC_DIR/" && echo "  Copied: $(basename $f)"
 done
+
+# Verify critical files exist
+echo "► Verifying deploy..."
+[ -f "$PUBLIC_DIR/index.html" ]      && echo "  ✓ index.html"    || echo "  ✗ MISSING: index.html"
+[ -d "$PUBLIC_DIR/assets" ]          && echo "  ✓ assets/"       || echo "  ✗ MISSING: assets/"
+[ -f "$BACKEND_DIR/public/index.php" ] && echo "  ✓ Laravel API"  || echo "  ✗ MISSING: backend/public/index.php"
 
 echo "Frontend deployed!"
 

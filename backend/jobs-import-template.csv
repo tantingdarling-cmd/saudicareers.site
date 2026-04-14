@@ -1,0 +1,9 @@
+title,title_en,company,location,description,requirements,category,job_type,experience_level,salary_min,salary_max,apply_url,is_featured,is_active
+مطور Full Stack,Full Stack Developer,شركة الاتصالات السعودية STC,الرياض,نبحث عن مطور Full Stack للانضمام إلى فريق التطوير,"خبرة 3+ سنوات في React و Node.js
+إتقان قواعد البيانات",tech,full_time,mid,18000,28000,,true,true
+محلل بيانات أول,Senior Data Analyst,أرامكو السعودية,الظهران,تحليل بيانات الطاقة واستخراج رؤى استراتيجية,"Python و SQL
+خبرة 5+ سنوات في تحليل البيانات",energy,full_time,senior,22000,35000,https://jobs.aramco.com,true,true
+مهندس ذكاء اصطناعي,AI Engineer,نيوم,تبوك,بناء نماذج تعلم الآلة لمشاريع نيوم الذكية,"TensorFlow أو PyTorch
+خبرة في NLP و Computer Vision",tech,full_time,senior,25000,40000,,false,true
+مدير موارد بشرية,HR Manager,صندوق الاستثمارات العامة,الرياض,قيادة قسم الموارد البشرية وتطوير استراتيجيات التوظيف,"SHRM أو PHR
+خبرة 7+ سنوات في الموارد البشرية",hr,full_time,lead,20000,32000,,false,true

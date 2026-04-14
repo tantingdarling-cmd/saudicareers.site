@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\ApplicationController;
 use App\Http\Controllers\Api\CareerTipController;
 use App\Http\Controllers\Api\SubscriberController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\BulkJobController;
 
 Route::prefix('v1')->group(function () {
     Route::get('/jobs', [JobController::class, 'index']);
@@ -32,6 +33,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     Route::prefix('admin')->middleware('admin')->group(function () {
         Route::apiResource('jobs', JobController::class)->except(['index', 'show']);
+        Route::post('/jobs/bulk', [BulkJobController::class, 'store']);
         Route::get('/applications', [ApplicationController::class, 'index']);
         Route::patch('/applications/{application}/status', [ApplicationController::class, 'updateStatus']);
         Route::get('/subscribers', [SubscriberController::class, 'index']);
