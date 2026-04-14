@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Plus, Pencil, Trash2, X, Save, Lock, LogOut, Loader, FileText, Clock, CheckCircle, XCircle } from 'lucide-react'
-import { authApi, jobsApi, applicationsApi } from '../services/api'
+import { Plus, Pencil, Trash2, X, Save, Lock, LogOut, Loader, FileText, Clock, CheckCircle, XCircle, Users, Download, Copy, Mail } from 'lucide-react'
+import { authApi, jobsApi, applicationsApi, subscribersApi } from '../services/api'
 
 const CATEGORIES = [
   { key:'tech', label:'تقنية' },
@@ -44,6 +44,9 @@ export default function Admin() {
   const [activeTab, setActiveTab] = useState('jobs')
   const [applications, setApplications] = useState([])
   const [loadingApps, setLoadingApps] = useState(false)
+  const [subscribers, setSubscribers] = useState([])
+  const [loadingSubs, setLoadingSubs] = useState(false)
+  const [subsCopied, setSubsCopied] = useState(false)
 
   const empty = {
     title:'', title_en:'', company:'', location:'',
@@ -62,10 +65,45 @@ export default function Admin() {
   }, [])
 
   useEffect(() => {
-    if (authApi.isAuthenticated() && activeTab === 'applications') {
-      fetchApplications()
-    }
+    if (!authApi.isAuthenticated()) return
+    if (activeTab === 'applications') fetchApplications()
+    if (activeTab === 'subscribers') fetchSubscribers()
   }, [activeTab])
+
+  const fetchSubscribers = async () => {
+    setLoadingSubs(true)
+    try {
+      const res = await subscribersApi.getAll()
+      setSubscribers(res.data || res || [])
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoadingSubs(false)
+    }
+  }
+
+  const exportCSV = () => {
+    const header = 'الاسم,البريد الإلكتروني,المجال المهني,تاريخ التسجيل'
+    const rows = subscribers.map(s =>
+      `"${s.name || ''}","${s.email || ''}","${s.field || ''}","${s.created_at?.split('T')[0] || ''}"`
+    )
+    const csv = '\uFEFF' + [header, ...rows].join('\n')
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `subscribers-${new Date().toISOString().split('T')[0]}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const copyAllEmails = () => {
+    const emails = subscribers.map(s => s.email).filter(Boolean).join(', ')
+    navigator.clipboard.writeText(emails).then(() => {
+      setSubsCopied(true)
+      setTimeout(() => setSubsCopied(false), 2000)
+    })
+  }
 
   const fetchApplications = async () => {
     setLoadingApps(true)
@@ -232,7 +270,9 @@ export default function Admin() {
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:24, flexWrap:'wrap', gap:16 }}>
           <div>
             <h1 style={{ fontSize:26, fontWeight:700, color:'var(--g950)', marginBottom:4 }}>لوحة التحكم</h1>
-            <p style={{ fontSize:14, color:'var(--gray400)' }}>{activeTab === 'jobs' ? jobs.length + ' وظائف' : applications.length + ' تقديم'}</p>
+            <p style={{ fontSize:14, color:'var(--gray400)' }}>
+              {activeTab === 'jobs' ? `${jobs.length} وظيفة` : activeTab === 'applications' ? `${applications.length} تقديم` : `${subscribers.length} مشترك`}
+            </p>
           </div>
           <div style={{ display:'flex', gap:12 }}>
             <button onClick={logout} style={{
@@ -243,7 +283,28 @@ export default function Admin() {
             }}>
               <LogOut size={16}/> تسجيل الخروج
             </button>
-            {activeTab === 'jobs' && (
+            {activeTab === 'subscribers' && subscribers.length > 0 && (
+              <>
+                <button onClick={copyAllEmails} style={{
+                  display:'flex', alignItems:'center', gap:8,
+                  background: subsCopied ? 'var(--g50)' : 'var(--gray100)',
+                  color: subsCopied ? 'var(--g700)' : 'var(--gray600)',
+                  border: subsCopied ? '1px solid var(--g200)' : '1px solid var(--gray200)',
+                  padding:'11px 18px', borderRadius:'var(--r-md)', fontSize:14, fontWeight:500, cursor:'pointer',
+                }}>
+                  {subsCopied ? <><CheckCircle size={15}/> تم النسخ</> : <><Copy size={15}/> نسخ الإيميلات</>}
+                </button>
+                <button onClick={exportCSV} style={{
+                  display:'flex', alignItems:'center', gap:8,
+                  background:'var(--g900)', color:'var(--white)',
+                  border:'none', padding:'11px 18px', borderRadius:'var(--r-md)',
+                  fontSize:14, fontWeight:600, cursor:'pointer',
+                }}>
+                  <Download size={15}/> تصدير CSV
+                </button>
+              </>
+            )}
+          {activeTab === 'jobs' && (
               <button onClick={openNew} style={{
                 display:'flex', alignItems:'center', gap:8,
                 background:'var(--g900)', color:'var(--white)',
@@ -269,6 +330,20 @@ export default function Admin() {
             color: activeTab === 'applications' ? 'var(--g900)' : 'var(--gray500)',
             boxShadow: activeTab === 'applications' ? 'var(--shadow-sm)' : 'none',
           }}>التقديمات</button>
+          <button onClick={() => setActiveTab('subscribers')} style={{
+            padding:'10px 24px', borderRadius:'var(--r-sm)', border:'none', fontSize:14, fontWeight:600, cursor:'pointer',
+            background: activeTab === 'subscribers' ? 'var(--white)' : 'transparent',
+            color: activeTab === 'subscribers' ? 'var(--g900)' : 'var(--gray500)',
+            boxShadow: activeTab === 'subscribers' ? 'var(--shadow-sm)' : 'none',
+            display:'flex', alignItems:'center', gap:6,
+          }}>
+            <Users size={14}/> المشتركون
+            {subscribers.length > 0 && (
+              <span style={{ background:'var(--g900)', color:'var(--white)', borderRadius:50, fontSize:10, fontWeight:700, padding:'2px 7px', minWidth:18, textAlign:'center' }}>
+                {subscribers.length}
+              </span>
+            )}
+          </button>
         </div>
 
         {activeTab === 'jobs' && (
@@ -360,6 +435,83 @@ export default function Admin() {
           )
         )}
       </div>
+
+        {activeTab === 'subscribers' && (
+          loadingSubs ? (
+            <div style={{ display:'flex', justifyContent:'center', padding:60 }}>
+              <Loader size={32} color="var(--g600)" style={{ animation:'spin 1s linear infinite' }}/>
+              <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+            </div>
+          ) : (
+            <>
+              {/* Stats row */}
+              {subscribers.length > 0 && (
+                <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))', gap:16, marginBottom:20 }}>
+                  {[
+                    { label:'إجمالي المشتركين', value: subscribers.length, color:'var(--g900)' },
+                    { label:'هذا الشهر', value: subscribers.filter(s => s.created_at?.startsWith(new Date().toISOString().slice(0,7))).length, color:'var(--g600)' },
+                    { label:'مجالات مختلفة', value: [...new Set(subscribers.map(s=>s.field).filter(Boolean))].length, color:'var(--gold600)' },
+                  ].map(({ label, value, color }) => (
+                    <div key={label} style={{ background:'var(--white)', border:'1.5px solid var(--gray200)', borderRadius:'var(--r-lg)', padding:'18px 20px', boxShadow:'var(--shadow-sm)' }}>
+                      <div style={{ fontSize:28, fontWeight:800, color, marginBottom:4 }}>{value}</div>
+                      <div style={{ fontSize:12, color:'var(--gray400)', fontWeight:500 }}>{label}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div style={{ background:'var(--white)', border:'1.5px solid var(--gray200)', borderRadius:'var(--r-lg)', overflow:'hidden', boxShadow:'var(--shadow-sm)' }}>
+                <div style={{ display:'grid', gridTemplateColumns:'1.5fr 2fr 1.5fr 1fr', gap:0, borderBottom:'1.5px solid var(--gray200)', padding:'12px 20px', background:'var(--gray50)' }}>
+                  {['الاسم','البريد الإلكتروني','المجال المهني','تاريخ التسجيل'].map(h => (
+                    <div key={h} style={{ fontSize:12, fontWeight:700, color:'var(--gray400)', textTransform:'uppercase', letterSpacing:0.8 }}>{h}</div>
+                  ))}
+                </div>
+
+                {subscribers.length === 0 ? (
+                  <div style={{ padding:60, textAlign:'center' }}>
+                    <Mail size={40} color="var(--gray200)" style={{ margin:'0 auto 16px' }}/>
+                    <div style={{ fontSize:16, fontWeight:600, color:'var(--gray400)', marginBottom:8 }}>لا يوجد مشتركون بعد</div>
+                    <div style={{ fontSize:13, color:'var(--gray300)' }}>سيظهرون هنا عند تسجيلهم من الموقع</div>
+                  </div>
+                ) : subscribers.map((sub, i) => (
+                  <div key={sub.id || i} style={{
+                    display:'grid', gridTemplateColumns:'1.5fr 2fr 1.5fr 1fr',
+                    gap:16, padding:'14px 20px', alignItems:'center',
+                    borderBottom: i < subscribers.length-1 ? '1px solid var(--gray100)' : 'none',
+                    transition:'background 0.15s',
+                  }}
+                    onMouseEnter={e => e.currentTarget.style.background='var(--gray50)'}
+                    onMouseLeave={e => e.currentTarget.style.background='transparent'}
+                  >
+                    <div style={{ fontWeight:600, color:'var(--g950)', fontSize:14 }}>{sub.name || '—'}</div>
+                    <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                      <span style={{ fontSize:13, color:'var(--gray600)' }}>{sub.email}</span>
+                      <button
+                        onClick={() => navigator.clipboard.writeText(sub.email)}
+                        title="نسخ البريد"
+                        style={{ background:'transparent', border:'none', padding:4, cursor:'pointer', color:'var(--gray300)', flexShrink:0 }}
+                        onMouseEnter={e => e.currentTarget.style.color='var(--g600)'}
+                        onMouseLeave={e => e.currentTarget.style.color='var(--gray300)'}
+                      >
+                        <Copy size={13}/>
+                      </button>
+                    </div>
+                    <div>
+                      {sub.field ? (
+                        <span style={{ fontSize:12, background:'var(--g50)', color:'var(--g700)', border:'1px solid var(--g100)', padding:'3px 10px', borderRadius:50, fontWeight:500 }}>
+                          {sub.field}
+                        </span>
+                      ) : <span style={{ fontSize:12, color:'var(--gray300)' }}>—</span>}
+                    </div>
+                    <div style={{ fontSize:12, color:'var(--gray400)' }}>
+                      {sub.created_at ? new Date(sub.created_at).toLocaleDateString('ar-SA', { year:'numeric', month:'short', day:'numeric' }) : '—'}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )
+        )}
 
       {showForm && (
         <div onClick={e => e.target===e.currentTarget && setShowForm(false)} style={{
