@@ -1,7 +1,8 @@
 User-agent: *
 Allow: /
 
-# Block admin panel from indexing
+# Block admin panel and API from indexing
 Disallow: /admin
+Disallow: /api/
 
 Sitemap: https://saudicareers.site/sitemap.xml

@@ -8,54 +8,45 @@ set -e
 
 echo "Starting deployment for saudicareers.site..."
 
-APP_DIR="/var/www/saudicareers"
+# ── Cloudways paths ────────────────────────────────────────
+APP_DIR="/home/1600726.cloudwaysapps.com/gaczagbrjk/public_html"
+PUBLIC_DIR="$APP_DIR/public"
+BACKEND_DIR="$APP_DIR/backend"
 
-# Pull latest code
-echo "Pulling latest code..."
 cd "$APP_DIR"
+
+# ── Pull latest code ───────────────────────────────────────
+echo "► Pulling latest code..."
 git pull origin main
 
 # ===========================================
 # BACKEND
 # ===========================================
-echo "Setting up Backend..."
+echo "► Setting up Backend..."
 
-cd "$APP_DIR/backend"
+cd "$BACKEND_DIR"
 
-# Install dependencies (no dev packages in production)
 composer install --no-dev --optimize-autoloader --prefer-dist
 
-# Setup .env on first deploy
+# Create .env on first deploy
 if [ ! -f .env ]; then
     echo "Creating .env from .env.example..."
     cp .env.example .env
     php artisan key:generate
-    echo ""
-    echo "IMPORTANT: Edit .env and fill in:"
-    echo "  - DB_USERNAME, DB_PASSWORD"
-    echo "  - ADMIN_EMAIL, ADMIN_PASSWORD"
-    echo "  - MAIL_HOST, MAIL_USERNAME, MAIL_PASSWORD"
-    echo "  - REDIS_PASSWORD (if applicable)"
-    echo ""
 fi
 
-# Verify APP_DEBUG is false in production
 if grep -q "APP_DEBUG=true" .env; then
     echo "WARNING: APP_DEBUG=true detected — set to false for production!"
 fi
 
-# Run migrations
 php artisan migrate --force
 
-# Create storage symlink if missing
 if [ ! -L public/storage ]; then
     php artisan storage:link
 fi
 
-# Seed admin user (safe — uses updateOrCreate)
-php artisan db:seed --class=AdminUserSeeder --force
+php artisan db:seed --class=AdminUserSeeder --force 2>/dev/null || true
 
-# Clear old cache and rebuild
 php artisan config:clear
 php artisan route:clear
 php artisan view:clear
@@ -64,7 +55,6 @@ php artisan route:cache
 php artisan view:cache
 php artisan optimize
 
-# Set permissions
 chmod -R 775 storage bootstrap/cache
 
 echo "Backend ready!"
@@ -72,38 +62,43 @@ echo "Backend ready!"
 # ===========================================
 # FRONTEND
 # ===========================================
-echo "Setting up Frontend..."
+echo "► Building Frontend..."
 
 cd "$APP_DIR"
 
 npm ci --prefer-offline
 npm run build
 
-chmod -R 755 dist
+# Copy React app → public/
+cp dist/index.html "$PUBLIC_DIR/index.html"
 
-echo "Frontend built!"
+# Sync assets (delete old, copy new — avoids stale JS filenames)
+rm -rf "$PUBLIC_DIR/assets"
+cp -r dist/assets "$PUBLIC_DIR/assets"
+chmod -R 755 "$PUBLIC_DIR/assets"
+
+# Copy static files (robots, sitemap, images, etc.)
+for f in dist/*.txt dist/*.xml dist/*.svg dist/*.png dist/*.ico; do
+    [ -f "$f" ] && cp "$f" "$PUBLIC_DIR/" && echo "  Copied: $(basename $f)"
+done
+
+echo "Frontend deployed!"
 
 # ===========================================
-# RESTART SERVICES
+# RESTART QUEUE WORKER
 # ===========================================
-echo "Restarting services..."
+echo "► Restarting queue worker..."
 
-# Restart PHP-FPM
-sudo service php8.2-fpm restart 2>/dev/null \
-  || sudo service php8.1-fpm restart 2>/dev/null \
-  || true
-
-# Restart Queue Worker (background)
-pkill -f "queue:work" || true
+pkill -f "queue:work" 2>/dev/null || true
 sleep 1
-cd "$APP_DIR/backend"
+cd "$BACKEND_DIR"
 nohup php artisan queue:work redis --sleep=3 --tries=3 --max-time=3600 \
   >> storage/logs/queue.log 2>&1 &
 
 echo ""
 echo "==================================="
 echo "Deployment complete!"
-echo "Site : https://saudicareers.site"
-echo "Admin: https://saudicareers.site/admin"
-echo "API  : https://saudicareers.site/api"
+echo "Site   : https://saudicareers.site"
+echo "Admin  : https://saudicareers.site/admin"
+echo "Sitemap: https://saudicareers.site/sitemap.xml"
 echo "==================================="
