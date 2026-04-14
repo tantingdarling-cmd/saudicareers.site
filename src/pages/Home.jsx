@@ -270,6 +270,33 @@ export default function Home() {
     attempt()
   }, [location.state])
 
+  // WebPage + BreadcrumbList JSON-LD — يستهدف وظائف الرياض، توطين، تقنية
+  useEffect(() => {
+    const id = 'webpage-structured-data'
+    const prev = document.getElementById(id)
+    if (prev) prev.remove()
+    const s = document.createElement('script')
+    s.id = id
+    s.type = 'application/ld+json'
+    s.textContent = JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'WebPage',
+      name: 'وظائف السعودية — فرص أرامكو ونيوم وPIF | Saudi Careers',
+      url: 'https://saudicareers.site',
+      description: 'وظائف الرياض وجدة والمنطقة الشرقية، توطين رؤية 2030، وظائف تقنية وهندسية وإدارية',
+      keywords: 'وظائف الرياض، وظائف تقنية، توطين، وظائف شاغرة السعودية، وظائف 2030، وظائف أرامكو، وظائف نيوم، وظائف PIF',
+      breadcrumb: {
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'الرئيسية', item: 'https://saudicareers.site' },
+          { '@type': 'ListItem', position: 2, name: 'وظائف السعودية', item: 'https://saudicareers.site/#jobs' },
+        ],
+      },
+    })
+    document.head.appendChild(s)
+    return () => { document.getElementById(id)?.remove() }
+  }, [])
+
   useEffect(() => {
     jobsApi.getAll({ per_page: 50, active: 1 })
       .then(res => {
@@ -534,7 +561,18 @@ export default function Home() {
               ? Array.from({ length: 6 }).map((_, i) => <JobSkeleton key={i} />)
               : filteredJobs.map((job, i) => (
                   <Reveal key={job.id} delay={i * 60}>
-                    <JobCard job={job} onApply={setSelectedJob} onDetails={setBottomSheetJob} />
+                    <JobCard
+                      job={job}
+                      onApply={setSelectedJob}
+                      onDetails={setBottomSheetJob}
+                      onTagClick={tag => {
+                        const cat = CATEGORIES.find(c => c.label === tag)
+                        if (cat) {
+                          setActiveCategory(cat.key)
+                          document.getElementById('jobs')?.scrollIntoView({ behavior: 'smooth' })
+                        }
+                      }}
+                    />
                   </Reveal>
                 ))
             }

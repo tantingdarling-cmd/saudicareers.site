@@ -2,7 +2,18 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { MapPin, Briefcase, Coins, ArrowLeft } from 'lucide-react'
 
-export default function JobCard({ job, onApply, onDetails, delay = 0 }) {
+/* توحيد أسلوب الأزرار — يُدمج مع أي خصائص إضافية */
+function createButtonStyle(overrides = {}) {
+  return {
+    border: 'none',
+    cursor: 'pointer',
+    fontFamily: 'var(--font-ar)',
+    transition: 'all 0.3s cubic-bezier(0.32,0.72,0,1)',
+    ...overrides,
+  }
+}
+
+export default function JobCard({ job, onApply, onDetails, onTagClick, delay = 0 }) {
   const [hovered, setHovered] = useState(false)
   const [pressed, setPressed] = useState(false)
 
@@ -82,14 +93,24 @@ export default function JobCard({ job, onApply, onDetails, delay = 0 }) {
         ))}
       </div>
 
-      {/* Tags */}
+      {/* Skill Tags — قابلة للنقر للتصفية */}
       <div style={{ display:'flex', flexWrap:'wrap', gap:6, marginBottom:16 }}>
         {job.tags.map(t => (
-          <span key={t} style={{
-            fontSize:11, fontWeight:500, padding:'4px 10px',
-            background:'var(--gray100)', color:'var(--gray600)',
-            borderRadius:50,
-          }}>{t}</span>
+          <button
+            key={t}
+            onClick={() => onTagClick?.(t)}
+            onPointerDown={e => { e.currentTarget.style.transform='scale(0.94)' }}
+            onPointerUp={e => { e.currentTarget.style.transform='scale(1)' }}
+            onPointerLeave={e => { e.currentTarget.style.transform='scale(1)' }}
+            style={createButtonStyle({
+              fontSize:11, fontWeight:500, padding:'4px 10px',
+              background:'var(--gray100)', color:'var(--gray600)',
+              borderRadius:50,
+              cursor: onTagClick ? 'pointer' : 'default',
+            })}
+            onMouseEnter={e => { if (onTagClick) { e.currentTarget.style.background='var(--g50)'; e.currentTarget.style.color='var(--g700)' }}}
+            onMouseLeave={e => { e.currentTarget.style.background='var(--gray100)'; e.currentTarget.style.color='var(--gray600)' }}
+          >{t}</button>
         ))}
       </div>
 
@@ -103,13 +124,15 @@ export default function JobCard({ job, onApply, onDetails, delay = 0 }) {
       <div style={{ display:'flex', gap:8, marginTop:'auto' }}>
         <button
           onClick={() => onApply(job)}
-          style={{
+          onPointerDown={e => e.currentTarget.style.transform='scale(0.98)'}
+          onPointerUp={e => e.currentTarget.style.transform='scale(1)'}
+          onPointerLeave={e => e.currentTarget.style.transform='scale(1)'}
+          style={createButtonStyle({
             flex:1, padding:'11px 0',
             background:'linear-gradient(135deg, var(--g900) 0%, var(--g950) 100%)',
-            color:'var(--white)', border:'none', borderRadius:'var(--r-md)',
+            color:'var(--white)', borderRadius:'var(--r-md)',
             fontSize:14, fontWeight:600,
-            transition:'all 0.2s', cursor:'pointer',
-          }}
+          })}
           onMouseEnter={e => e.currentTarget.style.background='var(--g700)'}
           onMouseLeave={e => e.currentTarget.style.background='linear-gradient(135deg, var(--g900) 0%, var(--g950) 100%)'}
         >

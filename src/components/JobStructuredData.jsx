@@ -16,6 +16,7 @@ export default function JobStructuredData({ jobs }) {
       '@context': 'https://schema.org',
       title: job.title,
       description: job.description || `وظيفة ${job.title} في ${job.company} — ${job.location}`,
+      keywords: buildKeywords(job),
       hiringOrganization: {
         '@type': 'Organization',
         name: job.company,
@@ -72,6 +73,14 @@ export default function JobStructuredData({ jobs }) {
   }, [jobs])
 
   return null
+}
+
+function buildKeywords(job) {
+  const base = ['وظائف السعودية', 'سوق العمل السعودي', 'رؤية 2030', 'توطين', 'توطين الوظائف']
+  const location = job.location?.includes('الرياض') ? ['وظائف الرياض', 'وظائف شاغرة الرياض'] : []
+  const tech = ['tech', 'تقنية', 'technology'].some(k => (job.category || '').includes(k))
+    ? ['وظائف تقنية', 'وظائف برمجة', 'وظائف تكنولوجيا السعودية'] : []
+  return [...base, ...location, ...tech, job.title, job.company].filter(Boolean).join(', ')
 }
 
 function mapEmploymentType(type) {
