@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { CheckCircle, FileText, Briefcase, Lightbulb, ArrowLeft, Clock } from 'lucide-react'
 import JobCard from '../components/JobCard.jsx'
+import JobSkeleton from '../components/JobSkeleton.jsx'
 import ApplyModal from '../components/ApplyModal.jsx'
 import JobStructuredData from '../components/JobStructuredData.jsx'
 import { JOBS as FALLBACK_JOBS, TIPS as FALLBACK_TIPS, CATEGORIES } from '../data'
@@ -304,14 +305,11 @@ export default function Home() {
           </Reveal>
 
           <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(min(100%,320px),1fr))', gap:20 }}>
+            {/* §6 / §7: Show JobSkeleton while API call is in-flight.
+                Fallback static data renders immediately → no blank state.
+                Skeletons show ONLY during the first load (loadingJobs=true). */}
             {loadingJobs
-              ? Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} style={{
-                    background:'var(--white)', border:'1.5px solid var(--gray200)',
-                    borderRadius:'var(--r-lg)', padding:24, height:240,
-                    animation:'shimmer 1.5s infinite',
-                  }}/>
-                ))
+              ? Array.from({ length: 6 }).map((_, i) => <JobSkeleton key={i} />)
               : filteredJobs.map((job, i) => (
                   <Reveal key={job.id} delay={i * 60}>
                     <JobCard job={job} onApply={setSelectedJob} />
@@ -319,12 +317,6 @@ export default function Home() {
                 ))
             }
           </div>
-          <style>{`
-            @keyframes shimmer {
-              0%,100% { opacity:1 }
-              50% { opacity:0.4 }
-            }
-          `}</style>
         </div>
       </section>
 

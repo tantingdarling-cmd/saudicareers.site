@@ -1,76 +1,98 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
+import { Helmet } from 'react-helmet-async'
 import { MapPin, Briefcase, Coins, ArrowRight, Clock, CheckCircle, Loader, Building2, Star, Share2 } from 'lucide-react'
 import ApplyModal from '../components/ApplyModal.jsx'
-import JobStructuredData from '../components/JobStructuredData.jsx'
 import { jobsApi } from '../services/api'
+
+// §5: Maps DB job_type enum → Schema.org employmentType
+const EMPLOYMENT_TYPE_MAP = {
+  full_time:  'FULL_TIME',
+  part_time:  'PART_TIME',
+  contract:   'CONTRACTOR',
+  internship: 'INTERN',
+  remote:     'FULL_TIME',
+}
 
 const CATEGORY_ICONS = {
   tech: '💻', finance: '🏦', energy: '⚡', construction: '🏗️',
   hr: '👥', marketing: '📣', healthcare: '🏥', education: '🎓', other: '💼',
 }
 
-function useSEO({ title, description, url }) {
-  useEffect(() => {
-    if (!title) return
-    document.title = title
-
-    const setMeta = (name, content, prop = false) => {
-      const sel = prop ? `meta[property="${name}"]` : `meta[name="${name}"]`
-      let el = document.querySelector(sel)
-      if (!el) { el = document.createElement('meta'); prop ? el.setAttribute('property', name) : el.setAttribute('name', name); document.head.appendChild(el) }
-      el.setAttribute('content', content)
-    }
-
-    const setCanonical = (href) => {
-      let el = document.querySelector('link[rel="canonical"]')
-      if (!el) { el = document.createElement('link'); el.setAttribute('rel', 'canonical'); document.head.appendChild(el) }
-      el.setAttribute('href', href)
-      return () => el.setAttribute('href', 'https://saudicareers.site')
-    }
-
-    setMeta('description', description)
-    setMeta('og:title', title, true)
-    setMeta('og:description', description, true)
-    setMeta('og:url', url, true)
-    setMeta('og:type', 'article', true)
-    setMeta('twitter:title', title)
-    setMeta('twitter:description', description)
-    const cleanCanonical = setCanonical(url)
-
-    return () => {
-      document.title = 'Saudi Careers | وظائف السعودية — فرص أرامكو ونيوم وPIF'
-      setMeta('og:type', 'website', true)
-      cleanCanonical()
-    }
-  }, [title, description, url])
+// Safe JSON for inline <script> — escapes </script> injection
+function safeJsonLd(obj) {
+  return JSON.stringify(obj).replace(/<\/script>/gi, '<\\/script>')
 }
 
 export default function JobDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
   const [job, setJob] = useState(null)
+  const [similar, setSimilar] = useState([])   // §9: similar_jobs from API
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [showApply, setShowApply] = useState(false)
   const [copied, setCopied] = useState(false)
 
   useEffect(() => {
+    setLoading(true)
     jobsApi.getById(id)
-      .then(data => setJob(data.data || data))
+      .then(data => {
+        // §4: show() now returns { data: Job, similar_jobs: Job[] }
+        setJob(data.data || data)
+        setSimilar(data.similar_jobs?.data || data.similar_jobs || [])
+      })
       .catch(() => setError('تعذّر تحميل الوظيفة'))
       .finally(() => setLoading(false))
   }, [id])
 
-  useSEO({
-    title: job ? `${job.title} — ${job.company} | Saudi Careers` : 'Saudi Careers',
-    description: job ? `${job.title} في ${job.company}، ${job.location}. ${job.description?.slice(0, 120) || ''}` : '',
-    url: `https://saudicareers.site/jobs/${id}`,
-  })
-
   const share = () => {
-    navigator.clipboard.writeText(window.location.href).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000) })
+    navigator.clipboard.writeText(window.location.href)
+      .then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000) })
   }
+
+  // ── §4 / §5: Structured data for Google Jobs ──────────────────
+  const jobLd = job ? safeJsonLd({
+    '@context': 'https://schema.org/',
+    '@type': 'JobPosting',
+    title: job.title,
+    description: job.description || `وظيفة ${job.title} في ${job.company}، ${job.location}`,
+    hiringOrganization: {
+      '@type': 'Organization',
+      name: job.company,
+      sameAs: 'https://saudicareers.site',
+    },
+    jobLocation: {
+      '@type': 'Place',
+      address: {
+        '@type': 'PostalAddress',
+        addressLocality: job.location,
+        addressCountry: 'SA',
+      },
+    },
+    // §5: experience_level enum → schema text
+    experienceRequirements: job.experience_level,
+    // §5: job_type enum → Schema.org employmentType
+    employmentType: EMPLOYMENT_TYPE_MAP[job.job_type] || 'FULL_TIME',
+    datePosted: job.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
+    validThrough: (() => {
+      const d = new Date(); d.setDate(d.getDate() + 30); return d.toISOString().split('T')[0]
+    })(),
+    // §4: salary fields are nullable — only emit when present
+    ...(job.salary_min && {
+      baseSalary: {
+        '@type': 'MonetaryAmount',
+        currency: 'SAR',
+        value: {
+          '@type': 'QuantitativeValue',
+          minValue: job.salary_min,
+          maxValue: job.salary_max || job.salary_min,
+          unitText: 'MONTH',
+        },
+      },
+    }),
+    applicantLocationRequirements: { '@type': 'Country', name: 'Saudi Arabia' },
+  }) : null
 
   if (loading) return (
     <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', paddingTop:68 }}>
@@ -86,12 +108,34 @@ export default function JobDetail() {
     </div>
   )
 
-  const icon = CATEGORY_ICONS[job.category] || '💼'
+  const icon         = CATEGORY_ICONS[job.category] || '💼'
   const requirements = job.requirements ? job.requirements.split('\n').filter(Boolean) : []
-  const description = job.description ? job.description.split('\n').filter(Boolean) : []
+  const description  = job.description  ? job.description.split('\n').filter(Boolean)  : []
+  const pageTitle    = `${job.title} | ${job.company} — سعودي كارييرز`
+  const pageDesc     = `${job.title} في ${job.company}، ${job.location}. ${job.description?.slice(0, 120) || ''}`
+  const pageUrl      = `https://saudicareers.site/jobs/${id}`
 
   return (
     <>
+      {/* ── §4: SEO meta + JSON-LD structured data via react-helmet-async ── */}
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description"         content={pageDesc} />
+        <link rel="canonical"            href={pageUrl} />
+        {/* Open Graph */}
+        <meta property="og:type"         content="article" />
+        <meta property="og:title"        content={pageTitle} />
+        <meta property="og:description"  content={pageDesc} />
+        <meta property="og:url"          content={pageUrl} />
+        <meta property="og:site_name"    content="سعودي كارييرز" />
+        {/* Twitter */}
+        <meta name="twitter:card"        content="summary" />
+        <meta name="twitter:title"       content={pageTitle} />
+        <meta name="twitter:description" content={pageDesc} />
+        {/* §5: JobPosting structured data */}
+        <script type="application/ld+json">{jobLd}</script>
+      </Helmet>
+
       {/* ── Breadcrumb ── */}
       <div style={{ paddingTop:88, background:'var(--gray50)', borderBottom:'1px solid var(--gray200)' }}>
         <div style={{ maxWidth:900, margin:'0 auto', padding:'16px clamp(1rem,4vw,2rem)' }}>
@@ -173,7 +217,7 @@ export default function JobDetail() {
 
             {/* Requirements */}
             {requirements.length > 0 && (
-              <div style={{ background:'var(--white)', border:'1.5px solid var(--gray200)', borderRadius:'var(--r-lg)', padding:'clamp(24px,4vw,32px)', boxShadow:'var(--shadow-sm)' }}>
+              <div style={{ background:'var(--white)', border:'1.5px solid var(--gray200)', borderRadius:'var(--r-lg)', padding:'clamp(24px,4vw,32px)', marginBottom:24, boxShadow:'var(--shadow-sm)' }}>
                 <h2 style={{ fontSize:17, fontWeight:700, color:'var(--g950)', marginBottom:16, display:'flex', alignItems:'center', gap:8 }}>
                   <span style={{ width:4, height:20, background:'var(--gold500)', borderRadius:2, display:'block' }}/>
                   المتطلبات
@@ -188,12 +232,38 @@ export default function JobDetail() {
                 </ul>
               </div>
             )}
+
+            {/* ── §9: وظائف مشابهة ────────────────────────────── */}
+            {similar.length > 0 && (
+              <div style={{ marginTop:8 }}>
+                <h2 style={{ fontSize:17, fontWeight:700, color:'var(--g950)', marginBottom:16, display:'flex', alignItems:'center', gap:8 }}>
+                  <span style={{ width:4, height:20, background:'var(--g500)', borderRadius:2, display:'block' }}/>
+                  وظائف قد تهمك
+                </h2>
+                <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(min(100%,240px),1fr))', gap:14 }}>
+                  {similar.map(s => (
+                    <Link
+                      key={s.id}
+                      to={`/jobs/${s.id}`}
+                      style={{ textDecoration:'none', display:'block', background:'var(--white)', border:'1.5px solid var(--gray200)', borderRadius:'var(--r-lg)', padding:'18px 20px', transition:'all 0.2s' }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor='var(--g400)'; e.currentTarget.style.transform='translateY(-2px)'; e.currentTarget.style.boxShadow='var(--shadow-md)' }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor='var(--gray200)'; e.currentTarget.style.transform='none'; e.currentTarget.style.boxShadow='none' }}
+                    >
+                      <div style={{ fontSize:11, fontWeight:700, letterSpacing:1, color:'var(--g600)', marginBottom:6, textTransform:'uppercase' }}>
+                        {s.category_label || s.category}
+                      </div>
+                      <div style={{ fontSize:14, fontWeight:700, color:'var(--g950)', lineHeight:1.4, marginBottom:6 }}>{s.title}</div>
+                      <div style={{ fontSize:12, color:'var(--gray500)' }}>{s.company} · {s.location}</div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* ── Sidebar ── */}
           <div style={{ width:280, flexShrink:0 }} className="job-sidebar">
             <div style={{ position:'sticky', top:88, display:'flex', flexDirection:'column', gap:16 }}>
-              {/* Apply Card */}
               <div style={{ background:'var(--white)', border:'1.5px solid var(--gray200)', borderRadius:'var(--r-lg)', padding:24, boxShadow:'var(--shadow-sm)' }}>
                 <button
                   onClick={() => setShowApply(true)}
@@ -203,21 +273,23 @@ export default function JobDetail() {
                   التقديم على الوظيفة ←
                 </button>
                 {job.apply_url && (
-                  <a href={job.apply_url} target="_blank" rel="noopener noreferrer" style={{ display:'block', width:'100%', padding:'12px 0', background:'var(--g50)', color:'var(--g800)', border:'1.5px solid var(--g200)', borderRadius:'var(--r-md)', fontSize:14, fontWeight:600, textAlign:'center', textDecoration:'none', marginBottom:12, transition:'all 0.2s' }}
+                  <a href={job.apply_url} target="_blank" rel="noopener noreferrer"
+                    style={{ display:'block', width:'100%', padding:'12px 0', background:'var(--g50)', color:'var(--g800)', border:'1.5px solid var(--g200)', borderRadius:'var(--r-md)', fontSize:14, fontWeight:600, textAlign:'center', textDecoration:'none', marginBottom:12, transition:'all 0.2s' }}
                     onMouseEnter={e => e.currentTarget.style.background='var(--g100)'}
                     onMouseLeave={e => e.currentTarget.style.background='var(--g50)'}>
                     تقديم مباشر عبر الشركة ↗
                   </a>
                 )}
-                <button onClick={share} style={{ width:'100%', padding:'10px 0', background:'transparent', color:'var(--gray500)', border:'1px solid var(--gray200)', borderRadius:'var(--r-md)', fontSize:13, fontWeight:500, display:'flex', alignItems:'center', justifyContent:'center', gap:6, transition:'all 0.2s' }}
+                <button onClick={share}
+                  style={{ width:'100%', padding:'10px 0', background:'transparent', color:'var(--gray500)', border:'1px solid var(--gray200)', borderRadius:'var(--r-md)', fontSize:13, fontWeight:500, display:'flex', alignItems:'center', justifyContent:'center', gap:6, transition:'all 0.2s' }}
                   onMouseEnter={e => e.currentTarget.style.background='var(--gray50)'}
                   onMouseLeave={e => e.currentTarget.style.background='transparent'}>
                   {copied ? <><CheckCircle size={14} color="var(--g500)" /> تم النسخ</> : <><Share2 size={14} /> مشاركة الوظيفة</>}
                 </button>
               </div>
 
-              {/* Back */}
-              <button onClick={() => navigate(-1)} style={{ width:'100%', padding:'11px 0', background:'transparent', color:'var(--gray500)', border:'1px solid var(--gray200)', borderRadius:'var(--r-md)', fontSize:13, fontWeight:500, display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}
+              <button onClick={() => navigate(-1)}
+                style={{ width:'100%', padding:'11px 0', background:'transparent', color:'var(--gray500)', border:'1px solid var(--gray200)', borderRadius:'var(--r-md)', fontSize:13, fontWeight:500, display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}
                 onMouseEnter={e => e.currentTarget.style.background='var(--gray50)'}
                 onMouseLeave={e => e.currentTarget.style.background='transparent'}>
                 <ArrowRight size={14} /> العودة للوظائف
@@ -228,8 +300,6 @@ export default function JobDetail() {
       </div>
 
       {showApply && <ApplyModal job={job} onClose={() => setShowApply(false)} />}
-
-      <JobStructuredData jobs={[job]} />
 
       <style>{`
         @media (max-width: 700px) {

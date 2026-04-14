@@ -7,6 +7,11 @@ use App\Http\Controllers\Api\CareerTipController;
 use App\Http\Controllers\Api\SubscriberController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BulkJobController;
+use App\Http\Controllers\Api\SitemapController;
+
+// §6: Sitemap — public, no auth, outside v1 prefix.
+// Accessible at /api/sitemap.xml. For static /sitemap.xml run: php artisan sitemap:generate
+Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
 
 Route::prefix('v1')->group(function () {
     Route::get('/jobs', [JobController::class, 'index']);

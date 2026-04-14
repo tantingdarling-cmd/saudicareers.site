@@ -1,51 +1,140 @@
-import { useState, useEffect } from 'react'
-import { X, CheckCircle } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { Link } from 'react-router-dom'
+import { X, CheckCircle, Upload, Loader } from 'lucide-react'
 import { applicationsApi } from '../services/api'
 
-export default function ApplyModal({ job, onClose }) {
-  const [form, setForm] = useState({ name:'', email:'', phone:'' })
-  const [cvFile, setCvFile] = useState(null)
-  const [submitted, setSubmitted] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+// §9 / §4: Validation helpers matching StoreApplicationRequest rules
+const isValidEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim())
+const isValidPhone = (v) => !v || /^[\d\s\+\-\(\)]{7,20}$/.test(v.trim())
 
+export default function ApplyModal({ job, onClose }) {
+  const [form, setForm]           = useState({ name:'', email:'', phone:'' })
+  const [errors, setErrors]       = useState({})   // ENHANCEMENT 2: inline field errors
+  const [cvFile, setCvFile]       = useState(null)
+  const [isDragging, setIsDragging] = useState(false) // ENHANCEMENT 3: drag state
+  const [progress, setProgress]   = useState(0)    // ENHANCEMENT 3: upload progress 0-100
+  const [submitted, setSubmitted] = useState(false)
+  const [loading, setLoading]     = useState(false)
+  const [error, setError]         = useState('')
+
+  // ENHANCEMENT 1: auto-focus name field on mount
+  const nameRef = useRef(null)
   useEffect(() => {
     document.body.style.overflow = 'hidden'
+    nameRef.current?.focus()
     return () => { document.body.style.overflow = '' }
   }, [])
 
-  const handleSubmit = async () => {
-    if (!form.name.trim()) {
-      setError('الرجاء إدخال اسمك')
+  // ── ENHANCEMENT 2: onBlur real-time validation ──────────────────
+  const validateField = (key, value) => {
+    if (key === 'name'  && !value.trim())        return 'الاسم مطلوب'
+    if (key === 'email' && !isValidEmail(value)) return 'بريد إلكتروني غير صحيح'
+    if (key === 'phone' && !isValidPhone(value)) return 'رقم الجوال غير صحيح'
+    return ''
+  }
+
+  const handleBlur = (key) => {
+    const msg = validateField(key, form[key])
+    setErrors(prev => ({ ...prev, [key]: msg }))
+  }
+
+  const handleChange = (key, value) => {
+    setForm(prev => ({ ...prev, [key]: value }))
+    if (errors[key]) setErrors(prev => ({ ...prev, [key]: '' }))
+  }
+
+  // ── ENHANCEMENT 3: drag-and-drop handlers ──────────────────────
+  const handleDragOver = (e) => { e.preventDefault(); setIsDragging(true) }
+  const handleDragLeave = ()  => setIsDragging(false)
+  const handleDrop = (e) => {
+    e.preventDefault()
+    setIsDragging(false)
+    const file = e.dataTransfer.files[0]
+    if (file) validateAndSetFile(file)
+  }
+
+  const validateAndSetFile = (file) => {
+    const allowed = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
+    if (!allowed.includes(file.type)) {
+      setError('الملف يجب أن يكون PDF أو Word')
       return
     }
-    if (!form.email.includes('@')) {
-      setError('الرجاء إدخال بريد إلكتروني صحيح')
-      return
-    }
-    if (cvFile && cvFile.size > 5 * 1024 * 1024) {
+    if (file.size > 5 * 1024 * 1024) {
       setError('حجم الملف يجب أن لا يتجاوز 5 ميغابايت')
       return
     }
+    setError('')
+    setCvFile(file)
+  }
+
+  // ── ENHANCEMENT 3: XHR-based submit with progress tracking ─────
+  // Uses XMLHttpRequest instead of fetch so onprogress events fire.
+  const handleSubmit = () => {
+    // Validate all fields before submit
+    const nameErr  = validateField('name',  form.name)
+    const emailErr = validateField('email', form.email)
+    const phoneErr = validateField('phone', form.phone)
+    if (nameErr || emailErr || phoneErr) {
+      setErrors({ name: nameErr, email: emailErr, phone: phoneErr })
+      return
+    }
+
+    const payload = new FormData()
+    payload.append('job_id', job.id)
+    payload.append('name',   form.name.trim())
+    payload.append('email',  form.email.trim())
+    payload.append('phone',  form.phone || '')
+    if (cvFile) payload.append('cv', cvFile)
+
     setLoading(true)
     setError('')
-    try {
-      const payload = new FormData()
-      payload.append('job_id', job.id)
-      payload.append('name', form.name)
-      payload.append('email', form.email)
-      payload.append('phone', form.phone || '')
-      if (cvFile) payload.append('cv', cvFile)
+    setProgress(0)
 
-      await applicationsApi.submit(payload)
-      setSubmitted(true)
-      setTimeout(onClose, 2200)
-    } catch (err) {
-      setError(err.message || 'حدث خطأ أثناء الإرسال')
-    } finally {
-      setLoading(false)
+    const token = localStorage.getItem('auth_token')
+    const xhr   = new XMLHttpRequest()
+
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) {
+        setProgress(Math.round((e.loaded / e.total) * 100))
+      }
     }
+
+    xhr.onload = () => {
+      setLoading(false)
+      if (xhr.status === 201 || xhr.status === 200) {
+        setProgress(100)
+        setSubmitted(true)
+      } else {
+        try {
+          const data = JSON.parse(xhr.responseText)
+          setError(data.message || 'حدث خطأ أثناء الإرسال')
+        } catch {
+          setError('حدث خطأ أثناء الإرسال')
+        }
+      }
+    }
+
+    xhr.onerror = () => {
+      setLoading(false)
+      setError('فشل الاتصال بالخادم')
+    }
+
+    const apiBase = import.meta.env.VITE_API_URL || 'https://saudicareers.site/api'
+    xhr.open('POST', `${apiBase}/v1/applications`)
+    xhr.setRequestHeader('Accept', 'application/json')
+    if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`)
+    xhr.send(payload)
   }
+
+  // ── Input style helper ──────────────────────────────────────────
+  const inputStyle = (key) => ({
+    width: '100%', padding: '13px 18px', marginBottom: errors[key] ? 4 : 12,
+    border: `1.5px solid ${errors[key] ? '#E24B4A' : 'var(--gray200)'}`,
+    borderRadius: 'var(--r-md)', fontSize: 15,
+    fontFamily: 'var(--font-ar)', color: 'var(--gray800)',
+    background: 'var(--gray50)', outline: 'none',
+    textAlign: 'right', direction: 'rtl',
+  })
 
   return (
     <div
@@ -61,7 +150,7 @@ export default function ApplyModal({ job, onClose }) {
         width:'100%', maxWidth:480,
         padding:'clamp(24px,4vw,36px)',
         boxShadow:'var(--shadow-lg)', position:'relative',
-        animation:'slideUp 0.3s ease',
+        animation:'slideUp 0.3s ease', maxHeight:'92vh', overflowY:'auto',
       }}>
         <button onClick={onClose} style={{
           position:'absolute', top:16, left:16,
@@ -75,85 +164,165 @@ export default function ApplyModal({ job, onClose }) {
           <X size={16} />
         </button>
 
-        {!submitted ? (
+        {/* ── ENHANCEMENT 4: Success State ─────────────────────── */}
+        {submitted ? (
+          <div style={{ textAlign:'center', padding:'24px 0' }}>
+            <CheckCircle size={56} color="var(--g600)" style={{ margin:'0 auto 16px' }} />
+            <div style={{ fontSize:20, fontWeight:700, color:'var(--g950)', marginBottom:8 }}>تم إرسال طلبك!</div>
+            <div style={{ fontSize:14, color:'var(--gray600)', lineHeight:1.8, marginBottom:24 }}>
+              سنراجع طلبك ونتواصل معك قريباً على بريدك الإلكتروني
+            </div>
+            {/* "وظائف مشابهة" CTA → filters jobs list by same category */}
+            <Link
+              to={`/?category=${job?.category || 'all'}#jobs`}
+              onClick={onClose}
+              style={{
+                display:'inline-flex', alignItems:'center', gap:8,
+                padding:'12px 24px', background:'var(--g900)',
+                color:'var(--white)', borderRadius:'var(--r-md)',
+                fontSize:14, fontWeight:600, textDecoration:'none',
+                transition:'background 0.2s',
+              }}
+              onMouseEnter={e => e.currentTarget.style.background='var(--g700)'}
+              onMouseLeave={e => e.currentTarget.style.background='var(--g900)'}
+            >
+              قدّم على وظائف مشابهة ←
+            </Link>
+          </div>
+        ) : (
           <>
             <div style={{ fontSize:20, fontWeight:700, color:'var(--g950)', marginBottom:6 }}>تقديم الطلب</div>
             <div style={{ fontSize:14, color:'var(--gray400)', marginBottom:22 }}>أدخل بياناتك وسنتواصل معك مباشرة</div>
 
             {/* Job preview */}
-            <div style={{
-              background:'var(--g50)', border:'1px solid var(--g100)',
-              borderRadius:'var(--r-md)', padding:16, marginBottom:24,
-            }}>
+            <div style={{ background:'var(--g50)', border:'1px solid var(--g100)', borderRadius:'var(--r-md)', padding:16, marginBottom:24 }}>
               <div style={{ fontSize:16, fontWeight:700, color:'var(--g900)' }}>{job?.title}</div>
               <div style={{ fontSize:13, color:'var(--g600)', marginTop:4 }}>{job?.company} · {job?.location}</div>
             </div>
 
-            {/* Form */}
-            {[
-              { key:'name', placeholder:'اسمك الكريم', type:'text' },
-              { key:'email', placeholder:'بريدك الإلكتروني', type:'email' },
-              { key:'phone', placeholder:'رقم الجوال (اختياري)', type:'tel', dir:'ltr' },
-            ].map(({ key, placeholder, type, dir }) => (
-              <input key={key} type={type} placeholder={placeholder}
-                value={form[key]} onChange={e => setForm(p => ({ ...p, [key]: e.target.value }))}
-                style={{
-                  width:'100%', padding:'13px 18px', marginBottom:12,
-                  border:'1.5px solid var(--gray200)', borderRadius:'var(--r-md)',
-                  fontSize:15, fontFamily:'var(--font-ar)',
-                  color:'var(--gray800)', background:'var(--gray50)',
-                  outline:'none', textAlign: dir ? 'left' : 'right',
-                  direction: dir || 'rtl',
-                }}
-                onFocus={e => { e.target.style.borderColor='var(--g600)'; e.target.style.background='var(--white)' }}
-                onBlur={e => { e.target.style.borderColor='var(--gray200)'; e.target.style.background='var(--gray50)' }}
-              />
-            ))}
+            {/* ── ENHANCEMENT 1 + 2: Fields with ref, onBlur validation ── */}
+            <input
+              ref={nameRef}
+              type="text"
+              placeholder="اسمك الكريم *"
+              value={form.name}
+              onChange={e => handleChange('name', e.target.value)}
+              onBlur={() => handleBlur('name')}
+              style={inputStyle('name')}
+              onFocus={e => { e.target.style.borderColor='var(--g600)'; e.target.style.background='var(--white)' }}
+            />
+            {errors.name && <p style={{ fontSize:12, color:'#E24B4A', marginBottom:10, marginTop:0 }}>{errors.name}</p>}
 
-            {/* CV Upload */}
-            <div style={{ marginBottom:12 }}>
-              <label style={{
-                display:'block', padding:'12px 18px',
-                border:'1.5px dashed var(--gray200)', borderRadius:'var(--r-md)',
-                background:'var(--gray50)', cursor:'pointer', textAlign:'right',
-                fontSize:14, color: cvFile ? 'var(--g700)' : 'var(--gray400)',
-              }}>
-                {cvFile ? `✓ ${cvFile.name}` : 'رفع السيرة الذاتية (PDF/DOC — اختياري)'}
+            <input
+              type="email"
+              placeholder="بريدك الإلكتروني *"
+              value={form.email}
+              onChange={e => handleChange('email', e.target.value)}
+              onBlur={() => handleBlur('email')}
+              style={inputStyle('email')}
+              onFocus={e => { e.target.style.borderColor='var(--g600)'; e.target.style.background='var(--white)' }}
+            />
+            {errors.email && <p style={{ fontSize:12, color:'#E24B4A', marginBottom:10, marginTop:0 }}>{errors.email}</p>}
+
+            <input
+              type="tel"
+              placeholder="رقم الجوال (اختياري)"
+              value={form.phone}
+              onChange={e => handleChange('phone', e.target.value)}
+              onBlur={() => handleBlur('phone')}
+              style={{ ...inputStyle('phone'), textAlign:'left', direction:'ltr' }}
+              onFocus={e => { e.target.style.borderColor='var(--g600)'; e.target.style.background='var(--white)' }}
+            />
+            {errors.phone && <p style={{ fontSize:12, color:'#E24B4A', marginBottom:10, marginTop:0 }}>{errors.phone}</p>}
+
+            {/* ── ENHANCEMENT 3: Drag-and-drop CV upload zone ──── */}
+            <div
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              style={{
+                marginBottom:12, padding:'16px 18px',
+                border: `1.5px dashed ${isDragging ? 'var(--g600)' : cvFile ? 'var(--g400)' : 'var(--gray200)'}`,
+                borderRadius:'var(--r-md)',
+                background: isDragging ? 'var(--g50)' : cvFile ? 'rgba(0,61,43,0.03)' : 'var(--gray50)',
+                transition:'all 0.2s', textAlign:'right', cursor:'pointer',
+              }}
+            >
+              <label style={{ display:'flex', alignItems:'center', gap:10, cursor:'pointer' }}>
+                <Upload size={16} color={cvFile ? 'var(--g600)' : 'var(--gray400)'} style={{ flexShrink:0 }} />
+                <div style={{ flex:1 }}>
+                  {cvFile ? (
+                    <>
+                      <div style={{ fontSize:13, fontWeight:600, color:'var(--g700)' }}>{cvFile.name}</div>
+                      <div style={{ fontSize:11, color:'var(--gray400)' }}>{(cvFile.size / 1024).toFixed(0)} KB</div>
+                    </>
+                  ) : (
+                    <div style={{ fontSize:13, color:'var(--gray400)' }}>
+                      اسحب ملف CV هنا أو <span style={{ color:'var(--g600)', fontWeight:600 }}>اضغط للاختيار</span>
+                      <div style={{ fontSize:11, marginTop:3 }}>PDF / DOC / DOCX — بحد أقصى 5MB</div>
+                    </div>
+                  )}
+                </div>
+                {cvFile && (
+                  <button
+                    type="button"
+                    onClick={e => { e.preventDefault(); setCvFile(null) }}
+                    style={{ background:'none', border:'none', color:'var(--gray400)', cursor:'pointer', padding:4, flexShrink:0 }}
+                  >
+                    <X size={14} />
+                  </button>
+                )}
                 <input
-                  type="file" accept=".pdf,.doc,.docx"
-                  onChange={e => setCvFile(e.target.files[0] || null)}
+                  type="file"
+                  accept=".pdf,.doc,.docx"
+                  onChange={e => { if (e.target.files[0]) validateAndSetFile(e.target.files[0]) }}
                   style={{ display:'none' }}
                 />
               </label>
             </div>
+
+            {/* ── ENHANCEMENT 3: Upload progress bar ───────────── */}
+            {loading && progress > 0 && (
+              <div style={{ marginBottom:12 }}>
+                <div style={{ display:'flex', justifyContent:'space-between', fontSize:11, color:'var(--gray400)', marginBottom:4 }}>
+                  <span>جارٍ الرفع...</span>
+                  <span>{progress}%</span>
+                </div>
+                <div style={{ height:4, background:'var(--gray100)', borderRadius:2, overflow:'hidden' }}>
+                  <div style={{
+                    height:'100%',
+                    width:`${progress}%`,
+                    background:'var(--g600)',
+                    borderRadius:2,
+                    transition:'width 0.2s ease',
+                  }} />
+                </div>
+              </div>
+            )}
 
             <button onClick={handleSubmit} disabled={loading} style={{
               width:'100%', padding:14, marginTop:4,
               background: loading ? 'var(--g600)' : 'var(--g900)', color:'var(--white)',
               border:'none', borderRadius:'var(--r-md)',
               fontSize:15, fontWeight:600, transition:'all 0.2s',
+              display:'flex', alignItems:'center', justifyContent:'center', gap:8,
             }}>
-              {loading ? '...جارٍ الإرسال' : 'تأكيد التقديم النهائي ←'}
+              {loading ? <><Loader size={16} style={{ animation:'spin 1s linear infinite' }} /> جارٍ الإرسال...</> : 'تأكيد التقديم النهائي ←'}
             </button>
+
             {error && <p style={{ fontSize:12, color:'#E24B4A', textAlign:'center', marginTop:8 }}>{error}</p>}
+
             <p style={{ fontSize:12, color:'var(--gray400)', textAlign:'center', marginTop:12 }}>
               بياناتك ستُشارك مع جهة العمل المعنية فقط
             </p>
           </>
-        ) : (
-          <div style={{ textAlign:'center', padding:'24px 0' }}>
-            <CheckCircle size={56} color="var(--g600)" style={{ margin:'0 auto 16px' }} />
-            <div style={{ fontSize:20, fontWeight:700, color:'var(--g950)', marginBottom:8 }}>تم إرسال طلبك!</div>
-            <div style={{ fontSize:14, color:'var(--gray600)', lineHeight:1.8 }}>
-              سنراجع طلبك ونتواصل معك قريباً على بريدك الإلكتروني
-            </div>
-          </div>
         )}
       </div>
 
       <style>{`
-        @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+        @keyframes fadeIn  { from{opacity:0} to{opacity:1} }
         @keyframes slideUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes spin    { to{transform:rotate(360deg)} }
       `}</style>
     </div>
   )
