@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { CheckCircle, FileText, Briefcase, Lightbulb, ArrowLeft, Clock } from 'lucide-react'
 import JobCard from '../components/JobCard.jsx'
 import JobSkeleton from '../components/JobSkeleton.jsx'
@@ -72,6 +72,43 @@ function Reveal({ children, delay = 0, style = {} }) {
       transition: `opacity 0.65s ease ${delay}ms, transform 0.65s ease ${delay}ms`,
       ...style
     }}>{children}</div>
+  )
+}
+
+/* ── CountUp hook ────────────────────────── */
+function useCountUp(target, visible, duration = 1600) {
+  const [count, setCount] = useState(0)
+  useEffect(() => {
+    if (!visible || !target) return
+    let startTime = null
+    const animate = ts => {
+      if (!startTime) startTime = ts
+      const progress = Math.min((ts - startTime) / duration, 1)
+      const eased = 1 - Math.pow(1 - progress, 3)
+      setCount(Math.round(eased * target))
+      if (progress < 1) requestAnimationFrame(animate)
+    }
+    requestAnimationFrame(animate)
+  }, [visible, target, duration])
+  return count
+}
+
+const toAr = n => String(n).replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d])
+
+function StatItem({ val, prefix = '', accent, label }) {
+  const [ref, vis] = useReveal()
+  const count = useCountUp(val, vis)
+  return (
+    <div ref={ref} style={{
+      opacity: vis ? 1 : 0,
+      transform: vis ? 'translateY(0)' : 'translateY(28px)',
+      transition: 'opacity 0.65s ease, transform 0.65s ease',
+    }}>
+      <div style={{ fontSize:'clamp(2rem,4vw,2.8rem)', fontWeight:800, color:'var(--white)', lineHeight:1, marginBottom:6, fontFamily:'var(--font-en)' }}>
+        {prefix}{toAr(count)}<span style={{ color:'var(--gold400)' }}>{accent}</span>
+      </div>
+      <div style={{ fontSize:14, color:'rgba(255,255,255,0.6)' }}>{label}</div>
+    </div>
   )
 }
 
@@ -177,6 +214,19 @@ export default function Home() {
   const [jobs, setJobs] = useState(FALLBACK_JOBS)
   const [tips, setTips] = useState(FALLBACK_TIPS)
   const [loadingJobs, setLoadingJobs] = useState(true)
+  const location = useLocation()
+
+  // تنفيذ الـ scroll عند الوصول من صفحة أخرى عبر navigate('/', { state: { scrollTo: id } })
+  useEffect(() => {
+    const id = location.state?.scrollTo
+    if (!id) return
+    const attempt = (tries = 0) => {
+      const el = document.getElementById(id)
+      if (el) { el.scrollIntoView({ behavior: 'smooth' }) }
+      else if (tries < 5) { setTimeout(() => attempt(tries + 1), 120) }
+    }
+    attempt()
+  }, [location.state])
 
   useEffect(() => {
     jobsApi.getAll({ per_page: 50, active: 1 })
@@ -264,17 +314,12 @@ export default function Home() {
       <div style={{ background:'var(--g900)', padding:'clamp(40px,6vw,64px) clamp(1rem,4vw,3rem)' }}>
         <div style={{ maxWidth:1160, margin:'0 auto', display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))', gap:32, textAlign:'center' }}>
           {[
-            { num:'٧٥', accent:'٪', label:'من السير الذاتية تُرفض آلياً قبل مراجعتها' },
-            { num:'+٢', accent:'م', label:'باحث عن عمل في السعودية' },
-            { num:'٧٠', accent:'٪', label:'نسبة التوطين المستهدفة برؤية 2030' },
-            { num:'٤٨', accent:'س', label:'لتحسين سيرتك الذاتية عند التسجيل' },
-          ].map(({ num, accent, label }) => (
-            <Reveal key={label}>
-              <div style={{ fontSize:'clamp(2rem,4vw,2.8rem)', fontWeight:800, color:'var(--white)', lineHeight:1, marginBottom:6, fontFamily:'var(--font-en)' }}>
-                {num}<span style={{ color:'var(--gold400)' }}>{accent}</span>
-              </div>
-              <div style={{ fontSize:14, color:'rgba(255,255,255,0.6)' }}>{label}</div>
-            </Reveal>
+            { val:75, prefix:'', accent:'٪', label:'من السير الذاتية تُرفض آلياً قبل مراجعتها' },
+            { val:2,  prefix:'+', accent:'م', label:'باحث عن عمل في السعودية' },
+            { val:70, prefix:'', accent:'٪', label:'نسبة التوطين المستهدفة برؤية 2030' },
+            { val:48, prefix:'', accent:'س', label:'لتحسين سيرتك الذاتية عند التسجيل' },
+          ].map(({ val, prefix, accent, label }) => (
+            <StatItem key={label} val={val} prefix={prefix} accent={accent} label={label} />
           ))}
         </div>
       </div>
@@ -330,12 +375,12 @@ export default function Home() {
           </Reveal>
           <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,300px),1fr))', gap:24 }}>
             {[
-              { Icon:FileText, emoji:'📄', title:'تحسين السيرة الذاتية', desc:'مراجعة احترافية تضمن أن سيرتك تتجاوز أنظمة الفحص الآلي وتصل للمسؤولين الفعليين.', features:['توافق مع معايير ATS','صياغة بالعربية والإنجليزية','مراجعة خلال 48 ساعة'], tag:'مجاني عند التسجيل', tagGold:false, accent:'var(--g600)', delay:0 },
-              { Icon:Briefcase, emoji:'💼', title:'وظائف ودورات موثّقة', desc:'نجمع الفرص من كبرى الشركات السعودية ونتحقق من مصداقيتها قبل نشرها.', features:['وظائف من نيوم وأرامكو وPIF','دورات معتمدة ومموّلة','تحديث يومي للفرص'], tag:'مصادر رسمية موثوقة', tagGold:true, accent:'var(--gold500)', delay:100 },
-              { Icon:Lightbulb, emoji:'🎯', title:'نصائح مهنية موثوقة', desc:'محتوى مبني على أبحاث الموارد البشرية لبناء حضور مهني قوي في السوق السعودي.', features:['نصائح مقابلات الوظائف','تطوير ملف LinkedIn','مخصصة للسوق السعودي'], tag:'محتوى حصري', tagGold:false, accent:'var(--g400)', delay:200 },
-            ].map(({ emoji, title, desc, features, tag, tagGold, accent, delay }, idx) => (
+              { emoji:'📄', title:'تحسين السيرة الذاتية', desc:'مراجعة احترافية تضمن أن سيرتك تتجاوز أنظمة الفحص الآلي وتصل للمسؤولين الفعليين — مجاناً.', features:['توافق مع معايير ATS','صياغة بالعربية والإنجليزية','مراجعة خلال 48 ساعة'], tag:'مجاني عند التسجيل', tagGold:false, accent:'var(--gold400)', featured:true, delay:0 },
+              { emoji:'💼', title:'وظائف ودورات موثّقة', desc:'نجمع الفرص من كبرى الشركات السعودية ونتحقق من مصداقيتها قبل نشرها.', features:['وظائف من نيوم وأرامكو وPIF','دورات معتمدة ومموّلة','تحديث يومي للفرص'], tag:'مصادر رسمية موثوقة', tagGold:true, accent:'var(--gold500)', featured:false, delay:100 },
+              { emoji:'🎯', title:'نصائح مهنية موثوقة', desc:'محتوى مبني على أبحاث الموارد البشرية لبناء حضور مهني قوي في السوق السعودي.', features:['نصائح مقابلات الوظائف','تطوير ملف LinkedIn','مخصصة للسوق السعودي'], tag:'محتوى حصري', tagGold:false, accent:'var(--g400)', featured:false, delay:200 },
+            ].map(({ emoji, title, desc, features, tag, tagGold, accent, featured, delay }) => (
               <Reveal key={title} delay={delay}>
-                <ServiceCard emoji={emoji} title={title} desc={desc} features={features} tag={tag} tagGold={tagGold} accent={accent} />
+                <ServiceCard emoji={emoji} title={title} desc={desc} features={features} tag={tag} tagGold={tagGold} accent={accent} featured={featured} />
               </Reveal>
             ))}
           </div>
@@ -425,8 +470,46 @@ export default function Home() {
 }
 
 /* ── Sub-components ────────────────────── */
-function ServiceCard({ emoji, title, desc, features, tag, tagGold, accent }) {
+function ServiceCard({ emoji, title, desc, features, tag, tagGold, accent, featured = false }) {
   const [hovered, setHovered] = useState(false)
+
+  if (featured) {
+    return (
+      <div onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} style={{
+        background: 'var(--g900)',
+        border: `1.5px solid ${hovered ? 'rgba(197,160,89,0.5)' : 'rgba(197,160,89,0.2)'}`,
+        borderRadius: 'var(--r-lg)', padding: '36px 32px',
+        transition: 'all 0.3s', position: 'relative', overflow: 'hidden',
+        transform: hovered ? 'translateY(-6px)' : 'none',
+        boxShadow: hovered ? '0 20px 60px rgba(0,0,0,0.25)' : '0 8px 32px rgba(0,0,0,0.15)',
+        height: '100%',
+      }}>
+        {/* شريط علوي ذهبي */}
+        <div style={{ position:'absolute', top:0, insetInline:0, height:3, background:'linear-gradient(90deg, var(--gold500), var(--gold300))', borderRadius:'var(--r-lg) var(--r-lg) 0 0' }}/>
+        {/* بادج "الأبرز" */}
+        <div style={{ position:'absolute', top:18, insetInlineStart:18, display:'flex', alignItems:'center', gap:5, background:'rgba(197,160,89,0.15)', border:'1px solid rgba(197,160,89,0.35)', padding:'3px 12px', borderRadius:50, fontSize:11, fontWeight:700, color:'var(--gold400)', letterSpacing:'0.5px' }}>
+          ★ الخدمة الرئيسية
+        </div>
+        <div style={{ fontSize:36, marginTop:28, marginBottom:20 }}>{emoji}</div>
+        <div style={{ fontSize:20, fontWeight:700, color:'var(--white)', marginBottom:12 }}>{title}</div>
+        <div style={{ fontSize:14, color:'rgba(255,255,255,0.65)', lineHeight:1.85, marginBottom:20 }}>{desc}</div>
+        {features.map(f => (
+          <div key={f} style={{ display:'flex', alignItems:'center', gap:8, fontSize:13, color:'rgba(255,255,255,0.75)', marginBottom:8 }}>
+            <span style={{ width:6, height:6, borderRadius:'50%', background:'var(--gold400)', flexShrink:0 }}/>
+            {f}
+          </div>
+        ))}
+        <span style={{
+          marginTop:24, display:'inline-block',
+          fontSize:12, fontWeight:700, padding:'6px 18px', borderRadius:50,
+          background:'rgba(197,160,89,0.2)', color:'var(--gold300)',
+          border:'1px solid rgba(197,160,89,0.3)',
+        }}>{tag}</span>
+        <div style={{ position:'absolute', bottom:0, insetInline:0, height: hovered ? 4 : 3, background:accent, borderRadius:'0 0 var(--r-lg) var(--r-lg)', transition:'height 0.3s' }}/>
+      </div>
+    )
+  }
+
   return (
     <div onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)} style={{
       background:'var(--white)', border:'1.5px solid var(--gray200)',

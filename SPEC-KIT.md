@@ -17,11 +17,14 @@ saudicareers/
 │   │   ├── Home.jsx                  ← الصفحة الرئيسية (jobs + tips + subscribe)
 │   │   ├── Admin.jsx                 ← لوحة التحكم (3 tabs: jobs/apps/subscribers)
 │   │   ├── JobDetail.jsx             ← تفاصيل وظيفة /jobs/:id
-│   │   └── TipDetail.jsx             ← تفاصيل نصيحة /tips/:slug
+│   │   ├── TipDetail.jsx             ← تفاصيل نصيحة /tips/:slug
+│   │   └── ResumeAnalyzer.jsx        ← محلل ATS /resume-analyzer (Phase 1)
 │   ├── components/
 │   │   ├── Navbar.jsx
 │   │   ├── Footer.jsx
 │   │   ├── JobCard.jsx               ← بطاقة عرض الوظيفة
+│   │   ├── JobSkeleton.jsx           ← skeleton loading للوظائف
+│   │   ├── PageLoader.jsx            ← Suspense fallback loader
 │   │   ├── ApplyModal.jsx            ← نموذج التقديم (modal overlay)
 │   │   ├── JobStructuredData.jsx     ← JSON-LD للـ SEO
 │   │   └── ErrorBoundary.jsx         ← يعترض React crashes (class component)
@@ -38,14 +41,19 @@ saudicareers/
 │   │   │   │   ├── CareerTipController.php
 │   │   │   │   ├── SubscriberController.php
 │   │   │   │   ├── AuthController.php
-│   │   │   │   └── BulkJobController.php
+│   │   │   │   ├── BulkJobController.php
+│   │   │   │   ├── SitemapController.php
+│   │   │   │   └── ResumeController.php      ← Phase 1: ATS analyzer
 │   │   │   ├── Middleware/
 │   │   │   │   ├── EnsureUserIsAdmin.php   ← alias: 'admin'
 │   │   │   │   └── SecurityHeaders.php     ← global middleware
 │   │   │   ├── Requests/
 │   │   │   │   ├── StoreJobRequest.php
 │   │   │   │   ├── UpdateJobRequest.php
-│   │   │   │   └── StoreApplicationRequest.php
+│   │   │   │   ├── StoreApplicationRequest.php
+│   │   │   │   └── StoreResumeRequest.php    ← PDF, max:2MB
+│   │   │   ├── Services/
+│   │   │   │   └── ResumeAnalyzer.php        ← ATS analysis logic (smalot/pdfparser)
 │   │   │   └── Resources/
 │   │   │       ├── JobResource.php
 │   │   │       ├── JobCollection.php
@@ -93,6 +101,7 @@ saudicareers/
 | `/jobs/:id` | `JobDetail` | id = رقم من DB |
 | `/tips/:slug` | `TipDetail` | slug = نص فريد |
 | `/admin` | `Admin` | لا حماية route-level — الحماية في الـ state |
+| `/resume-analyzer` | `ResumeAnalyzer` | Phase 1 — public, لا يلزم تسجيل |
 
 **SPA Requirement:** Nginx يجب يُعيد `index.html` لكل path غير موجود:
 ```nginx
@@ -111,6 +120,7 @@ location / { try_files $uri $uri/ /index.html; }
 | GET | `/api/v1/tips/{tip}` | `CareerTipController@show` | Route Model Binding by **slug** |
 | POST | `/api/v1/applications` | `ApplicationController@store` | يقبل CV file |
 | POST | `/api/v1/subscribe` | `SubscriberController@store` | |
+| POST | `/api/v1/resume/analyze` | `ResumeController@analyze` | throttle: 3 req/min — PDF ≤ 2MB |
 | POST | `/api/v1/login` | `AuthController@login` | throttle: 5 req/min |
 
 #### Protected — يحتاج `Authorization: Bearer {token}`
@@ -385,6 +395,45 @@ title,title_en,company,location,description,requirements,category,job_type,exper
 }
 ```
 > الحد الأقصى: 500 صف لكل طلب. الملف: CSV أو TXT، max 2MB.
+
+### 4.6 POST /api/v1/resume/analyze — Request & Response
+
+**Request:** `multipart/form-data`
+```
+file    PDF (required, max:2MB)
+```
+
+**Response 200:**
+```json
+{
+  "score": 43,
+  "passed": ["has_contact"],
+  "failed": ["standard_headings", "good_keywords"],
+  "recommendations": [
+    "استخدم عناوين قياسية مثل: Experience, Education, Skills.",
+    "أضف كلمات مفتاحية شائعة في مجالك مثل: Leadership، Analysis."
+  ],
+  "cta": "upgrade_for_full_report"
+}
+```
+
+**Check IDs (passed/failed):**
+| ID | المعنى | الأثر على الدرجة |
+|----|--------|-----------------|
+| `has_contact` | يحتوي على بريد إلكتروني أو هاتف | +25 نقطة |
+| `standard_headings` | عناوين ATS قياسية (Experience/Education/Skills) | +30 نقطة |
+| `good_keywords` | كثافة الكلمات المفتاحية > 3% | +15 نقطة |
+| (base) | نقاط ثابتة لكل تحليل | +15 نقطة |
+
+**Error 422:**
+```json
+{ "message": "...", "errors": { "file": ["يجب أن يكون الملف بصيغة PDF"] } }
+```
+
+**Error 429:**
+```json
+{ "message": "Too Many Requests" }
+```
 
 ---
 
@@ -666,6 +715,11 @@ VITE_API_TARGET=http://localhost:8000    ← للـ dev proxy فقط
 | linkedin_url | nullable, url |
 | portfolio_url | nullable, url |
 
+### StoreResumeRequest.php
+| Field | Rule |
+|-------|------|
+| file | required, file, **mimes:pdf**, max:2048 (2MB) |
+
 ### AuthController — register (admin-only)
 | Field | Rule |
 |-------|------|
@@ -699,6 +753,21 @@ JobApplication::reviewed() → where('status', 'reviewed')
 // Accessor: $application->status_label → Arabic label
 ```
 
+### ResumeAnalyzer.php (Service — `App\Services\ResumeAnalyzer`)
+```php
+// الاستخدام (Dependency Injection في Controller):
+$analyzer->analyze(string $pdfPath): array
+
+// المنطق الداخلي:
+extractText()      → smalot/pdfparser → plain text
+checkContact()     → regex (email أو phone)
+checkHeadings()    → regex (EXPERIENCE|EDUCATION|SKILLS|...)
+checkKeywords()    → مقارنة مع 12 كلمة شائعة (EN + AR)
+buildTips()        → توصيات بالعربية بناءً على النتائج
+
+// الملف يُحذف فوراً في finally block بعد analyze()
+```
+
 ---
 
 ## 11. Known Constraints & Gotchas
@@ -715,6 +784,12 @@ JobApplication::reviewed() → where('status', 'reviewed')
 | 8 | **subscribers.field** | أُضيف في migration منفصلة (#5). إذا نفّذت migrations على قاعدة قديمة بدون هذا العمود ستحصل على SQL error في SubscriberController |
 | 9 | **CORS** | مُقيّد بـ `CORS_ALLOWED_ORIGINS` من الـ `.env`. في الـ dev يجب إضافة `http://localhost:5173` أو استخدام الـ Vite proxy |
 | 10 | **vendor chunk** | React + ReactDOM + React Router مجمّعون في `vendor-[hash].js` منفصل. هذا يُسرّع الـ cache — الـ vendor لا يتغير hash إلا إذا تغيّرت الـ dependencies |
+| 11 | **smalot/pdfparser ذاكرة** | يُحمّل الـ PDF بالكامل في RAM. عند ملفات PDF كبيرة (>1MB) قد يتجاوز `memory_limit` الافتراضي. الحل: `ini_set('memory_limit','256M')` في ResumeController، أو رفع الحد في php.ini على Cloudways |
+| 12 | **Build path يحتوي #** | `npm run build` يفشل إذا مسار المشروع يحتوي على `#` أو مسافات. الحل: ابنِ في مجلد مؤقت نظيف ثم انسخ `dist/` للمجلد الأصلي |
+| 13 | **ResumeAnalyzer — tmp storage** | الملفات تُحفظ في `storage/app/resumes/tmp/`. يجب التأكد أن `php artisan storage:link` شُغّل، وأن الـ directory صلاحياته `775` |
+| 14 | **smalot/pdfparser — @unlink cleanup** | ملف الـ PDF يُحذف فوراً في `finally` block بعد `analyze()`. إذا فشل الـ unlink (صلاحيات) يظل الملف في `storage/app/resumes/tmp/` ويتراكم. مراقبة دورية: `du -sh backend/storage/app/resumes/tmp/` |
+| 15 | **Navbar scrollTo() — non-home pages** | دالة `scrollTo()` في Navbar تستخدم `navigate('/', { state: { scrollTo: id } })` للانتقال من أي صفحة. Home.jsx تستقبل الـ state وتنفذ الـ scroll بعد الـ mount. إذا أُزيل هذا الـ useEffect من Home.jsx يعود الخلل. |
+| 16 | **CTA buttons — توحيد** | الـ Navbar يحتوي على زر واحد فقط `<Link to="/resume-analyzer">` — لا يوجد زر "حسّن سيرتك" منفصل في الـ desktop. الـ mobile menu يحتوي زر scroll-to-signup مستقل. أي دمج مستقبلي يجب ألا يُعيد إضافة زرّين. |
 
 ---
 
@@ -753,4 +828,4 @@ PHP:        8.2-FPM (sock: /var/run/php/php8.2-fpm.sock)
 
 ---
 
-*آخر تحديث: 2026-04-14 — مُستخرَج من الكود مباشرة*
+*آخر تحديث: 2026-04-14 — Phase 1 Resume Engine + Navbar scrollTo fix + CTA unification*

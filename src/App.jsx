@@ -7,10 +7,11 @@ import PageLoader from './components/PageLoader.jsx'
 // §8: Code-split each page into its own async chunk.
 // Vite will emit separate files: Home-[hash].js, JobDetail-[hash].js, etc.
 // Only the chunk for the current route is downloaded by the browser.
-const Home      = lazy(() => import('./pages/Home.jsx'))
-const JobDetail = lazy(() => import('./pages/JobDetail.jsx'))
-const TipDetail = lazy(() => import('./pages/TipDetail.jsx'))
-const Admin     = lazy(() => import('./pages/Admin.jsx'))
+const Home           = lazy(() => import('./pages/Home.jsx'))
+const JobDetail      = lazy(() => import('./pages/JobDetail.jsx'))
+const TipDetail      = lazy(() => import('./pages/TipDetail.jsx'))
+const Admin          = lazy(() => import('./pages/Admin.jsx'))
+const ResumeAnalyzer = lazy(() => import('./pages/ResumeAnalyzer.jsx'))
 
 export default function App() {
   return (
@@ -23,7 +24,8 @@ export default function App() {
             <Route path="/"           element={<Home />} />
             <Route path="/jobs/:id"   element={<JobDetail />} />
             <Route path="/tips/:slug" element={<TipDetail />} />
-            <Route path="/admin"      element={<Admin />} />
+            <Route path="/admin"           element={<Admin />} />
+            <Route path="/resume-analyzer" element={<ResumeAnalyzer />} />
           </Routes>
         </Suspense>
       </main>

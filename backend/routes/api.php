@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\SubscriberController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BulkJobController;
 use App\Http\Controllers\Api\SitemapController;
+use App\Http\Controllers\Api\ResumeController;
 
 // §6: Sitemap — public, no auth, outside v1 prefix.
 // Accessible at /api/sitemap.xml. For static /sitemap.xml run: php artisan sitemap:generate
@@ -24,6 +25,11 @@ Route::prefix('v1')->group(function () {
     Route::get('/tips/{tip}', [CareerTipController::class, 'show']);
 
     Route::post('/subscribe', [SubscriberController::class, 'store']);
+
+    // §2: Resume ATS analyzer — public, throttled (3 req/min per IP)
+    Route::post('/resume/analyze', [ResumeController::class, 'analyze'])
+        ->middleware('throttle:3,1')
+        ->name('resume.analyze');
 
     // Rate limited to 5 attempts per minute per IP
     Route::post('/login', [AuthController::class, 'login'])

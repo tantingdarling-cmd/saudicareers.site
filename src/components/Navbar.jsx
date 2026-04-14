@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Menu, X } from 'lucide-react'
 
 export default function Navbar() {
@@ -7,6 +7,7 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false)
   const location = useLocation()
   const isHome = location.pathname === '/'
+  const navigate = useNavigate()
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20)
@@ -19,6 +20,8 @@ export default function Navbar() {
   const scrollTo = (id) => {
     if (isHome) {
       document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
+    } else {
+      navigate('/', { state: { scrollTo: id } })
     }
     setMenuOpen(false)
   }
@@ -61,15 +64,16 @@ export default function Navbar() {
         </div>
 
         <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-          <button onClick={() => scrollTo('signup')} style={{
-            background:'var(--g900)', color:'var(--white)',
-            border:'none', padding:'9px 20px', borderRadius:50,
-            fontSize:14, fontWeight:600, transition:'all 0.2s',
+          <Link to="/resume-analyzer" style={{
+            background:'var(--gold500)', color:'var(--g950)',
+            padding:'9px 20px', borderRadius:50,
+            fontSize:14, fontWeight:700, textDecoration:'none',
+            transition:'background 0.2s',
           }}
-          onMouseEnter={e => e.target.style.background='var(--g700)'}
-          onMouseLeave={e => e.target.style.background='var(--g900)'}>
-            حسّن سيرتك مجاناً
-          </button>
+          onMouseEnter={e => e.currentTarget.style.background='var(--gold400)'}
+          onMouseLeave={e => e.currentTarget.style.background='var(--gold500)'}>
+            افحص سيرتك مجاناً ✦
+          </Link>
           <button onClick={() => setMenuOpen(!menuOpen)} style={{
             display:'none', background:'none', border:'none', padding:4
           }} className="hamburger-btn" aria-label="القائمة">
@@ -113,6 +117,7 @@ export default function Navbar() {
         @media (max-width: 860px) {
           .desktop-nav { display: none !important; }
           .hamburger-btn { display: flex !important; }
+          .resume-cta-desktop { display: none !important; }
         }
       `}</style>
     </>
