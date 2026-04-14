@@ -12,7 +12,7 @@ export default function Footer() {
           {/* Brand */}
           <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
             <Link to="/" style={{ display:'flex', alignItems:'center', gap:10 }}>
-              <img src="saudi.png" alt="Saudi Careers" style={{ width:42, height:42, borderRadius:'50%', objectFit:'cover' }} />
+              <img src="/saudi.png" alt="Saudi Careers" style={{ width:42, height:42, borderRadius:'50%', objectFit:'cover' }} />
               <span style={{ fontFamily:'var(--font-en)', fontWeight:700, fontSize:16, color:'var(--white)' }}>
                 Saudi<span style={{ color:'var(--gold400)' }}>Careers</span>
               </span>

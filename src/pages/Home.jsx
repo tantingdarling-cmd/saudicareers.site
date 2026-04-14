@@ -222,7 +222,7 @@ export default function Home() {
           backgroundImage:'radial-gradient(circle at 20% 50%, rgba(0,61,43,0.04) 0%, transparent 40%), radial-gradient(circle at 80% 20%, rgba(197,160,89,0.05) 0%, transparent 35%)',
         }}/>
         <div style={{ position:'relative', zIndex:1, display:'flex', flexDirection:'column', alignItems:'center' }}>
-          <img src="saudi.png" alt="Saudi Careers" style={{
+          <img src="/saudi.png" alt="Saudi Careers" style={{
             width:'clamp(100px,16vw,140px)', height:'clamp(100px,16vw,140px)',
             borderRadius:'50%', objectFit:'cover',
             boxShadow:'0 8px 40px rgba(0,61,43,0.2)',

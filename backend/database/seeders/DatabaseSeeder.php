@@ -32,6 +32,7 @@ class DatabaseSeeder extends Seeder
                 'is_featured' => true,
                 'posted_at' => now(),
                 'created_at' => now(),
+                'updated_at' => now(),
             ],
             [
                 'title' => 'محاسب مالي',
@@ -50,6 +51,7 @@ class DatabaseSeeder extends Seeder
                 'is_featured' => true,
                 'posted_at' => now(),
                 'created_at' => now(),
+                'updated_at' => now(),
             ],
             [
                 'title' => 'مهندس مشاريع',
@@ -68,6 +70,7 @@ class DatabaseSeeder extends Seeder
                 'is_featured' => false,
                 'posted_at' => now(),
                 'created_at' => now(),
+                'updated_at' => now(),
             ],
         ]);
 
@@ -82,6 +85,7 @@ class DatabaseSeeder extends Seeder
                 'is_published' => true,
                 'published_at' => now(),
                 'created_at' => now(),
+                'updated_at' => now(),
             ],
             [
                 'title' => 'أخطاء شائعة في المقابلات',
@@ -93,6 +97,7 @@ class DatabaseSeeder extends Seeder
                 'is_published' => true,
                 'published_at' => now(),
                 'created_at' => now(),
+                'updated_at' => now(),
             ],
         ]);
     }
