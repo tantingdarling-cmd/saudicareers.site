@@ -115,3 +115,15 @@ export const subscribersApi = {
   subscribe: (data) => api.post('/v1/subscribe', data),
   getAll: () => api.get('/admin/subscribers'),
 };
+
+export const settingsApi = {
+  getAll:  ()           => api.get('/admin/settings'),
+  update:  (key, value) => api.patch(`/admin/settings/${encodeURIComponent(key)}`, { value }),
+};
+
+export const probationApi = {
+  getAll:  (params = {}) => api.get('/admin/probation', params),
+  getStatus: (id) => api.get(`/admin/probation/${id}/status`),
+  create:  (data) => api.post('/admin/probation', data),
+  extend:  (id, formData) => api.post(`/admin/probation/${id}/extend`, formData),
+};

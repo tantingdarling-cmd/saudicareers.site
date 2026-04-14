@@ -252,6 +252,7 @@ function SignupForm({ id }) {
 export default function Home() {
   const [activeCategory, setActiveCategory] = useState('all')
   const [selectedJob, setSelectedJob] = useState(null)
+  const [bottomSheetJob, setBottomSheetJob] = useState(null)
   const [jobs, setJobs] = useState(FALLBACK_JOBS)
   const [tips, setTips] = useState(FALLBACK_TIPS)
   const [loadingJobs, setLoadingJobs] = useState(true)
@@ -306,7 +307,7 @@ export default function Home() {
         padding: '120px clamp(1rem,4vw,3rem) 80px',
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
         textAlign: 'center',
-        background: '#FAFAF9',
+        background: 'radial-gradient(ellipse 80% 50% at 50% -5%, rgba(0,61,43,0.06) 0%, transparent 65%), radial-gradient(ellipse 50% 40% at 95% 40%, rgba(197,160,89,0.04) 0%, transparent 55%), #F5F5F7',
         position: 'relative', overflow: 'hidden',
       }}>
         {/* خط عرضي خفيف في الأعلى */}
@@ -337,9 +338,9 @@ export default function Home() {
             marginBottom: 20,
             letterSpacing: '-0.5px',
             fontFamily: 'var(--font-ar)',
+            fontVariationSettings: "'wght' 700",
           }}>
-            طريقك للفرصة
-            <span style={{ display:'block', color:'var(--g600)', fontWeight:600 }}>في سوق العمل السعودي</span>
+            ارفع مستواك في سوق العمل
           </h1>
 
           {/* sub */}
@@ -350,21 +351,23 @@ export default function Home() {
             marginBottom: 44,
             lineHeight: 1.9,
             fontFamily: 'var(--font-ar)',
+            fontVariationSettings: "'wght' 500",
           }}>
-            افحص سيرتك الذاتية مجاناً، اكتشف أفضل الوظائف، واحصل على نصائح موثوقة من خبراء الموارد البشرية.
+            مقالات مبنية على أبحاث الموارد البشرية ومعطيات سوق العمل السعودي.
           </p>
 
           {/* CTA buttons */}
           <div style={{ display:'flex', gap:12, flexWrap:'wrap', justifyContent:'center', marginBottom:48 }}>
             <Link to="/resume-analyzer" style={{
               display:'inline-flex', alignItems:'center', gap:8,
-              background:'var(--g900)', color:'var(--white)',
+              background:'linear-gradient(135deg, var(--g900) 0%, var(--g950) 100%)',
+              color:'var(--white)',
               padding:'13px 28px', borderRadius:'var(--r-md)',
               fontSize:15, fontWeight:600, textDecoration:'none',
               transition:'background 0.2s',
             }}
             onMouseEnter={e=>e.currentTarget.style.background='var(--g700)'}
-            onMouseLeave={e=>e.currentTarget.style.background='var(--g900)'}
+            onMouseLeave={e=>e.currentTarget.style.background='linear-gradient(135deg, var(--g900) 0%, var(--g950) 100%)'}
             >
               افحص سيرتك مجاناً ✦
             </Link>
@@ -380,6 +383,90 @@ export default function Home() {
             >
               تصفّح الوظائف
             </button>
+          </div>
+
+          {/* ── Notion-style floating AI preview card ── */}
+          <div aria-hidden="true" style={{
+            position:'relative', width:'100%', maxWidth:360, margin:'0 auto 40px',
+            animation:'float 6s ease-in-out infinite',
+            filter:'drop-shadow(0 16px 40px rgba(0,61,43,0.12))',
+          }}>
+            <div style={{
+              background:'var(--white)', borderRadius:'var(--r-xl)',
+              border:'1px solid var(--gray200)',
+              padding:'20px 24px',
+              textAlign:'right',
+            }}>
+              {/* رأس البطاقة */}
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16 }}>
+                <div style={{
+                  fontSize:11, fontWeight:700, color:'var(--g700)',
+                  background:'var(--g50)', padding:'3px 10px', borderRadius:20,
+                  letterSpacing:'0.5px',
+                }}>
+                  🤖 نتيجة مطابقتك
+                </div>
+                <div style={{ display:'flex', gap:5 }}>
+                  {['var(--g200)','var(--gold300)','var(--gray200)'].map((c,i) => (
+                    <div key={i} style={{ width:8, height:8, borderRadius:'50%', background:c }}/>
+                  ))}
+                </div>
+              </div>
+
+              {/* حلقة الـ Score المتحركة */}
+              <div style={{ display:'flex', alignItems:'center', gap:16, marginBottom:16 }}>
+                <svg width="64" height="64" viewBox="0 0 64 64" style={{ flexShrink:0 }}>
+                  <circle cx="32" cy="32" r="27" fill="none" stroke="var(--g100)" strokeWidth="6"/>
+                  <circle cx="32" cy="32" r="27" fill="none"
+                    stroke="var(--g600)" strokeWidth="6" strokeLinecap="round"
+                    strokeDasharray="170" strokeDashoffset="25"
+                    transform="rotate(-90 32 32)"
+                    style={{ animation:'ringFill 2.5s cubic-bezier(0.19,1,0.22,1) 0.3s both' }}
+                  />
+                  <text x="32" y="32" textAnchor="middle" dominantBaseline="central"
+                    fontSize="13" fontWeight="800" fill="var(--g900)"
+                    fontFamily="'Plus Jakarta Sans',sans-serif">85%</text>
+                </svg>
+                <div>
+                  <div style={{ fontSize:15, fontWeight:700, color:'var(--g950)', marginBottom:3 }}>
+                    مطور واجهات أمامية
+                  </div>
+                  <div style={{ fontSize:12, color:'var(--gray600)' }}>شركة الرياض التقنية</div>
+                  <div style={{
+                    display:'inline-flex', alignItems:'center', gap:4, marginTop:6,
+                    fontSize:11, fontWeight:700, color:'#065F46',
+                    background:'#D1FAE5', padding:'2px 8px', borderRadius:20,
+                  }}>
+                    🏆 مطابقة ممتازة
+                  </div>
+                </div>
+              </div>
+
+              {/* شريط أبعاد خفيف */}
+              {[['المهارات','85%','var(--g600)',0.85],['الخبرة','90%','var(--g500)',0.9],['الموقع','100%','var(--gold500)',1]].map(([label,pct,color,ratio]) => (
+                <div key={label} style={{ marginBottom:7 }}>
+                  <div style={{ display:'flex', justifyContent:'space-between', fontSize:11, color:'var(--gray600)', marginBottom:3 }}>
+                    <span style={{ color, fontWeight:600 }}>{pct}</span>
+                    <span>{label}</span>
+                  </div>
+                  <div style={{ height:4, background:'var(--gray100)', borderRadius:2, overflow:'hidden' }}>
+                    <div style={{
+                      height:'100%', width:`${ratio*100}%`, background:color, borderRadius:2,
+                      animation:`ringFill 1.8s ease ${0.5 + ratio * 0.3}s both`,
+                      animationName:'none',  /* لا نعيد animate CSS هنا — static يكفي للمعاينة */
+                    }}/>
+                  </div>
+                </div>
+              ))}
+
+              {/* Trust badge صغير */}
+              <div style={{
+                marginTop:12, paddingTop:12, borderTop:'1px solid var(--gray100)',
+                fontSize:10, color:'var(--gray400)', display:'flex', alignItems:'center', justifyContent:'center', gap:4,
+              }}>
+                🔒 بياناتك محمية وفق PDPL
+              </div>
+            </div>
           </div>
 
           {/* social proof */}
@@ -447,7 +534,7 @@ export default function Home() {
               ? Array.from({ length: 6 }).map((_, i) => <JobSkeleton key={i} />)
               : filteredJobs.map((job, i) => (
                   <Reveal key={job.id} delay={i * 60}>
-                    <JobCard job={job} onApply={setSelectedJob} />
+                    <JobCard job={job} onApply={setSelectedJob} onDetails={setBottomSheetJob} />
                   </Reveal>
                 ))
             }
@@ -552,9 +639,173 @@ export default function Home() {
       <JobStructuredData jobs={jobs} />
 
       <style>{`
-        @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
-        @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.8)} }
+        @keyframes float    { 0%,100%{transform:translateY(0px) rotate(-1deg)} 50%{transform:translateY(-12px) rotate(1deg)} }
+        @keyframes pulse    { 0%,100%{box-shadow:0 0 0 0 rgba(59,175,122,0.55);transform:scale(1)} 50%{box-shadow:0 0 0 6px rgba(59,175,122,0);transform:scale(1.15)} }
+        @keyframes ringFill { from{stroke-dashoffset:170} }
+        @media (prefers-reduced-motion: reduce) {
+          [style*="float"], [style*="pulse"] { animation: none !important; }
+        }
       `}</style>
+
+      {/* ── Bottom Sheet (Job Details) ── */}
+      {bottomSheetJob && (
+        <BottomSheet
+          job={bottomSheetJob}
+          onClose={() => setBottomSheetJob(null)}
+          onApply={setSelectedJob}
+        />
+      )}
+    </>
+  )
+}
+
+/* ── Bottom Sheet ────────────────────────────────────────────────── */
+function BottomSheet({ job, onClose, onApply }) {
+  const [visible, setVisible] = useState(false)
+
+  useEffect(() => {
+    // قفل التمرير خلف الـ Sheet
+    document.body.style.overflow = 'hidden'
+    // Double-RAF للـ slide-up animation
+    let r1, r2
+    r1 = requestAnimationFrame(() => {
+      r2 = requestAnimationFrame(() => setVisible(true))
+    })
+    return () => {
+      document.body.style.overflow = ''
+      cancelAnimationFrame(r1)
+      cancelAnimationFrame(r2)
+    }
+  }, [])
+
+  const handleClose = () => {
+    setVisible(false)
+    setTimeout(onClose, 420)
+  }
+
+  const handleApply = () => {
+    setVisible(false)
+    // تأخير بسيط لإغلاق الـ Sheet قبل فتح الـ Modal
+    setTimeout(() => onApply(job), 420)
+  }
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div
+        onClick={handleClose}
+        style={{
+          position:'fixed', inset:0, zIndex:400,
+          background:'rgba(0,0,0,0.45)',
+          backdropFilter:'blur(4px)', WebkitBackdropFilter:'blur(4px)',
+          opacity: visible ? 1 : 0,
+          transition:'opacity 0.3s ease',
+        }}
+      />
+
+      {/* Sheet */}
+      <div role="dialog" aria-modal="true" aria-label={`تفاصيل: ${job.title}`} style={{
+        position:'fixed', bottom:0, left:0, right:0, zIndex:401,
+        background:'var(--white)',
+        borderRadius:'20px 20px 0 0',
+        maxHeight:'88vh',
+        overflowY:'auto',
+        overscrollBehavior:'contain',
+        WebkitOverflowScrolling:'touch',
+        paddingBottom:'calc(env(safe-area-inset-bottom) + 24px)',
+        boxShadow:'0 -8px 40px rgba(0,0,0,0.15)',
+        transform: visible ? 'translateY(0)' : 'translateY(100%)',
+        transition:'transform 0.42s cubic-bezier(0.32,0.72,0,1)',
+      }}>
+        {/* Handle */}
+        <div style={{ display:'flex', justifyContent:'center', padding:'12px 0 6px' }}>
+          <div style={{ width:36, height:4, borderRadius:2, background:'var(--gray200)' }}/>
+        </div>
+
+        {/* Header */}
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 20px 16px' }}>
+          <button onClick={handleClose} style={{
+            width:32, height:32, borderRadius:'50%',
+            background:'var(--gray100)', border:'none',
+            display:'flex', alignItems:'center', justifyContent:'center',
+            cursor:'pointer', fontSize:20, lineHeight:1, color:'var(--gray500)',
+            transition:'background 0.2s',
+          }}
+          onMouseEnter={e => e.currentTarget.style.background='var(--gray200)'}
+          onMouseLeave={e => e.currentTarget.style.background='var(--gray100)'}
+          aria-label="إغلاق">×</button>
+          <span style={{ fontSize:15, fontWeight:700, color:'var(--g950)' }}>تفاصيل الوظيفة</span>
+          <div style={{ width:32 }}/>
+        </div>
+
+        {/* Content */}
+        <div style={{ padding:'0 20px' }}>
+          {/* Company row */}
+          <div style={{ display:'flex', alignItems:'center', gap:12, marginBottom:20 }}>
+            <div style={{
+              width:52, height:52, borderRadius:'var(--r-sm)',
+              background:'var(--g50)', border:'1px solid var(--g100)',
+              display:'flex', alignItems:'center', justifyContent:'center',
+              fontSize:26, flexShrink:0,
+            }}>{job.icon}</div>
+            <div>
+              <div style={{ fontSize:18, fontWeight:700, color:'var(--g950)', lineHeight:1.3 }}>{job.title}</div>
+              <div style={{ fontSize:14, color:'var(--g700)', fontWeight:600, marginTop:2 }}>{job.company}</div>
+            </div>
+          </div>
+
+          {/* Meta pills */}
+          <div style={{ display:'flex', flexWrap:'wrap', gap:8, marginBottom:16 }}>
+            {[job.location, job.type, `${job.salary} ر.س`].filter(Boolean).map(text => (
+              <span key={text} style={{
+                fontSize:12, padding:'5px 12px', borderRadius:50,
+                background:'var(--g50)', color:'var(--g700)', fontWeight:500,
+              }}>{text}</span>
+            ))}
+          </div>
+
+          {/* Tags */}
+          {job.tags?.length > 0 && (
+            <div style={{ display:'flex', flexWrap:'wrap', gap:6, marginBottom:20 }}>
+              {job.tags.map(t => (
+                <span key={t} style={{
+                  fontSize:11, fontWeight:500, padding:'4px 10px',
+                  background:'var(--gray100)', color:'var(--gray600)', borderRadius:50,
+                }}>{t}</span>
+              ))}
+            </div>
+          )}
+
+          {/* Description */}
+          {job.description && (
+            <div style={{ marginBottom:28 }}>
+              <div style={{ fontSize:14, fontWeight:700, color:'var(--g900)', marginBottom:10 }}>وصف الوظيفة</div>
+              <p style={{
+                fontSize:14, color:'var(--gray600)', lineHeight:1.85,
+                display:'-webkit-box', WebkitLineClamp:8, WebkitBoxOrient:'vertical', overflow:'hidden',
+                margin:0,
+              }}>{job.description}</p>
+            </div>
+          )}
+
+          {/* CTA */}
+          <button
+            onClick={handleApply}
+            onPointerDown={e => e.currentTarget.style.transform='scale(0.97)'}
+            onPointerUp={e => e.currentTarget.style.transform='scale(1)'}
+            onPointerLeave={e => e.currentTarget.style.transform='scale(1)'}
+            style={{
+              width:'100%', padding:'14px 0',
+              background:'linear-gradient(135deg, var(--g900) 0%, var(--g950) 100%)',
+              color:'var(--white)', border:'none', borderRadius:'var(--r-md)',
+              fontSize:15, fontWeight:700, cursor:'pointer',
+              transition:'transform 0.3s cubic-bezier(0.32,0.72,0,1)',
+            }}
+          >
+            التقديم الآن ←
+          </button>
+        </div>
+      </div>
     </>
   )
 }
@@ -620,7 +871,7 @@ function ServiceCard({ emoji, title, desc, features, tag, tagGold, accent, featu
       borderRadius:'var(--r-lg)', padding:'32px 28px',
       transition:'all 0.3s', position:'relative', overflow:'hidden',
       transform: hovered ? 'translateY(-4px)' : 'none',
-      boxShadow: hovered ? 'var(--shadow-lg)' : 'var(--shadow-sm)',
+      boxShadow: hovered ? 'var(--shadow-lg)' : '0 8px 32px rgba(0,0,0,0.08)',
       height:'100%',
     }}>
       <div style={{ position:'absolute', bottom:0, insetInline:0, height: hovered ? 4 : 3, background:accent, borderRadius:'0 0 var(--r-lg) var(--r-lg)', transition:'height 0.3s' }}/>

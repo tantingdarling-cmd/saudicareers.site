@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Notifications\Notifiable;
 
 class JobApplication extends Model
 {
-    use HasFactory;
+    use HasFactory, Notifiable;
 
     protected $fillable = [
         'job_id',
@@ -20,10 +21,17 @@ class JobApplication extends Model
         'portfolio_url',
         'status',
         'notes',
+        'ai_consent',
+        'match_score',
+        'match_details',
+        'applied_at',
     ];
 
     protected $casts = [
-        'applied_at' => 'datetime',
+        'applied_at'     => 'datetime',
+        'ai_consent'     => 'boolean',
+        'match_score'    => 'float',
+        'match_details'  => 'array',
     ];
 
     public function job()

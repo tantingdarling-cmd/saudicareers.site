@@ -78,9 +78,23 @@
   </script>
 
   <!-- ═══ Fonts ══════════════════════════════════════════════════════ -->
+  <!-- preconnect يبدأ DNS+TLS مبكراً -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- preload للـ CSS بدون blocking — يُبدّل media بعد التحميل -->
+  <link rel="preload" as="style"
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" />
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap"
+    media="print" onload="this.media='all'" />
+  <noscript>
+    <link rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" />
+  </noscript>
+
+  <!-- preload للصورة الرئيسية (above the fold في Navbar) -->
+  <link rel="preload" as="image" href="/saudi.webp" type="image/webp" />
 
   <!-- ═══ Theme color (mobile browser chrome) ══════════════════════ -->
   <meta name="theme-color" content="#003D2B" />

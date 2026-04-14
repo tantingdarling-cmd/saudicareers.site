@@ -9,6 +9,8 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BulkJobController;
 use App\Http\Controllers\Api\SitemapController;
 use App\Http\Controllers\Api\ResumeController;
+use App\Http\Controllers\Api\ProbationController;
+use App\Http\Controllers\Api\SettingsController;
 
 // §6: Sitemap — public, no auth, outside v1 prefix.
 // Accessible at /api/sitemap.xml. For static /sitemap.xml run: php artisan sitemap:generate
@@ -25,6 +27,10 @@ Route::prefix('v1')->group(function () {
     Route::get('/tips/{tip}', [CareerTipController::class, 'show']);
 
     Route::post('/subscribe', [SubscriberController::class, 'store']);
+
+    // Public settings (GA/GTM/Pixel IDs) — no auth, cached 1h
+    Route::get('/settings/public', [SettingsController::class, 'public'])
+         ->middleware('throttle:60,1');
 
     // §2: Resume ATS analyzer — public, throttled (3 req/min per IP)
     Route::post('/resume/analyze', [ResumeController::class, 'analyze'])
@@ -51,5 +57,17 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
         // Only existing admins can create new admin accounts
         Route::post('/register', [AuthController::class, 'register'])->name('register');
+
+        // Settings CRUD — admin only
+        Route::get('/settings',              [SettingsController::class, 'index']);
+        Route::patch('/settings/{key}',      [SettingsController::class, 'update'])
+             ->where('key', '.+');           // يسمح بـ dots في الـ key (analytics.ga_id)
+
+        // Probation Tracker — نظام العمل السعودي المادة 53
+        // جميع العمليات محمية بـ Sanctum + admin middleware
+        Route::get('/probation',              [ProbationController::class, 'index']);
+        Route::post('/probation',             [ProbationController::class, 'store']);
+        Route::get('/probation/{probation}/status',  [ProbationController::class, 'status']);
+        Route::post('/probation/{probation}/extend', [ProbationController::class, 'extend']);
     });
 });

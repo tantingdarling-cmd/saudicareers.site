@@ -106,6 +106,20 @@ export default function ResumeAnalyzer() {
           // حفظ النتيجة مؤقتاً والانتقال للوحة النتائج
           const id = Date.now().toString(36)
           try { localStorage.setItem(`resume_result_${id}`, JSON.stringify(res)) } catch (_) {}
+
+          // ── Conversion tracking ──────────────────────────────────────
+          // GTM dataLayer event — يُربط بـ GA4 Conversion أو Facebook Pixel
+          // من GTM: اصنع Trigger بـ Custom Event = "resume_analyzed"
+          try {
+            window.dataLayer = window.dataLayer || []
+            window.dataLayer.push({
+              event:          'resume_analyzed',
+              event_category: 'engagement',
+              event_label:    'cv_upload_success',
+              score:          res?.score ?? null,   // درجة الـ ATS إن وُجدت
+            })
+          } catch (_) {}
+
           navigate(`/resume-results/${id}`)
         } else if (xhr.status === 422) {
           const messages = res.errors?.file?.[0] || res.message || 'الملف غير صالح'

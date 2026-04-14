@@ -4,6 +4,53 @@
 
 ---
 
+## 🏁 نسخة v1.0-RC1 — معايير الأداء المعتمدة
+
+| المؤشر | القيمة | الحد الأقصى المسموح |
+|---|---|---|
+| `vendor` chunk (react/router) | **162 KB** (gzip: 52.9 KB) | 178 KB (+10%) |
+| `main` chunk (index) | **28 KB** (gzip: 10.3 KB) | 31 KB (+10%) |
+| `icons` chunk (lucide-react) | **13.2 KB** (gzip: 2.9 KB) | 20 KB |
+| LCP هدف | **< 1.8s** | 1.8s |
+
+**أي commit يرفع Initial Payload > 10% دون مبرر استراتيجي = يستوجب مراجعة.**
+
+### معيار الصور في الـ Header (ثابت)
+```jsx
+// ✅ النمط المعتمد — Navbar (LCP critical path)
+<picture>
+  <source srcSet="/logo.webp" type="image/webp" />
+  <img src="/logo.png" fetchPriority="high" decoding="async" ... />
+</picture>
+
+// ✅ النمط المعتمد — Footer / داخل الصفحة
+<picture>
+  <source srcSet="/logo.webp" type="image/webp" />
+  <img src="/logo.png" loading="lazy" ... />
+</picture>
+```
+- الـ WebP مع PNG fallback إلزامي لكل صورة علامة تجارية
+- `fetchPriority="high"` للصور فوق الطي (above-the-fold) فقط
+- `loading="lazy"` لكل صورة تحت الطي
+
+### معيار Lazy Loading (ثابت)
+```jsx
+// ✅ كل route جديد يدخل بـ React.lazy()
+const NewModule = lazy(() => import('./pages/NewModule.jsx'))
+```
+- لا يُضاف موديول جديد للـ main bundle مباشرة
+- ينطبق على: Probation Tracker، Job Moderation، وأي صفحة مستقبلية
+
+### معيار توثيق نظام العمل السعودي
+```jsx
+// ✅ مثال — عند استخدام مدة فترة التجربة
+// نظام العمل السعودي — المادة 53: فترة التجربة لا تتجاوز 90 يوماً
+const PROBATION_MAX_DAYS = 90
+```
+- أي قيمة مستمدة من نظام العمل تُعلَّق برقم المادة المقابلة
+
+---
+
 ## المسار 1 — ATS Resume Analyzer
 
 | الملف | الحالة |

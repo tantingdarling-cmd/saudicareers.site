@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Plus, Pencil, Trash2, X, Save, Lock, LogOut, Loader, FileText, Clock, CheckCircle, XCircle, Users, Download, Copy, Mail } from 'lucide-react'
-import { authApi, jobsApi, applicationsApi, subscribersApi } from '../services/api'
+import { Plus, Pencil, Trash2, X, Save, Lock, LogOut, Loader, FileText, Clock, CheckCircle, XCircle, Users, Download, Copy, Mail, UserCheck, AlertTriangle } from 'lucide-react'
+import { authApi, jobsApi, applicationsApi, subscribersApi, probationApi, settingsApi } from '../services/api'
 
 const CATEGORIES = [
   { key:'tech', label:'تقنية' },
@@ -49,6 +49,23 @@ export default function Admin() {
   const [subsCopied, setSubsCopied] = useState(false)
   const [peek, setPeek]             = useState(null)   // { type:'job'|'app', item }
 
+  // ── Probation state ──────────────────────────────────────────────
+  const [probation, setProbation]           = useState([])
+  const [loadingProbation, setLoadingProbation] = useState(false)
+  const [showProbationForm, setShowProbationForm] = useState(false)
+  const [probationForm, setProbationForm]   = useState({
+    employee_name:'', employee_email:'', start_date:'', duration_days:90, application_id:'',
+  })
+  const [savingProbation, setSavingProbation] = useState(false)
+  const [extendingId, setExtendingId]       = useState(null)
+  const [extendFile, setExtendFile]         = useState(null)
+
+  // ── Settings state ───────────────────────────────────────────────
+  const [settingsGroups, setSettingsGroups] = useState({})
+  const [loadingSettings, setLoadingSettings] = useState(false)
+  const [savingKey, setSavingKey]           = useState(null)
+  const [settingsDraft, setSettingsDraft]   = useState({}) // { key: editedValue }
+
   const empty = {
     title:'', title_en:'', company:'', location:'',
     salary_min:'', salary_max:'', description:'',
@@ -69,7 +86,94 @@ export default function Admin() {
     if (!authApi.isAuthenticated()) return
     if (activeTab === 'applications') fetchApplications()
     if (activeTab === 'subscribers') fetchSubscribers()
+    if (activeTab === 'probation') fetchProbation()
+    if (activeTab === 'settings') fetchSettings()
   }, [activeTab])
+
+  const fetchProbation = async () => {
+    setLoadingProbation(true)
+    try {
+      const res = await probationApi.getAll({ per_page: 100 })
+      setProbation(res.data || [])
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoadingProbation(false)
+    }
+  }
+
+  const saveProbation = async () => {
+    if (!probationForm.employee_name || !probationForm.employee_email || !probationForm.start_date) return
+    setSavingProbation(true)
+    try {
+      await probationApi.create(probationForm)
+      setShowProbationForm(false)
+      setProbationForm({ employee_name:'', employee_email:'', start_date:'', duration_days:90, application_id:'' })
+      fetchProbation()
+    } catch (err) {
+      alert(err.message || 'فشل الحفظ')
+    } finally {
+      setSavingProbation(false)
+    }
+  }
+
+  const extendProbation = async (record) => {
+    if (!extendFile) { alert('يرجى رفع ملف الموافقة الخطية (PDF أو صورة)'); return }
+    const fd = new FormData()
+    fd.append('extension_docs', extendFile)
+    fd.append('duration_days', 180)
+    try {
+      await probationApi.extend(record.id, fd)
+      setExtendingId(null); setExtendFile(null)
+      fetchProbation()
+    } catch (err) {
+      alert(err.message || 'فشل التمديد')
+    }
+  }
+
+  const getProbationBadge = (status) => {
+    const map = {
+      active:     { bg:'var(--g50)',            color:'var(--g700)',   label:'نشطة' },
+      extended:   { bg:'#EDE9FE',               color:'#5B21B6',      label:'ممتدة' },
+      completed:  { bg:'#D1FAE5',               color:'#065F46',      label:'مكتملة' },
+      terminated: { bg:'rgba(220,38,38,0.07)',  color:'#991B1B',      label:'منهية' },
+    }
+    const s = map[status] || map.active
+    return (
+      <span style={{ fontSize:11, fontWeight:700, padding:'3px 10px', borderRadius:50, background:s.bg, color:s.color }}>
+        {s.label}
+      </span>
+    )
+  }
+
+  const fetchSettings = async () => {
+    setLoadingSettings(true)
+    try {
+      const res = await settingsApi.getAll()
+      setSettingsGroups(res)
+      // ابنِ draft من القيم الحالية
+      const draft = {}
+      Object.values(res).flat().forEach(s => { draft[s.key] = s.value ?? '' })
+      setSettingsDraft(draft)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoadingSettings(false)
+    }
+  }
+
+  const saveSetting = async (key) => {
+    setSavingKey(key)
+    try {
+      await settingsApi.update(key, settingsDraft[key] || null)
+      // مسح الـ cache المحلي للـ Analytics
+      sessionStorage.removeItem('sc_analytics')
+    } catch (err) {
+      alert(err.message || 'فشل الحفظ')
+    } finally {
+      setSavingKey(null)
+    }
+  }
 
   const fetchSubscribers = async () => {
     setLoadingSubs(true)
@@ -282,7 +386,7 @@ export default function Admin() {
           <div>
             <h1 style={{ fontSize:26, fontWeight:700, color:'var(--g950)', marginBottom:4 }}>لوحة التحكم</h1>
             <p style={{ fontSize:14, color:'var(--gray400)' }}>
-              {activeTab === 'jobs' ? `${jobs.length} وظيفة` : activeTab === 'applications' ? `${applications.length} تقديم` : `${subscribers.length} مشترك`}
+              {activeTab === 'jobs' ? `${jobs.length} وظيفة` : activeTab === 'applications' ? `${applications.length} تقديم` : activeTab === 'probation' ? `${probation.length} سجل تجربة` : `${subscribers.length} مشترك`}
             </p>
           </div>
           <div style={{ display:'flex', gap:12 }}>
@@ -314,6 +418,16 @@ export default function Admin() {
                   <Download size={15}/> تصدير CSV
                 </button>
               </>
+            )}
+          {activeTab === 'probation' && (
+              <button onClick={() => setShowProbationForm(true)} style={{
+                display:'flex', alignItems:'center', gap:8,
+                background:'var(--g900)', color:'var(--white)',
+                border:'none', padding:'11px 22px', borderRadius:'var(--r-md)',
+                fontSize:14, fontWeight:600,
+              }}>
+                <Plus size={16}/> إضافة موظف
+              </button>
             )}
           {activeTab === 'jobs' && (
               <button onClick={openNew} style={{
@@ -352,6 +466,26 @@ export default function Admin() {
             {subscribers.length > 0 && (
               <span style={{ background:'var(--g900)', color:'var(--white)', borderRadius:50, fontSize:10, fontWeight:700, padding:'2px 7px', minWidth:18, textAlign:'center' }}>
                 {subscribers.length}
+              </span>
+            )}
+          </button>
+          <button onClick={() => setActiveTab('settings')} style={{
+            padding:'10px 24px', borderRadius:'var(--r-sm)', border:'none', fontSize:14, fontWeight:600, cursor:'pointer',
+            background: activeTab === 'settings' ? 'var(--white)' : 'transparent',
+            color: activeTab === 'settings' ? 'var(--g900)' : 'var(--gray500)',
+            boxShadow: activeTab === 'settings' ? 'var(--shadow-sm)' : 'none',
+          }}>⚙️ الإعدادات</button>
+          <button onClick={() => setActiveTab('probation')} style={{
+            padding:'10px 24px', borderRadius:'var(--r-sm)', border:'none', fontSize:14, fontWeight:600, cursor:'pointer',
+            background: activeTab === 'probation' ? 'var(--white)' : 'transparent',
+            color: activeTab === 'probation' ? 'var(--g900)' : 'var(--gray500)',
+            boxShadow: activeTab === 'probation' ? 'var(--shadow-sm)' : 'none',
+            display:'flex', alignItems:'center', gap:6,
+          }}>
+            <UserCheck size={14}/> فترة التجربة
+            {probation.filter(r => r.status === 'active' || r.status === 'extended').length > 0 && (
+              <span style={{ background:'var(--g600)', color:'var(--white)', borderRadius:50, fontSize:10, fontWeight:700, padding:'2px 7px', minWidth:18, textAlign:'center' }}>
+                {probation.filter(r => r.status === 'active' || r.status === 'extended').length}
               </span>
             )}
           </button>
@@ -473,10 +607,26 @@ export default function Admin() {
                       📌 {app.job?.title || '—'}
                     </div>
 
+                    {/* AI Match Score */}
+                    {app.match_score != null && (() => {
+                      const s = parseFloat(app.match_score)
+                      const [bg, color, label] =
+                        s >= 80 ? ['#D1FAE5','#065F46','عالي'] :
+                        s >= 50 ? ['#FEF3C7','#92400E','متوسط'] :
+                                  ['#FEE2E2','#991B1B','منخفض']
+                      return (
+                        <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:8, padding:'6px 10px', background:bg, borderRadius:'var(--r-sm)' }}>
+                          <span style={{ fontSize:12 }}>🤖</span>
+                          <span style={{ fontSize:12, fontWeight:700, color }}>
+                            AI Match: {s.toFixed(0)}% — {label}
+                          </span>
+                        </div>
+                      )
+                    })()}
+
                     {/* Badges row */}
                     <div style={{ display:'flex', alignItems:'center', gap:6, flexWrap:'wrap' }}>
                       {getStatusBadge(app.status)}
-                      {/* PDPL badge */}
                       {!isWithdrawn && (
                         <span style={{ fontSize:10, fontWeight:700, background:'var(--g50)', color:'var(--g600)', border:'1px solid var(--g200)', padding:'2px 8px', borderRadius:50 }}>
                           PDPL ✓
@@ -567,6 +717,194 @@ export default function Admin() {
                   </div>
                 ))}
               </div>
+            </>
+          )
+        )}
+
+        {/* ── Settings Tab ──────────────────────────────────────────── */}
+        {activeTab === 'settings' && (
+          loadingSettings ? (
+            <div style={{ display:'flex', justifyContent:'center', padding:60 }}>
+              <Loader size={32} color="var(--g600)" style={{ animation:'spin 1s linear infinite' }}/>
+            </div>
+          ) : (
+            <div style={{ display:'flex', flexDirection:'column', gap:24 }}>
+              {Object.entries(settingsGroups).map(([group, items]) => {
+                const groupLabels = { analytics:'📊 التحليلات والإعلانات', general:'🌐 عام', jobs:'💼 الوظائف' }
+                return (
+                  <div key={group} style={{ background:'var(--white)', border:'1.5px solid var(--gray200)', borderRadius:'var(--r-xl)', overflow:'hidden', boxShadow:'var(--shadow-sm)' }}>
+                    <div style={{ padding:'16px 24px', background:'var(--gray50)', borderBottom:'1px solid var(--gray200)' }}>
+                      <div style={{ fontSize:15, fontWeight:700, color:'var(--g950)' }}>
+                        {groupLabels[group] || group}
+                      </div>
+                    </div>
+                    <div style={{ padding:'8px 0' }}>
+                      {items.map((s, i) => (
+                        <div key={s.key} style={{
+                          padding:'18px 24px',
+                          borderBottom: i < items.length-1 ? '1px solid var(--gray100)' : 'none',
+                        }}>
+                          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', gap:16, flexWrap:'wrap' }}>
+                            <div style={{ flex:1, minWidth:200 }}>
+                              <div style={{ fontSize:14, fontWeight:600, color:'var(--g950)', marginBottom:4 }}>
+                                {s.label}
+                              </div>
+                              {s.description && (
+                                <div style={{ fontSize:12, color:'var(--gray400)', lineHeight:1.6, marginBottom:8 }}>
+                                  {s.description}
+                                </div>
+                              )}
+                              <div style={{ fontSize:11, color:'var(--gray300)', fontFamily:'monospace' }}>{s.key}</div>
+                            </div>
+                            <div style={{ display:'flex', gap:8, alignItems:'center', minWidth:280 }}>
+                              <input
+                                value={settingsDraft[s.key] ?? ''}
+                                onChange={e => setSettingsDraft(p => ({ ...p, [s.key]: e.target.value }))}
+                                placeholder={s.type === 'json' ? '["value1","value2"]' : s.type === 'boolean' ? 'true / false' : 'أدخل القيمة...'}
+                                style={{ ...inputStyle, marginBottom:0, flex:1, fontSize:13, fontFamily: s.type === 'json' ? 'monospace' : 'inherit' }}
+                              />
+                              <button
+                                onClick={() => saveSetting(s.key)}
+                                disabled={savingKey === s.key}
+                                style={{
+                                  padding:'10px 18px', background:'var(--g900)', color:'var(--white)',
+                                  border:'none', borderRadius:'var(--r-md)', fontSize:13, fontWeight:600,
+                                  cursor:'pointer', whiteSpace:'nowrap', flexShrink:0,
+                                  opacity: savingKey === s.key ? 0.6 : 1,
+                                }}
+                              >
+                                {savingKey === s.key ? '...' : <Save size={14}/>}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )
+        )}
+
+        {/* ── Probation Tab ──────────────────────────────────────────── */}
+        {activeTab === 'probation' && (
+          loadingProbation ? (
+            <div style={{ display:'flex', justifyContent:'center', padding:60 }}>
+              <Loader size={32} color="var(--g600)" style={{ animation:'spin 1s linear infinite' }}/>
+            </div>
+          ) : (
+            <>
+              {/* KPI row */}
+              {probation.length > 0 && (() => {
+                const active    = probation.filter(r => r.status === 'active').length
+                const expiring  = probation.filter(r => r.remaining_days <= 14 && r.remaining_days > 0).length
+                const extended  = probation.filter(r => r.status === 'extended').length
+                return (
+                  <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))', gap:16, marginBottom:20 }}>
+                    {[
+                      { label:'نشطة',            value:active,   color:'var(--g900)' },
+                      { label:'تنتهي خلال 14 يوم', value:expiring, color:'#DC2626' },
+                      { label:'ممتدة (المادة 53)', value:extended, color:'#5B21B6' },
+                    ].map(({ label, value, color }) => (
+                      <div key={label} style={{ background:'var(--white)', border:'1.5px solid var(--gray200)', borderRadius:'var(--r-lg)', padding:'18px 20px', boxShadow:'var(--shadow-sm)' }}>
+                        <div style={{ fontSize:28, fontWeight:800, color, marginBottom:4 }}>{value}</div>
+                        <div style={{ fontSize:12, color:'var(--gray400)', fontWeight:500 }}>{label}</div>
+                      </div>
+                    ))}
+                  </div>
+                )
+              })()}
+
+              {probation.length === 0 ? (
+                <div style={{ padding:60, textAlign:'center', color:'var(--gray400)', background:'var(--white)', borderRadius:'var(--r-lg)', border:'1.5px solid var(--gray200)' }}>
+                  <UserCheck size={40} color="var(--gray200)" style={{ margin:'0 auto 16px' }}/>
+                  <div style={{ fontSize:16, fontWeight:600, marginBottom:8 }}>لا يوجد سجلات تجربة بعد</div>
+                  <div style={{ fontSize:13, color:'var(--gray300)' }}>أضف موظفاً جديداً لبدء تتبع فترة التجربة</div>
+                </div>
+              ) : (
+                <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(320px,1fr))', gap:16 }}>
+                  {probation.map(record => {
+                    const isExpiringSoon = record.remaining_days <= 14 && record.remaining_days > 0
+                    const barColor = record.is_expired ? '#9CA3AF' : isExpiringSoon ? '#EF4444' : 'var(--g500)'
+                    return (
+                      <div key={record.id} style={{
+                        background:'var(--white)', border: isExpiringSoon ? '1.5px solid rgba(239,68,68,0.3)' : '1.5px solid var(--gray200)',
+                        borderRadius:'var(--r-xl)', padding:20, boxShadow:'var(--shadow-sm)',
+                      }}>
+                        {/* Header */}
+                        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:14 }}>
+                          <div>
+                            <div style={{ fontSize:15, fontWeight:700, color:'var(--g950)', marginBottom:2 }}>{record.employee_name}</div>
+                            <div style={{ fontSize:12, color:'var(--gray400)' }}>{record.employee_email}</div>
+                          </div>
+                          <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:4 }}>
+                            {getProbationBadge(record.status)}
+                            {isExpiringSoon && <span style={{ fontSize:10, color:'#DC2626', fontWeight:600, display:'flex', alignItems:'center', gap:3 }}><AlertTriangle size={10}/> تنتهي قريباً</span>}
+                          </div>
+                        </div>
+
+                        {/* Progress bar */}
+                        <div style={{ background:'var(--gray100)', borderRadius:4, height:6, marginBottom:6, overflow:'hidden' }}>
+                          <div style={{ width:`${record.progress_percent}%`, height:'100%', background:barColor, borderRadius:4, transition:'width 0.3s' }}/>
+                        </div>
+                        <div style={{ display:'flex', justifyContent:'space-between', fontSize:11, color:'var(--gray400)', marginBottom:14 }}>
+                          <span>{record.progress_percent}% مكتمل</span>
+                          <span>{record.remaining_days} يوم متبقٍ من {record.duration_days}</span>
+                        </div>
+
+                        {/* Dates grid */}
+                        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:14 }}>
+                          {[
+                            { label:'تاريخ البدء', value:record.start_date },
+                            { label:'تاريخ الانتهاء', value:record.end_date },
+                          ].map(({ label, value }) => (
+                            <div key={label} style={{ background:'var(--gray50)', borderRadius:'var(--r-sm)', padding:'8px 12px' }}>
+                              <div style={{ fontSize:10, color:'var(--gray400)', marginBottom:2 }}>{label}</div>
+                              <div style={{ fontSize:13, fontWeight:600, color:'var(--g800)' }}>{value}</div>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Law ref */}
+                        <div style={{ fontSize:11, color:'var(--gray400)', marginBottom:12, display:'flex', alignItems:'center', gap:4 }}>
+                          ⚖️ {record.law_ref}
+                        </div>
+
+                        {/* Extend action */}
+                        {record.can_extend && (
+                          extendingId === record.id ? (
+                            <div style={{ background:'var(--g50)', border:'1px solid var(--g200)', borderRadius:'var(--r-md)', padding:14 }}>
+                              <div style={{ fontSize:12, color:'var(--g700)', fontWeight:600, marginBottom:8 }}>
+                                ارفع ملف الموافقة الخطية (PDF/صورة) — المادة 53
+                              </div>
+                              <input type="file" accept=".pdf,.jpg,.jpeg,.png"
+                                onChange={e => setExtendFile(e.target.files[0])}
+                                style={{ fontSize:12, width:'100%', marginBottom:10 }}/>
+                              <div style={{ display:'flex', gap:8 }}>
+                                <button onClick={() => extendProbation(record)} style={{ flex:1, padding:'8px', background:'var(--g900)', color:'var(--white)', border:'none', borderRadius:'var(--r-sm)', fontSize:12, fontWeight:600, cursor:'pointer' }}>
+                                  تأكيد التمديد لـ 180 يوم
+                                </button>
+                                <button onClick={() => { setExtendingId(null); setExtendFile(null) }} style={{ padding:'8px 12px', background:'var(--gray100)', color:'var(--gray600)', border:'none', borderRadius:'var(--r-sm)', fontSize:12, cursor:'pointer' }}>
+                                  إلغاء
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <button onClick={() => setExtendingId(record.id)} style={{
+                              width:'100%', padding:'9px', background:'transparent',
+                              color:'var(--g700)', border:'1.5px solid var(--g200)',
+                              borderRadius:'var(--r-md)', fontSize:13, fontWeight:600, cursor:'pointer',
+                            }}>
+                              تمديد الفترة (حتى 180 يوم)
+                            </button>
+                          )
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
             </>
           )
         )}
@@ -708,6 +1046,61 @@ export default function Admin() {
                   </div>
                 </div>
 
+                {/* ── AI Match Dimensions (7 أبعاد — Staggered) ── */}
+                {a.match_score != null && (() => {
+                  const raw     = a.match_details
+                  const details = raw
+                    ? (typeof raw === 'string' ? (() => { try { return JSON.parse(raw) } catch { return {} } })() : raw)
+                    : {}
+
+                  const dims = [
+                    { key:'skills',       label:'المهارات التقنية',  weight:'35%' },
+                    { key:'experience',   label:'الخبرة',            weight:'25%' },
+                    { key:'location',     label:'الموقع',            weight:'15%' },
+                    { key:'job_type',     label:'نوع الدوام',        weight:'10%' },
+                    { key:'education',    label:'التعليم',           weight:'7%'  },
+                    { key:'category',     label:'القطاع',            weight:'5%'  },
+                    { key:'completeness', label:'اكتمال الطلب',      weight:'3%'  },
+                  ].filter(d => details[d.key] != null)
+
+                  if (!dims.length) return null
+
+                  return (
+                    <div style={{ background:'var(--gray50)', border:'1px solid var(--gray200)', borderRadius:'var(--r-lg)', padding:'14px 16px', marginBottom:16 }}>
+                      <div style={{ fontSize:11, fontWeight:700, color:'var(--gray400)', textTransform:'uppercase', letterSpacing:1, marginBottom:12 }}>
+                        🤖 تفاصيل المطابقة الذكية
+                      </div>
+                      {dims.map(({ key, label, weight }, i) => {
+                        const val = parseFloat(details[key])
+                        const barColor = val >= 70 ? 'var(--g600)' : val >= 40 ? 'var(--gold500)' : '#ef4444'
+                        return (
+                          <div key={key} style={{
+                            marginBottom: 10,
+                            opacity: 1,
+                            animation: `dimIn 0.4s ease ${i * 300}ms both`,
+                          }}>
+                            <div style={{ display:'flex', justifyContent:'space-between', fontSize:11, color:'var(--gray600)', marginBottom:4 }}>
+                              <span style={{ fontWeight:600, color:barColor }}>{val.toFixed(0)}%</span>
+                              <span>{label} <span style={{ color:'var(--gray400)' }}>({weight})</span></span>
+                            </div>
+                            <div style={{ height:5, background:'var(--gray200)', borderRadius:3, overflow:'hidden' }}>
+                              <div style={{
+                                height:'100%', width:`${val}%`,
+                                background:barColor, borderRadius:3,
+                                animation: `barFill 0.8s cubic-bezier(0.19,1,0.22,1) ${i * 300 + 200}ms both`,
+                              }}/>
+                            </div>
+                          </div>
+                        )
+                      })}
+                      <style>{`
+                        @keyframes dimIn    { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:none} }
+                        @keyframes barFill  { from{width:0} }
+                      `}</style>
+                    </div>
+                  )
+                })()}
+
                 {/* Delete Data */}
                 <button onClick={() => withdrawData(a.id)} style={{
                   width:'100%', padding:'11px', borderRadius:'var(--r-md)',
@@ -723,6 +1116,59 @@ export default function Admin() {
                 </p>
               </>
             )})()}
+          </div>
+        </div>
+      )}
+
+      {showProbationForm && (
+        <div onClick={e => e.target===e.currentTarget && setShowProbationForm(false)} style={{
+          position:'fixed', inset:0, zIndex:500,
+          background:'rgba(0,26,13,0.7)', backdropFilter:'blur(4px)',
+          display:'flex', alignItems:'center', justifyContent:'center', padding:'1rem',
+        }}>
+          <div style={{ background:'var(--white)', borderRadius:'var(--r-xl)', width:'100%', maxWidth:480, padding:32, boxShadow:'var(--shadow-lg)', position:'relative' }}>
+            <button onClick={() => setShowProbationForm(false)} style={{ position:'absolute', top:16, left:16, width:32, height:32, borderRadius:'50%', background:'var(--gray100)', border:'none', display:'flex', alignItems:'center', justifyContent:'center' }}>
+              <X size={16}/>
+            </button>
+            <div style={{ fontSize:18, fontWeight:700, color:'var(--g950)', marginBottom:6 }}>إضافة سجل فترة تجربة</div>
+            {/* نظام العمل السعودي — المادة 53: الحد الأقصى 90 يوماً */}
+            <div style={{ fontSize:12, color:'var(--gray400)', marginBottom:20, display:'flex', alignItems:'center', gap:4 }}>
+              ⚖️ وفق نظام العمل السعودي — المادة 53 (الحد الأقصى 90 يوماً)
+            </div>
+
+            <input placeholder="اسم الموظف *" value={probationForm.employee_name}
+              onChange={e => setProbationForm(p => ({ ...p, employee_name:e.target.value }))}
+              style={inputStyle}/>
+
+            <input type="email" placeholder="البريد الإلكتروني *" value={probationForm.employee_email}
+              onChange={e => setProbationForm(p => ({ ...p, employee_email:e.target.value }))}
+              style={inputStyle}/>
+
+            <div style={{ marginBottom:12 }}>
+              <div style={{ fontSize:12, color:'var(--gray500)', marginBottom:6 }}>تاريخ بدء فترة التجربة *</div>
+              <input type="date" value={probationForm.start_date}
+                onChange={e => setProbationForm(p => ({ ...p, start_date:e.target.value }))}
+                style={{ ...inputStyle, marginBottom:0 }}/>
+            </div>
+
+            <div style={{ marginBottom:12 }}>
+              <div style={{ fontSize:12, color:'var(--gray500)', marginBottom:6 }}>المدة بالأيام (الحد الأقصى 90)</div>
+              <input type="number" min={1} max={90} value={probationForm.duration_days}
+                onChange={e => setProbationForm(p => ({ ...p, duration_days:Math.min(90,parseInt(e.target.value)||90) }))}
+                style={{ ...inputStyle, marginBottom:0 }}/>
+            </div>
+
+            <input placeholder="رقم الطلب المرتبط (اختياري)" value={probationForm.application_id}
+              onChange={e => setProbationForm(p => ({ ...p, application_id:e.target.value }))}
+              style={inputStyle}/>
+
+            <button onClick={saveProbation} disabled={savingProbation} style={{
+              width:'100%', padding:13, background:'var(--g900)', color:'var(--white)',
+              border:'none', borderRadius:'var(--r-md)', fontSize:15, fontWeight:600,
+              opacity: savingProbation ? 0.7 : 1,
+            }}>
+              {savingProbation ? 'جارٍ الحفظ...' : 'حفظ السجل'}
+            </button>
           </div>
         </div>
       )}

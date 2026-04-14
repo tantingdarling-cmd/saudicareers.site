@@ -3,6 +3,131 @@ import { Link } from 'react-router-dom'
 import { X, CheckCircle, Upload, Loader } from 'lucide-react'
 import { applicationsApi } from '../services/api'
 
+// ── Success State Component ─────────────────────────────────────────
+// يُعرض بعد إرسال الطلب بنجاح مع كشف درجة AI متحركة إن وُجدت
+function SuccessState({ job, score, onClose }) {
+  // double-RAF: ينتظر رسمتين متتاليتين بدلاً من setTimeout ثابت
+  // الرسمة الأولى: الـ DOM ظهر / الثانية: الـ layout حُسب → آمن لبدء الـ transition
+  const [ringReady, setRingReady] = useState(false)
+  useEffect(() => {
+    let raf1, raf2
+    raf1 = requestAnimationFrame(() => {
+      raf2 = requestAnimationFrame(() => setRingReady(true))
+    })
+    return () => { cancelAnimationFrame(raf1); cancelAnimationFrame(raf2) }
+  }, [])
+
+  const hasScore = score !== null && score !== undefined
+
+  // تحديد الـ tier بناءً على الدرجة
+  const tier = hasScore
+    ? score >= 80
+      ? { label:'مطابقة ممتازة', color:'#065F46', bg:'#D1FAE5', border:'#6EE7B7', emoji:'🏆' }
+      : score >= 50
+        ? { label:'مطابقة جيدة', color:'#92400E', bg:'#FEF3C7', border:'#FCD34D', emoji:'⭐' }
+        : { label:'طلبك قيد المراجعة', color:'#991B1B', bg:'#FEE2E2', border:'#FCA5A5', emoji:'📋' }
+    : null
+
+  // حساب stroke-dashoffset للحلقة الدائرية (r=36 → circumference≈226)
+  const CIRCUM  = 226
+  const offset  = hasScore ? CIRCUM * (1 - score / 100) : CIRCUM
+
+  return (
+    <div style={{ textAlign:'center', padding:'28px 8px 20px' }}>
+
+      {/* ── Animated checkmark ── */}
+      <div style={{
+        width:72, height:72, margin:'0 auto 20px',
+        animation:'checkBounce 0.6s cubic-bezier(0.34,1.56,0.64,1) forwards',
+        display:'flex', alignItems:'center', justifyContent:'center',
+      }}>
+        <CheckCircle size={72} color="var(--g600)" strokeWidth={1.5} />
+      </div>
+
+      <div style={{ fontSize:21, fontWeight:700, color:'var(--g950)', marginBottom:6 }}>
+        تم إرسال طلبك!
+      </div>
+      <div style={{ fontSize:14, color:'var(--gray600)', lineHeight:1.8, marginBottom:hasScore ? 24 : 28 }}>
+        سنراجع طلبك ونتواصل معك قريباً على بريدك الإلكتروني
+      </div>
+
+      {/* ── Score ring — يظهر فقط عند ai_consent + نتيجة ── */}
+      {hasScore && tier && (
+        <div style={{
+          background: tier.bg,
+          border: `1.5px solid ${tier.border}`,
+          borderRadius: 'var(--r-lg)',
+          padding: '20px 24px',
+          marginBottom: 24,
+          animation: 'scoreFadeUp 0.5s ease 0.4s both',
+          display: 'flex', alignItems: 'center', gap: 20,
+          textAlign: 'right',
+        }}>
+          {/* SVG Ring */}
+          <div style={{ flexShrink:0 }}>
+            <svg width="72" height="72" viewBox="0 0 80 80">
+              {/* خلفية الحلقة */}
+              <circle cx="40" cy="40" r="36"
+                fill="none" stroke="rgba(0,0,0,0.07)" strokeWidth="7"/>
+              {/* الحلقة المتحركة — تبدأ فقط بعد ringReady */}
+              <circle cx="40" cy="40" r="36"
+                fill="none"
+                stroke={tier.color}
+                strokeWidth="7"
+                strokeLinecap="round"
+                strokeDasharray={CIRCUM}
+                strokeDashoffset={ringReady ? offset : CIRCUM}
+                transform="rotate(-90 40 40)"
+                style={{
+                  transition: ringReady
+                    ? 'stroke-dashoffset 1.2s cubic-bezier(0.19,1,0.22,1) 0.4s'
+                    : 'none',
+                }}
+              />
+              {/* النسبة المئوية في المنتصف */}
+              <text x="40" y="40" textAnchor="middle" dominantBaseline="central"
+                fontSize="16" fontWeight="800" fill={tier.color}
+                fontFamily="'Plus Jakarta Sans', sans-serif">
+                {Math.round(score)}%
+              </text>
+            </svg>
+          </div>
+          {/* النص */}
+          <div style={{ flex:1, textAlign:'right' }}>
+            <div style={{ fontSize:13, color: tier.color, fontWeight:700, marginBottom:4 }}>
+              {tier.emoji} {tier.label}
+            </div>
+            <div style={{ fontSize:12, color:'var(--gray600)', lineHeight:1.7 }}>
+              {score >= 80
+                ? 'طلبك يُعدّ من الطلبات المميزة وسيُراجع بأولوية عالية'
+                : score >= 50
+                  ? 'طلبك يوافق جزءاً من متطلبات الوظيفة — أضف تفاصيل أكثر في طلباتك القادمة'
+                  : 'طلبك وصل ويخضع للمراجعة اليدوية'}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── CTA ── */}
+      <Link
+        to={`/?category=${job?.category || 'all'}#jobs`}
+        onClick={onClose}
+        style={{
+          display:'inline-flex', alignItems:'center', gap:8,
+          padding:'12px 28px', background:'var(--g900)',
+          color:'var(--white)', borderRadius:'var(--r-md)',
+          fontSize:14, fontWeight:600, textDecoration:'none',
+          transition:'background 0.2s',
+        }}
+        onMouseEnter={e => e.currentTarget.style.background='var(--g700)'}
+        onMouseLeave={e => e.currentTarget.style.background='var(--g900)'}
+      >
+        قدّم على وظائف مشابهة ←
+      </Link>
+    </div>
+  )
+}
+
 // §9 / §4: Validation helpers matching StoreApplicationRequest rules
 const isValidEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim())
 const isValidPhone = (v) => !v || /^[\d\s\+\-\(\)]{7,20}$/.test(v.trim())
@@ -16,6 +141,9 @@ export default function ApplyModal({ job, onClose }) {
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading]     = useState(false)
   const [error, setError]         = useState('')
+  const [matchScore, setMatchScore] = useState(null)   // درجة AI المحسوبة — تُعرض في Success State
+  // PDPL consent_v2 — موافقة صريحة على المعالجة بالذكاء الاصطناعي
+  const [aiConsent, setAiConsent] = useState(false)
 
   // ENHANCEMENT 1: auto-focus name field on mount
   const nameRef = useRef(null)
@@ -80,10 +208,11 @@ export default function ApplyModal({ job, onClose }) {
     }
 
     const payload = new FormData()
-    payload.append('job_id', job.id)
-    payload.append('name',   form.name.trim())
-    payload.append('email',  form.email.trim())
-    payload.append('phone',  form.phone || '')
+    payload.append('job_id',     job.id)
+    payload.append('name',       form.name.trim())
+    payload.append('email',      form.email.trim())
+    payload.append('phone',      form.phone || '')
+    payload.append('ai_consent', aiConsent ? '1' : '0')
     if (cvFile) payload.append('cv', cvFile)
 
     setLoading(true)
@@ -104,6 +233,31 @@ export default function ApplyModal({ job, onClose }) {
       if (xhr.status === 201 || xhr.status === 200) {
         setProgress(100)
         setSubmitted(true)
+
+        // ── GTM: High Quality Lead event ─────────────────────────────
+        // يُطلق عند موافقة على AI + درجة مطابقة ≥ 80 (hql_threshold)
+        try {
+          const res = JSON.parse(xhr.responseText)
+          const score = res?.match_score ?? null
+          if (score !== null) setMatchScore(parseFloat(score))
+          window.dataLayer = window.dataLayer || []
+          window.dataLayer.push({
+            event:          'application_submitted',
+            event_category: 'conversion',
+            job_id:         job.id,
+            job_title:      job.title,
+            ai_scored:      aiConsent,
+            match_score:    score,
+          })
+          if (score !== null && score >= 80) {
+            window.dataLayer.push({
+              event:       'hql_application',
+              match_score: score,
+              job_id:      job.id,
+            })
+          }
+        } catch (_) {}
+
       } else {
         try {
           const data = JSON.parse(xhr.responseText)
@@ -164,31 +318,9 @@ export default function ApplyModal({ job, onClose }) {
           <X size={16} />
         </button>
 
-        {/* ── ENHANCEMENT 4: Success State ─────────────────────── */}
+        {/* ── Success State — Micro-animated ─────────────────────── */}
         {submitted ? (
-          <div style={{ textAlign:'center', padding:'24px 0' }}>
-            <CheckCircle size={56} color="var(--g600)" style={{ margin:'0 auto 16px' }} />
-            <div style={{ fontSize:20, fontWeight:700, color:'var(--g950)', marginBottom:8 }}>تم إرسال طلبك!</div>
-            <div style={{ fontSize:14, color:'var(--gray600)', lineHeight:1.8, marginBottom:24 }}>
-              سنراجع طلبك ونتواصل معك قريباً على بريدك الإلكتروني
-            </div>
-            {/* "وظائف مشابهة" CTA → filters jobs list by same category */}
-            <Link
-              to={`/?category=${job?.category || 'all'}#jobs`}
-              onClick={onClose}
-              style={{
-                display:'inline-flex', alignItems:'center', gap:8,
-                padding:'12px 24px', background:'var(--g900)',
-                color:'var(--white)', borderRadius:'var(--r-md)',
-                fontSize:14, fontWeight:600, textDecoration:'none',
-                transition:'background 0.2s',
-              }}
-              onMouseEnter={e => e.currentTarget.style.background='var(--g700)'}
-              onMouseLeave={e => e.currentTarget.style.background='var(--g900)'}
-            >
-              قدّم على وظائف مشابهة ←
-            </Link>
-          </div>
+          <SuccessState job={job} score={matchScore} onClose={onClose} />
         ) : (
           <>
             <div style={{ fontSize:20, fontWeight:700, color:'var(--g950)', marginBottom:6 }}>تقديم الطلب</div>
@@ -300,6 +432,27 @@ export default function ApplyModal({ job, onClose }) {
               </div>
             )}
 
+            {/* ── PDPL consent_v2: موافقة على المعالجة بالذكاء الاصطناعي ── */}
+            <label style={{
+              display:'flex', alignItems:'flex-start', gap:10,
+              padding:'12px 14px', marginBottom:12,
+              background: aiConsent ? 'var(--g50)' : 'var(--gray50)',
+              border: `1.5px solid ${aiConsent ? 'var(--g200)' : 'var(--gray200)'}`,
+              borderRadius:'var(--r-md)', cursor:'pointer', transition:'all 0.2s',
+            }}>
+              <input
+                type="checkbox"
+                checked={aiConsent}
+                onChange={e => setAiConsent(e.target.checked)}
+                style={{ marginTop:2, accentColor:'var(--g700)', flexShrink:0 }}
+              />
+              <span style={{ fontSize:12, color:'var(--gray600)', lineHeight:1.6 }}>
+                أوافق على تحليل طلبي بالذكاء الاصطناعي لمطابقته مع متطلبات الوظيفة.
+                {' '}<span style={{ color:'var(--g600)', fontWeight:600 }}>اختياري</span>
+                {' '}— يساعد جهة التوظيف على مراجعة الطلبات بشكل أسرع.
+              </span>
+            </label>
+
             <button onClick={handleSubmit} disabled={loading} style={{
               width:'100%', padding:14, marginTop:4,
               background: loading ? 'var(--g600)' : 'var(--g900)', color:'var(--white)',
@@ -320,9 +473,13 @@ export default function ApplyModal({ job, onClose }) {
       </div>
 
       <style>{`
-        @keyframes fadeIn  { from{opacity:0} to{opacity:1} }
-        @keyframes slideUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
-        @keyframes spin    { to{transform:rotate(360deg)} }
+        @keyframes fadeIn      { from{opacity:0} to{opacity:1} }
+        @keyframes slideUp     { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes spin        { to{transform:rotate(360deg)} }
+        @keyframes checkBounce { 0%{opacity:0;transform:scale(0.4)} 65%{transform:scale(1.1)} 80%{transform:scale(0.95)} 100%{opacity:1;transform:scale(1)} }
+        @keyframes scoreFadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes ringFill    { from{stroke-dashoffset:226} }
+        @keyframes dotPop      { 0%{transform:scale(0)} 60%{transform:scale(1.2)} 100%{transform:scale(1)} }
       `}</style>
     </div>
   )

@@ -32,16 +32,19 @@ export default function Navbar() {
         position:'fixed', top:0, insetInline:0, zIndex:200,
         height:68, display:'flex', alignItems:'center', justifyContent:'space-between',
         padding:'0 clamp(1rem,4vw,3rem)',
-        background: scrolled ? 'rgba(255,255,255,0.97)' : 'rgba(255,255,255,0.92)',
-        backdropFilter:'blur(16px)',
+        background: scrolled ? 'rgba(255,255,255,0.82)' : 'rgba(255,255,255,0.72)',
+        backdropFilter:'blur(15px) saturate(180%)',
         borderBottom:'1px solid var(--gray200)',
         boxShadow: scrolled ? 'var(--shadow-md)' : 'none',
         transition:'all 0.3s',
       }}>
         <Link to="/" style={{ display:'flex', alignItems:'center', gap:10 }}>
-          <img src="/saudi.png" alt="Saudi Careers"
-            style={{ width:44, height:44, borderRadius:'50%', objectFit:'cover', background:'#000' }}
-          />
+          <picture>
+            <source srcSet="/saudi.webp" type="image/webp" />
+            <img src="/saudi.png" alt="Saudi Careers" fetchPriority="high" decoding="async"
+              style={{ width:44, height:44, borderRadius:'50%', objectFit:'cover', background:'#000' }}
+            />
+          </picture>
           <span style={{ fontFamily:'var(--font-en)', fontWeight:700, fontSize:17, color:'var(--g900)' }}>
             Saudi<span style={{ color:'var(--gold500)' }}>Careers</span>
           </span>
@@ -86,7 +89,8 @@ export default function Navbar() {
       {menuOpen && (
         <div style={{
           position:'fixed', top:68, insetInline:0, zIndex:199,
-          background:'var(--white)', borderBottom:'1px solid var(--gray200)',
+          background:'rgba(255,255,255,0.88)', backdropFilter:'blur(20px) saturate(180%)',
+          borderBottom:'1px solid var(--gray200)',
           padding:'1.5rem clamp(1rem,4vw,3rem)',
           display:'flex', flexDirection:'column', gap:6,
           boxShadow:'var(--shadow-lg)',

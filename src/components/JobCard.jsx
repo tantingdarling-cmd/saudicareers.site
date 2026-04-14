@@ -2,8 +2,9 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { MapPin, Briefcase, Coins, ArrowLeft } from 'lucide-react'
 
-export default function JobCard({ job, onApply, delay = 0 }) {
+export default function JobCard({ job, onApply, onDetails, delay = 0 }) {
   const [hovered, setHovered] = useState(false)
+  const [pressed, setPressed] = useState(false)
 
   const badgeColors = {
     hot: { bg:'rgba(220,38,38,0.08)', color:'#B91C1C', border:'rgba(220,38,38,0.15)' },
@@ -15,18 +16,22 @@ export default function JobCard({ job, onApply, delay = 0 }) {
   return (
     <div
       onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      onMouseLeave={() => { setHovered(false); setPressed(false) }}
+      onPointerDown={() => setPressed(true)}
+      onPointerUp={() => setPressed(false)}
+      onPointerCancel={() => setPressed(false)}
       style={{
         background:'var(--white)',
         border: hovered ? '1.5px solid var(--g400)' : '1.5px solid var(--gray200)',
-        borderRadius:'var(--r-lg)',
+        borderRadius:20,
         padding:24,
         display:'flex', flexDirection:'column',
-        transition:'all 0.3s',
-        transform: hovered ? 'translateY(-4px)' : 'translateY(0)',
-        boxShadow: hovered ? 'var(--shadow-lg)' : 'var(--shadow-sm)',
+        transition:'all 0.45s cubic-bezier(0.32,0.72,0,1)',
+        transform: pressed ? 'scale(0.97)' : hovered ? 'translateY(-4px)' : 'translateY(0)',
+        boxShadow: hovered ? 'var(--shadow-lg)' : '0 8px 32px rgba(0,0,0,0.08)',
         animationDelay: `${delay}ms`,
         position: 'relative',
+        cursor: 'default',
       }}>
 
       {/* Top row */}
@@ -99,30 +104,48 @@ export default function JobCard({ job, onApply, delay = 0 }) {
         <button
           onClick={() => onApply(job)}
           style={{
-            flex:1, padding:'11px 0', background:'var(--g900)', color:'var(--white)',
-            border:'none', borderRadius:'var(--r-md)',
+            flex:1, padding:'11px 0',
+            background:'linear-gradient(135deg, var(--g900) 0%, var(--g950) 100%)',
+            color:'var(--white)', border:'none', borderRadius:'var(--r-md)',
             fontSize:14, fontWeight:600,
             transition:'all 0.2s', cursor:'pointer',
           }}
           onMouseEnter={e => e.currentTarget.style.background='var(--g700)'}
-          onMouseLeave={e => e.currentTarget.style.background='var(--g900)'}
+          onMouseLeave={e => e.currentTarget.style.background='linear-gradient(135deg, var(--g900) 0%, var(--g950) 100%)'}
         >
           التقديم ←
         </button>
-        <Link
-          to={`/jobs/${job.id}`}
-          style={{
-            display:'flex', alignItems:'center', justifyContent:'center', gap:5,
-            padding:'11px 14px', background:'var(--g50)', color:'var(--g800)',
-            border:'1.5px solid var(--g200)', borderRadius:'var(--r-md)',
-            fontSize:13, fontWeight:600, textDecoration:'none', whiteSpace:'nowrap',
-            transition:'all 0.2s',
-          }}
-          onMouseEnter={e => { e.currentTarget.style.background='var(--g100)'; e.currentTarget.style.borderColor='var(--g400)' }}
-          onMouseLeave={e => { e.currentTarget.style.background='var(--g50)'; e.currentTarget.style.borderColor='var(--g200)' }}
-        >
-          <ArrowLeft size={13} /> التفاصيل
-        </Link>
+        {onDetails ? (
+          <button
+            onClick={() => onDetails(job)}
+            style={{
+              display:'flex', alignItems:'center', justifyContent:'center', gap:5,
+              padding:'11px 14px', background:'var(--g50)', color:'var(--g800)',
+              border:'1.5px solid var(--g200)', borderRadius:'var(--r-md)',
+              fontSize:13, fontWeight:600, whiteSpace:'nowrap', cursor:'pointer',
+              transition:'all 0.3s cubic-bezier(0.32,0.72,0,1)',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background='var(--g100)'; e.currentTarget.style.borderColor='var(--g400)' }}
+            onMouseLeave={e => { e.currentTarget.style.background='var(--g50)'; e.currentTarget.style.borderColor='var(--g200)' }}
+          >
+            <ArrowLeft size={13} /> التفاصيل
+          </button>
+        ) : (
+          <Link
+            to={`/jobs/${job.id}`}
+            style={{
+              display:'flex', alignItems:'center', justifyContent:'center', gap:5,
+              padding:'11px 14px', background:'var(--g50)', color:'var(--g800)',
+              border:'1.5px solid var(--g200)', borderRadius:'var(--r-md)',
+              fontSize:13, fontWeight:600, textDecoration:'none', whiteSpace:'nowrap',
+              transition:'all 0.3s cubic-bezier(0.32,0.72,0,1)',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background='var(--g100)'; e.currentTarget.style.borderColor='var(--g400)' }}
+            onMouseLeave={e => { e.currentTarget.style.background='var(--g50)'; e.currentTarget.style.borderColor='var(--g200)' }}
+          >
+            <ArrowLeft size={13} /> التفاصيل
+          </Link>
+        )}
       </div>
     </div>
   )

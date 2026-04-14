@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Navbar from './components/Navbar.jsx'
 import Footer from './components/Footer.jsx'
 import PageLoader from './components/PageLoader.jsx'
+import AnalyticsHead from './components/AnalyticsHead.jsx'
 
 // §8: Code-split each page into its own async chunk.
 // Vite will emit separate files: Home-[hash].js, JobDetail-[hash].js, etc.
@@ -19,6 +20,7 @@ const Terms          = lazy(() => import('./pages/Terms.jsx'))
 export default function App() {
   return (
     <BrowserRouter>
+      <AnalyticsHead />
       <Navbar />
       <main>
         {/* §2: All 4 routes preserved exactly — paths, params, components unchanged */}

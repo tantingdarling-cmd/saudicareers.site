@@ -8,6 +8,7 @@ use App\Http\Requests\StoreJobRequest;
 use App\Http\Requests\UpdateJobRequest;
 use App\Http\Resources\JobResource;
 use App\Http\Resources\JobCollection;
+use App\Services\SeoService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 
@@ -77,9 +78,9 @@ class JobController extends Controller
     }
 
     // ── §4 / §10: GET /api/v1/jobs/{id} ─────────────────────────────
-    // Appends similar_jobs[] using the existing ::scopeActive() + category match.
+    // Appends similar_jobs[] + seo block (meta + JSON-LD) for the React head manager.
     // inRandomOrder() keeps the section feeling fresh on every visit.
-    public function show(Job $job)
+    public function show(Job $job, SeoService $seo)
     {
         $similar = Job::where('id', '!=', $job->id)
             ->where('category', $job->category)
@@ -90,6 +91,11 @@ class JobController extends Controller
 
         return (new JobResource($job))->additional([
             'similar_jobs' => JobResource::collection($similar),
+            'seo'          => [
+                'title'       => $seo->metaTitle($job),
+                'description' => $seo->metaDescription($job),
+                'json_ld'     => $seo->jobPosting($job),
+            ],
         ]);
     }
 

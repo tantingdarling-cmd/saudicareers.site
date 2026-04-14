@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="vendor/autoload.php"
+         colors="true">
+
+    <testsuites>
+        <testsuite name="Unit">
+            <directory>tests/Unit</directory>
+        </testsuite>
+        <testsuite name="Feature">
+            <directory>tests/Feature</directory>
+        </testsuite>
+    </testsuites>
+
+    <source>
+        <include>
+            <directory>app</directory>
+        </include>
+    </source>
+
+    <php>
+        <!-- بيئة اختبار معزولة تماماً عن الإنتاج -->
+        <env name="APP_ENV"             value="testing"/>
+        <env name="APP_KEY"             value="base64:dGVzdGtleXRlc3RrZXl0ZXN0a2V5dGVzdGtleQ=="/>
+        <env name="APP_DEBUG"           value="true"/>
+
+        <!-- SQLite in-memory: بدون قاعدة بيانات خارجية -->
+        <env name="DB_CONNECTION"       value="sqlite"/>
+        <env name="DB_DATABASE"         value=":memory:"/>
+
+        <!-- تعطيل Redis والـ Queue — الإشعارات تُعترَض بـ Notification::fake() -->
+        <env name="QUEUE_CONNECTION"    value="sync"/>
+        <env name="CACHE_DRIVER"        value="array"/>
+        <env name="SESSION_DRIVER"      value="array"/>
+        <env name="MAIL_MAILER"         value="array"/>
+
+        <!-- تعطيل throttle middleware في الاختبارات -->
+        <env name="CACHE_STORE"         value="array"/>
+    </php>
+
+</phpunit>

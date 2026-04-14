@@ -34,13 +34,16 @@ export default function JobDetail() {
   const [showApply, setShowApply] = useState(false)
   const [copied, setCopied] = useState(false)
 
+  const [seoMeta, setSeoMeta] = useState(null)  // §4: from SeoService via API
+
   useEffect(() => {
     setLoading(true)
     jobsApi.getById(id)
       .then(data => {
-        // §4: show() now returns { data: Job, similar_jobs: Job[] }
+        // §4: show() returns { data: Job, similar_jobs: Job[], seo: { title, description, json_ld } }
         setJob(data.data || data)
         setSimilar(data.similar_jobs?.data || data.similar_jobs || [])
+        if (data.seo) setSeoMeta(data.seo)
       })
       .catch(() => setError('تعذّر تحميل الوظيفة'))
       .finally(() => setLoading(false))
@@ -111,9 +114,15 @@ export default function JobDetail() {
   const icon         = CATEGORY_ICONS[job.category] || '💼'
   const requirements = job.requirements ? job.requirements.split('\n').filter(Boolean) : []
   const description  = job.description  ? job.description.split('\n').filter(Boolean)  : []
-  const pageTitle    = `${job.title} | ${job.company} — سعودي كارييرز`
-  const pageDesc     = `${job.title} في ${job.company}، ${job.location}. ${job.description?.slice(0, 120) || ''}`
-  const pageUrl      = `https://saudicareers.site/jobs/${id}`
+
+  // §4: استخدم بيانات SeoService من الـ API إذا توفرت، وإلا ابنِها محلياً (fallback)
+  const pageTitle = seoMeta?.title    || `${job.title} | ${job.company} — سعودي كارييرز`
+  const pageDesc  = seoMeta?.description || `${job.title} في ${job.company}، ${job.location}. ${job.description?.slice(0, 120) || ''}`
+  const canonicalSlug = job.slug || id
+  const pageUrl   = `https://saudicareers.site/jobs/${canonicalSlug}`
+
+  // §5: JSON-LD — يُفضَّل مصدر SeoService (يتضمن salary_currency)؛ وإلا استخدم البناء المحلي
+  const resolvedJsonLd = seoMeta?.json_ld ? safeJsonLd(seoMeta.json_ld) : jobLd
 
   return (
     <>
@@ -132,8 +141,8 @@ export default function JobDetail() {
         <meta name="twitter:card"        content="summary" />
         <meta name="twitter:title"       content={pageTitle} />
         <meta name="twitter:description" content={pageDesc} />
-        {/* §5: JobPosting structured data */}
-        <script type="application/ld+json">{jobLd}</script>
+        {/* §5: JobPosting structured data — SeoService أو fallback محلي */}
+        <script type="application/ld+json">{resolvedJsonLd}</script>
       </Helmet>
 
       {/* ── Breadcrumb ── */}

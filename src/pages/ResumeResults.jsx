@@ -25,23 +25,33 @@ const CHECK_META = {
   good_keywords:     { label: 'كثافة الكلمات المفتاحية',   tip: 'أضف مصطلحات مهنية متخصصة تزيد كثافتها عن ٣٪ من النص' },
 }
 
-// ── Animated Score Ring ───────────────────────────────────────────────
+// ── Animated Score Ring (In-View trigger) ────────────────────────────
 function ScoreRing({ score }) {
   const r      = 60
   const circ   = 2 * Math.PI * r
   const [animated, setAnimated] = useState(0)
+  const containerRef = useRef(null)
 
+  // الحلقة تتحرك فقط عند دخولها نطاق الرؤية
   useEffect(() => {
     let frame, start
     const run = ts => {
       if (!start) start = ts
-      const p = Math.min((ts - start) / 1200, 1)
+      const p     = Math.min((ts - start) / 1400, 1)
       const eased = 1 - Math.pow(1 - p, 3)
       setAnimated(Math.round(eased * score))
       if (p < 1) frame = requestAnimationFrame(run)
     }
-    const timer = setTimeout(() => { frame = requestAnimationFrame(run) }, 300)
-    return () => { clearTimeout(timer); cancelAnimationFrame(frame) }
+
+    const obs = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        obs.disconnect()
+        frame = requestAnimationFrame(run)
+      }
+    }, { threshold: 0.2 })
+
+    if (containerRef.current) obs.observe(containerRef.current)
+    return () => { obs.disconnect(); cancelAnimationFrame(frame) }
   }, [score])
 
   const color   = scoreColor(score)
@@ -50,7 +60,7 @@ function ScoreRing({ score }) {
   const bdColor = score >= 70 ? 'var(--g200)' : score >= 45 ? 'var(--gold300)' : '#fecaca'
 
   return (
-    <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:12 }}>
+    <div ref={containerRef} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:12 }}>
       <div style={{ position:'relative', width:144, height:144 }}>
         <svg width={144} height={144} style={{ transform:'rotate(-90deg)' }}>
           <circle cx={72} cy={72} r={r} fill="none" stroke="var(--gray200)" strokeWidth={12} />
@@ -94,15 +104,30 @@ function MetricCard({ icon, value, label, sub, color = 'var(--g500)', bg = 'var(
   )
 }
 
-// ── Check Row ─────────────────────────────────────────────────────────
-function CheckRow({ id, passed }) {
+// ── Check Row — Staggered In-View ────────────────────────────────────
+function CheckRow({ id, passed, delay = 0 }) {
+  const ref = useRef(null)
+  const [visible, setVisible] = useState(false)
+
+  useEffect(() => {
+    const obs = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting) { setVisible(true); obs.disconnect() }
+    }, { threshold: 0.1 })
+    if (ref.current) obs.observe(ref.current)
+    return () => obs.disconnect()
+  }, [])
+
   const meta  = CHECK_META[id] || { label: id, tip: '' }
   const color = passed ? 'var(--g600)' : '#ef4444'
   const Icon  = passed ? CheckCircle : XCircle
+
   return (
-    <div style={{
+    <div ref={ref} style={{
       display: 'flex', alignItems: 'flex-start', gap: 14,
       padding: '14px 0', borderBottom: '1px solid var(--gray100)',
+      opacity: visible ? 1 : 0,
+      transform: visible ? 'translateX(0)' : 'translateX(12px)',
+      transition: `opacity 0.45s ease ${delay}ms, transform 0.45s ease ${delay}ms`,
     }}>
       <Icon size={20} color={color} style={{ flexShrink: 0, marginTop: 1 }} />
       <div style={{ flex: 1 }}>
@@ -301,8 +326,8 @@ export default function ResumeResults() {
               <div style={{ fontSize: 12, color: 'var(--gray400)', marginBottom: 16 }}>
                 ٣ معايير تفصل بين سيرة تُقرأ وأخرى تُحذف آلياً
               </div>
-              {Object.keys(CHECK_META).map(key => (
-                <CheckRow key={key} id={key} passed={passed.includes(key)} />
+              {Object.keys(CHECK_META).map((key, i) => (
+                <CheckRow key={key} id={key} passed={passed.includes(key)} delay={i * 300} />
               ))}
             </div>
           </FadeIn>
