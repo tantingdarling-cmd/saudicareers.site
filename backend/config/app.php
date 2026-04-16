@@ -2,6 +2,11 @@
 
 return [
     'name' => env('APP_NAME', 'SaudiCareers'),
+
+    // مسار React's index.html المبني — يستخدمه JobPageController للـ Hybrid SEO
+    // الإنتاج (Cloudways): /home/xxx.cloudwaysapps.com/xxx/public_html/index.html
+    // محلياً (بعد npm build): ../dist/index.html
+    'react_index_path' => env('REACT_INDEX_PATH', base_path('../index.html')),
     'env' => env('APP_ENV', 'production'),
     'debug' => (bool) env('APP_DEBUG', false),
     'url' => env('APP_URL', 'http://localhost'),

@@ -1,11 +1,61 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { X, CheckCircle, Upload, Loader } from 'lucide-react'
+import { X, CheckCircle, Upload, Loader, ExternalLink, Copy } from 'lucide-react'
 import { applicationsApi } from '../services/api'
 
 // ── Success State Component ─────────────────────────────────────────
 // يُعرض بعد إرسال الطلب بنجاح مع كشف درجة AI متحركة إن وُجدت
-function SuccessState({ job, score, onClose }) {
+function TrackingLink({ token }) {
+  const [copied, setCopied] = useState(false)
+  const url = `${window.location.origin}/track/${token}`
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }
+
+  return (
+    <div style={{
+      background:'var(--g50)', border:'1.5px solid var(--g100)',
+      borderRadius:'var(--r-md)', padding:'14px 16px',
+      marginBottom:20, textAlign:'right',
+    }}>
+      <div style={{ fontSize:12, fontWeight:700, color:'var(--g700)', marginBottom:8, display:'flex', alignItems:'center', gap:5 }}>
+        🔗 تتبّع حالة طلبك
+      </div>
+      <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+        <Link
+          to={`/track/${token}`}
+          target="_blank"
+          style={{
+            flex:1, fontSize:11, color:'var(--g600)', fontWeight:500,
+            background:'var(--white)', border:'1px solid var(--g200)',
+            borderRadius:'var(--r-sm)', padding:'7px 10px',
+            textDecoration:'none', overflow:'hidden', textOverflow:'ellipsis',
+            whiteSpace:'nowrap', display:'flex', alignItems:'center', gap:5,
+          }}>
+          <ExternalLink size={11} /> تتبّع الطلب
+        </Link>
+        <button onClick={handleCopy} style={{
+          padding:'7px 12px', background: copied ? 'var(--g600)' : 'var(--white)',
+          color: copied ? 'var(--white)' : 'var(--g700)',
+          border:'1px solid var(--g200)', borderRadius:'var(--r-sm)',
+          fontSize:11, fontWeight:600, cursor:'pointer', flexShrink:0,
+          display:'flex', alignItems:'center', gap:4, transition:'all 0.2s',
+        }}>
+          {copied ? <><CheckCircle size={11} /> تم</> : <><Copy size={11} /> نسخ</>}
+        </button>
+      </div>
+      <div style={{ fontSize:11, color:'var(--gray400)', marginTop:6 }}>
+        احفظ هذا الرابط لمتابعة حالة طلبك في أي وقت
+      </div>
+    </div>
+  )
+}
+
+function SuccessState({ job, score, trackingToken, onClose }) {
   // double-RAF: ينتظر رسمتين متتاليتين بدلاً من setTimeout ثابت
   // الرسمة الأولى: الـ DOM ظهر / الثانية: الـ layout حُسب → آمن لبدء الـ transition
   const [ringReady, setRingReady] = useState(false)
@@ -47,9 +97,14 @@ function SuccessState({ job, score, onClose }) {
       <div style={{ fontSize:21, fontWeight:700, color:'var(--g950)', marginBottom:6 }}>
         تم إرسال طلبك!
       </div>
-      <div style={{ fontSize:14, color:'var(--gray600)', lineHeight:1.8, marginBottom:hasScore ? 24 : 28 }}>
+      <div style={{ fontSize:14, color:'var(--gray600)', lineHeight:1.8, marginBottom:16 }}>
         سنراجع طلبك ونتواصل معك قريباً على بريدك الإلكتروني
       </div>
+
+      {/* ── Tracking Link ── */}
+      {trackingToken && (
+        <TrackingLink token={trackingToken} />
+      )}
 
       {/* ── Score ring — يظهر فقط عند ai_consent + نتيجة ── */}
       {hasScore && tier && (
@@ -141,7 +196,8 @@ export default function ApplyModal({ job, onClose }) {
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading]     = useState(false)
   const [error, setError]         = useState('')
-  const [matchScore, setMatchScore] = useState(null)   // درجة AI المحسوبة — تُعرض في Success State
+  const [matchScore, setMatchScore]       = useState(null)   // درجة AI المحسوبة — تُعرض في Success State
+  const [trackingToken, setTrackingToken] = useState(null)   // رمز تتبع الطلب
   // PDPL consent_v2 — موافقة صريحة على المعالجة بالذكاء الاصطناعي
   const [aiConsent, setAiConsent] = useState(false)
 
@@ -240,6 +296,7 @@ export default function ApplyModal({ job, onClose }) {
           const res = JSON.parse(xhr.responseText)
           const score = res?.match_score ?? null
           if (score !== null) setMatchScore(parseFloat(score))
+          if (res?.tracking_token) setTrackingToken(res.tracking_token)
           window.dataLayer = window.dataLayer || []
           window.dataLayer.push({
             event:          'application_submitted',
@@ -320,7 +377,7 @@ export default function ApplyModal({ job, onClose }) {
 
         {/* ── Success State — Micro-animated ─────────────────────── */}
         {submitted ? (
-          <SuccessState job={job} score={matchScore} onClose={onClose} />
+          <SuccessState job={job} score={matchScore} trackingToken={trackingToken} onClose={onClose} />
         ) : (
           <>
             <div style={{ fontSize:20, fontWeight:700, color:'var(--g950)', marginBottom:6 }}>تقديم الطلب</div>

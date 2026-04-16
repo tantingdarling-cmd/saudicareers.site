@@ -52,19 +52,47 @@ class SeoService
 
     // ── JSON-LD: JobPosting (Google Jobs) ───────────────────────────────────
 
+    // خريطة experience_level → عدد الأشهر (OccupationalExperienceRequirements)
+    private const EXPERIENCE_MONTHS = [
+        'entry'     => 0,
+        'junior'    => 12,
+        'mid'       => 36,
+        'senior'    => 60,
+        'lead'      => 84,
+        'executive' => 120,
+    ];
+
     public function jobPosting(Job $job): array
     {
+        // وصف كافٍ لـ Google Jobs (لا يقل عن 100 حرف)
+        $description = $job->description;
+        if (!$description || mb_strlen($description) < 100) {
+            $parts = ["وظيفة {$job->title} في شركة {$job->company} بمدينة {$job->location}."];
+            if ($job->job_type) $parts[] = "نوع الدوام: {$job->job_type}.";
+            if ($job->experience_level) $parts[] = "مستوى الخبرة: {$job->experience_level}.";
+            if ($job->requirements) $parts[] = 'المتطلبات: ' . mb_substr($job->requirements, 0, 300);
+            $description = implode(' ', $parts);
+        }
+
         $schema = [
-            '@context'          => 'https://schema.org',
-            '@type'             => 'JobPosting',
-            'title'             => $job->title,
-            'description'       => $job->description,
-            'datePosted'        => optional($job->posted_at)->toIso8601String()
-                                    ?? $job->created_at->toIso8601String(),
+            '@context'  => 'https://schema.org',
+            '@type'     => 'JobPosting',
+            // §Google: معرّف فريد يمنع التكرار في نتائج البحث
+            'identifier' => [
+                '@type' => 'PropertyValue',
+                'name'  => self::SITE_NAME,
+                'value' => (string) $job->id,
+            ],
+            'title'       => $job->title,
+            'description' => $description,
+            'datePosted'  => optional($job->posted_at)->toIso8601String()
+                              ?? $job->created_at->toIso8601String(),
+            'validThrough' => now()->addDays(30)->toIso8601String(),
             'hiringOrganization' => [
-                '@type' => 'Organization',
-                'name'  => $job->company,
-                'logo'  => $job->company_logo
+                '@type'  => 'Organization',
+                'name'   => $job->company,
+                'sameAs' => self::SITE_URL,
+                'logo'   => $job->company_logo
                     ? self::SITE_URL . '/storage/' . $job->company_logo
                     : self::SITE_URL . '/saudi.png',
             ],
@@ -76,9 +104,25 @@ class SeoService
                     'addressCountry'  => 'SA',
                 ],
             ],
-            'employmentType' => $this->mapEmploymentType($job->job_type),
-            'url'            => self::SITE_URL . '/jobs/' . $job->slug,
+            'employmentType'               => $this->mapEmploymentType($job->job_type),
+            'applicantLocationRequirements' => ['@type' => 'Country', 'name' => 'Saudi Arabia'],
+            // §Google: directApply يُظهر زر "تقدم الآن" مباشرة في نتائج Google
+            'directApply' => true,
+            'url'         => self::SITE_URL . '/jobs/' . $job->slug,
         ];
+
+        // وظيفة عن بعد → jobLocationType بدلاً من REMOTE (Google لا يدعمها كـ employmentType)
+        if ($job->job_type === 'remote') {
+            $schema['jobLocationType'] = 'TELECOMMUTE';
+        }
+
+        // §Google: OccupationalExperienceRequirements بدلاً من string عادي
+        if ($job->experience_level && isset(self::EXPERIENCE_MONTHS[$job->experience_level])) {
+            $schema['experienceRequirements'] = [
+                '@type'              => 'OccupationalExperienceRequirements',
+                'monthsOfExperience' => self::EXPERIENCE_MONTHS[$job->experience_level],
+            ];
+        }
 
         // أضف نطاق الراتب فقط إذا كانت القيم موجودة (Google Jobs يُفضّله)
         if ($job->salary_min || $job->salary_max) {
@@ -88,7 +132,7 @@ class SeoService
                 'value'    => [
                     '@type'    => 'QuantitativeValue',
                     'minValue' => $job->salary_min,
-                    'maxValue' => $job->salary_max,
+                    'maxValue' => $job->salary_max ?? $job->salary_min,
                     'unitText' => 'MONTH',
                 ],
             ];

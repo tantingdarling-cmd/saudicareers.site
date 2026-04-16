@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { Helmet } from 'react-helmet-async'
-import { MapPin, Briefcase, Coins, ArrowRight, Clock, CheckCircle, Loader, Building2, Star, Share2 } from 'lucide-react'
+import { MapPin, Briefcase, Coins, ArrowRight, Clock, CheckCircle, Loader, Building2, Star, Share2, Download, MessageCircle, Linkedin, X, QrCode } from 'lucide-react'
+import { QRCodeSVG } from 'qrcode.react'
+import html2canvas from 'html2canvas'
 import ApplyModal from '../components/ApplyModal.jsx'
 import { jobsApi } from '../services/api'
 
@@ -35,6 +37,9 @@ export default function JobDetail() {
   const [copied, setCopied] = useState(false)
 
   const [seoMeta, setSeoMeta] = useState(null)  // §4: from SeoService via API
+  const [showSharePanel, setShowSharePanel] = useState(false)
+  const [downloading, setDownloading] = useState(false)
+  const jobCardRef = useRef(null)
 
   useEffect(() => {
     setLoading(true)
@@ -54,16 +59,77 @@ export default function JobDetail() {
       .then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000) })
   }
 
+  const shareWhatsApp = () => {
+    if (!job) return
+    const reqs = job.requirements ? job.requirements.split('\n').filter(Boolean).slice(0, 3) : []
+    const reqText = reqs.length ? '\n\nالمتطلبات الرئيسية:\n' + reqs.map(r => `• ${r}`).join('\n') : ''
+    const salary  = job.salary ? `\n💰 الراتب: ${job.salary} ر.س` : ''
+    const text = `وظيفة: ${job.title}\n🏢 الشركة: ${job.company}\n📍 المدينة: ${job.location}${salary}${reqText}\n\nقدّم الآن 👇\n${window.location.href}`
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank')
+  }
+
+  const shareLinkedIn = () => {
+    if (!job) return
+    window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}`, '_blank', 'width=600,height=500')
+  }
+
+  const downloadAsImage = async () => {
+    if (!jobCardRef.current || !job) return
+    setDownloading(true)
+    try {
+      const canvas = await html2canvas(jobCardRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+      })
+      const link = document.createElement('a')
+      link.download = `وظيفة-${job.title}-${job.company}.png`.replace(/\s/g, '-')
+      link.href = canvas.toDataURL('image/png')
+      link.click()
+    } finally {
+      setDownloading(false)
+    }
+  }
+
   // ── §4 / §5: Structured data for Google Jobs ──────────────────
+
+  // خريطة experience_level → OccupationalExperienceRequirements (Google Jobs standard)
+  const EXPERIENCE_REQUIREMENTS_MAP = {
+    entry:     { '@type': 'OccupationalExperienceRequirements', monthsOfExperience: 0  },
+    junior:    { '@type': 'OccupationalExperienceRequirements', monthsOfExperience: 12 },
+    mid:       { '@type': 'OccupationalExperienceRequirements', monthsOfExperience: 36 },
+    senior:    { '@type': 'OccupationalExperienceRequirements', monthsOfExperience: 60 },
+    lead:      { '@type': 'OccupationalExperienceRequirements', monthsOfExperience: 84 },
+    executive: { '@type': 'OccupationalExperienceRequirements', monthsOfExperience: 120 },
+  }
+
+  // وصف كافٍ لـ Google Jobs (لا يقل عن 100 حرف)
+  const buildDescription = (j) => {
+    if (j.description && j.description.length >= 100) return j.description
+    const parts = [`وظيفة ${j.title} في شركة ${j.company} بمدينة ${j.location}.`]
+    if (j.job_type_label) parts.push(`نوع الدوام: ${j.job_type_label}.`)
+    if (j.experience_level) parts.push(`مستوى الخبرة المطلوب: ${j.experience_level}.`)
+    if (j.requirements) parts.push(`المتطلبات: ${j.requirements.slice(0, 300)}`)
+    return parts.join(' ')
+  }
+
   const jobLd = job ? safeJsonLd({
     '@context': 'https://schema.org/',
     '@type': 'JobPosting',
+    // §Google: معرّف فريد للوظيفة — يمنع التكرار في نتائج البحث
+    identifier: {
+      '@type': 'PropertyValue',
+      name: 'سعودي كارييرز',
+      value: String(job.id),
+    },
     title: job.title,
-    description: job.description || `وظيفة ${job.title} في ${job.company}، ${job.location}`,
+    description: buildDescription(job),
     hiringOrganization: {
       '@type': 'Organization',
       name: job.company,
       sameAs: 'https://saudicareers.site',
+      ...(job.company_logo && { logo: job.company_logo }),
     },
     jobLocation: {
       '@type': 'Place',
@@ -73,14 +139,20 @@ export default function JobDetail() {
         addressCountry: 'SA',
       },
     },
-    // §5: experience_level enum → schema text
-    experienceRequirements: job.experience_level,
+    // §Google: OccupationalExperienceRequirements بدلاً من string عادي
+    ...(job.experience_level && EXPERIENCE_REQUIREMENTS_MAP[job.experience_level] && {
+      experienceRequirements: EXPERIENCE_REQUIREMENTS_MAP[job.experience_level],
+    }),
     // §5: job_type enum → Schema.org employmentType
     employmentType: EMPLOYMENT_TYPE_MAP[job.job_type] || 'FULL_TIME',
     datePosted: job.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
     validThrough: (() => {
       const d = new Date(); d.setDate(d.getDate() + 30); return d.toISOString().split('T')[0]
     })(),
+    // §Google: directApply — يُظهر زر "تقدم الآن" في نتائج Google مباشرة
+    directApply: true,
+    // رابط التقديم المباشر للشركة إن وُجد
+    ...(job.apply_url && { url: job.apply_url }),
     // §4: salary fields are nullable — only emit when present
     ...(job.salary_min && {
       baseSalary: {
@@ -137,10 +209,25 @@ export default function JobDetail() {
         <meta property="og:description"  content={pageDesc} />
         <meta property="og:url"          content={pageUrl} />
         <meta property="og:site_name"    content="سعودي كارييرز" />
+        {/* og:image — صورة عامة بانتظار dynamic OG images */}
+        <meta property="og:image"        content="https://saudicareers.site/og-image.svg" />
+        <meta property="og:image:width"  content="1200" />
+        <meta property="og:image:height" content="630" />
         {/* Twitter */}
-        <meta name="twitter:card"        content="summary" />
+        <meta name="twitter:card"        content="summary_large_image" />
         <meta name="twitter:title"       content={pageTitle} />
         <meta name="twitter:description" content={pageDesc} />
+        <meta name="twitter:image"       content="https://saudicareers.site/og-image.svg" />
+        {/* BreadcrumbList — يُحسّن مسار التنقل في نتائج Google */}
+        <script type="application/ld+json">{safeJsonLd({
+          '@context': 'https://schema.org',
+          '@type': 'BreadcrumbList',
+          itemListElement: [
+            { '@type': 'ListItem', position: 1, name: 'الرئيسية', item: 'https://saudicareers.site' },
+            { '@type': 'ListItem', position: 2, name: 'الوظائف',  item: 'https://saudicareers.site/#jobs' },
+            { '@type': 'ListItem', position: 3, name: job.title,  item: pageUrl },
+          ],
+        })}</script>
         {/* §5: JobPosting structured data — SeoService أو fallback محلي */}
         <script type="application/ld+json">{resolvedJsonLd}</script>
       </Helmet>
@@ -164,7 +251,7 @@ export default function JobDetail() {
           {/* ── Main Content ── */}
           <div>
             {/* Header Card */}
-            <div style={{ background:'var(--white)', border:'1.5px solid var(--gray200)', borderRadius:'var(--r-lg)', padding:'clamp(24px,4vw,36px)', marginBottom:24, boxShadow:'var(--shadow-sm)' }}>
+            <div ref={jobCardRef} style={{ background:'var(--white)', border:'1.5px solid var(--gray200)', borderRadius:'var(--r-lg)', padding:'clamp(24px,4vw,36px)', marginBottom:24, boxShadow:'var(--shadow-sm)' }}>
               <div style={{ display:'flex', alignItems:'flex-start', gap:16, marginBottom:24, flexWrap:'wrap' }}>
                 <div style={{ width:64, height:64, borderRadius:'var(--r-md)', background:'var(--g50)', border:'1.5px solid var(--g100)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:32, flexShrink:0 }}>
                   {icon}
@@ -209,6 +296,11 @@ export default function JobDetail() {
                   <span style={{ fontSize:13, color:'var(--gray400)' }}>شهرياً</span>
                 </div>
               )}
+
+              {/* Watermark for image download */}
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'flex-end', marginTop:8, gap:4, opacity:0.4 }}>
+                <span style={{ fontSize:11, fontWeight:700, color:'var(--g700)', letterSpacing:0.5 }}>saudicareers.site</span>
+              </div>
             </div>
 
             {/* Description */}
@@ -289,12 +381,57 @@ export default function JobDetail() {
                     تقديم مباشر عبر الشركة ↗
                   </a>
                 )}
-                <button onClick={share}
-                  style={{ width:'100%', padding:'10px 0', background:'transparent', color:'var(--gray500)', border:'1px solid var(--gray200)', borderRadius:'var(--r-md)', fontSize:13, fontWeight:500, display:'flex', alignItems:'center', justifyContent:'center', gap:6, transition:'all 0.2s' }}
+                {/* Share button — opens panel */}
+                <button onClick={() => setShowSharePanel(v => !v)}
+                  style={{ width:'100%', padding:'10px 0', background: showSharePanel ? 'var(--g50)' : 'transparent', color:'var(--gray500)', border:'1px solid var(--gray200)', borderRadius:'var(--r-md)', fontSize:13, fontWeight:500, display:'flex', alignItems:'center', justifyContent:'center', gap:6, transition:'all 0.2s', cursor:'pointer' }}
                   onMouseEnter={e => e.currentTarget.style.background='var(--gray50)'}
-                  onMouseLeave={e => e.currentTarget.style.background='transparent'}>
-                  {copied ? <><CheckCircle size={14} color="var(--g500)" /> تم النسخ</> : <><Share2 size={14} /> مشاركة الوظيفة</>}
+                  onMouseLeave={e => e.currentTarget.style.background= showSharePanel ? 'var(--g50)' : 'transparent'}>
+                  <Share2 size={14} /> مشاركة الوظيفة
                 </button>
+
+                {/* ── Share Panel ── */}
+                {showSharePanel && (
+                  <div style={{ marginTop:12, padding:'16px', background:'var(--gray50)', borderRadius:'var(--r-md)', border:'1px solid var(--gray200)', display:'flex', flexDirection:'column', gap:10 }}>
+
+                    {/* WhatsApp */}
+                    <button onClick={shareWhatsApp}
+                      style={{ display:'flex', alignItems:'center', gap:10, width:'100%', padding:'11px 14px', background:'#25D366', color:'#fff', border:'none', borderRadius:'var(--r-md)', fontSize:13, fontWeight:600, cursor:'pointer', transition:'opacity 0.2s' }}
+                      onMouseEnter={e => e.currentTarget.style.opacity='0.88'}
+                      onMouseLeave={e => e.currentTarget.style.opacity='1'}>
+                      <MessageCircle size={15} fill="#fff" /> مشاركة عبر واتساب
+                    </button>
+
+                    {/* LinkedIn */}
+                    <button onClick={shareLinkedIn}
+                      style={{ display:'flex', alignItems:'center', gap:10, width:'100%', padding:'11px 14px', background:'#0A66C2', color:'#fff', border:'none', borderRadius:'var(--r-md)', fontSize:13, fontWeight:600, cursor:'pointer', transition:'opacity 0.2s' }}
+                      onMouseEnter={e => e.currentTarget.style.opacity='0.88'}
+                      onMouseLeave={e => e.currentTarget.style.opacity='1'}>
+                      <Linkedin size={15} fill="#fff" /> مشاركة في لينكد إن
+                    </button>
+
+                    {/* Copy link */}
+                    <button onClick={share}
+                      style={{ display:'flex', alignItems:'center', gap:10, width:'100%', padding:'11px 14px', background:'var(--white)', color:'var(--gray600)', border:'1px solid var(--gray200)', borderRadius:'var(--r-md)', fontSize:13, fontWeight:500, cursor:'pointer', transition:'all 0.2s' }}
+                      onMouseEnter={e => e.currentTarget.style.background='var(--gray100)'}
+                      onMouseLeave={e => e.currentTarget.style.background='var(--white)'}>
+                      {copied ? <><CheckCircle size={14} color="var(--g500)" /> تم نسخ الرابط</> : <><Share2 size={14} /> نسخ الرابط</>}
+                    </button>
+
+                    {/* Download as image */}
+                    <button onClick={downloadAsImage} disabled={downloading}
+                      style={{ display:'flex', alignItems:'center', gap:10, width:'100%', padding:'11px 14px', background:'var(--g900)', color:'var(--white)', border:'none', borderRadius:'var(--r-md)', fontSize:13, fontWeight:600, cursor: downloading ? 'wait' : 'pointer', opacity: downloading ? 0.7 : 1, transition:'all 0.2s' }}
+                      onMouseEnter={e => { if (!downloading) e.currentTarget.style.background='var(--g700)' }}
+                      onMouseLeave={e => e.currentTarget.style.background='var(--g900)'}>
+                      <Download size={14} /> {downloading ? 'جاري التحميل...' : 'تحميل كصورة'}
+                    </button>
+
+                    {/* QR Code */}
+                    <div style={{ display:'flex', flexDirection:'column', alignItems:'center', padding:'14px', background:'var(--white)', borderRadius:'var(--r-md)', border:'1px solid var(--gray200)', gap:8 }}>
+                      <QRCodeSVG value={window.location.href} size={110} fgColor="var(--g950)" bgColor="#ffffff" level="M" />
+                      <span style={{ fontSize:11, color:'var(--gray400)', textAlign:'center' }}>امسح الكود للدخول للوظيفة</span>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <button onClick={() => navigate(-1)}

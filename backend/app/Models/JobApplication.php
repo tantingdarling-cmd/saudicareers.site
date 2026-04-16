@@ -25,6 +25,7 @@ class JobApplication extends Model
         'match_score',
         'match_details',
         'applied_at',
+        'tracking_token',
     ];
 
     protected $casts = [

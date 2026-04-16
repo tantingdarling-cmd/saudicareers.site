@@ -22,6 +22,9 @@ Route::prefix('v1')->group(function () {
     Route::get('/jobs/{job}', [JobController::class, 'show']);
 
     Route::post('/applications', [ApplicationController::class, 'store']);
+    Route::get('/track/{token}', [ApplicationController::class, 'track'])
+         ->middleware('throttle:30,1')
+         ->name('applications.track');
 
     Route::get('/tips', [CareerTipController::class, 'index']);
     Route::get('/tips/{tip}', [CareerTipController::class, 'show']);

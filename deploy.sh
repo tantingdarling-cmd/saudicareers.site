@@ -183,10 +183,38 @@ fi
 
 # ── التحقق النهائي ─────────────────────────────────────────────────────
 echo ""
-[[ -f "$APP_DIR/index.html"      ]] && ok "index.html"       || warn "MISSING: index.html"
-[[ -d "$APP_DIR/assets"          ]] && ok "assets/"          || warn "MISSING: assets/"
-[[ -f "$BACKEND/public/index.php" ]] && ok "Laravel API"     || warn "MISSING: backend/public/index.php"
+[[ -f "$APP_DIR/index.html"       ]] && ok "index.html"        || warn "MISSING: index.html"
+[[ -d "$APP_DIR/assets"           ]] && ok "assets/"           || warn "MISSING: assets/"
+[[ -f "$BACKEND/public/index.php" ]] && ok "Laravel API"       || warn "MISSING: backend/public/index.php"
 [[ -f "$BACKEND/bootstrap/cache/config.php" ]] && ok "config cache" || warn "config cache مفقود"
+
+# ── فحص REACT_INDEX_PATH ───────────────────────────────────────────────
+REACT_INDEX=$(cd "$BACKEND" && php artisan tinker --execute="echo config('app.react_index_path');" 2>/dev/null || true)
+if [[ -f "${REACT_INDEX:-}" ]]; then
+  ok "REACT_INDEX_PATH → $REACT_INDEX"
+else
+  warn "REACT_INDEX_PATH غير صحيح أو غير محدد في .env"
+  warn "  أضف: REACT_INDEX_PATH=$APP_DIR/index.html"
+fi
+
+# ── فحص خط Noto Arabic ─────────────────────────────────────────────────
+FONT_PATH="$BACKEND/resources/fonts/NotoSansArabic-Regular.ttf"
+if [[ -f "$FONT_PATH" ]]; then
+  FONT_SIZE=$(du -h "$FONT_PATH" | cut -f1)
+  ok "NotoSansArabic-Regular.ttf ($FONT_SIZE) — صور OG بعربية كاملة"
+else
+  warn "خط Noto Arabic غير موجود — صور OG ستعمل بـ fallback"
+  warn "  لتفعيله:"
+  warn "  1. نزّل: https://fonts.google.com/noto/specimen/Noto+Sans+Arabic"
+  warn "  2. ضع الملفين في: $BACKEND/resources/fonts/"
+  warn "     NotoSansArabic-Regular.ttf"
+  warn "     NotoSansArabic-Bold.ttf"
+fi
+
+# ── فحص GD Extension ───────────────────────────────────────────────────
+php -r "echo extension_loaded('gd') ? 'ok' : 'missing';" 2>/dev/null | grep -q "ok" \
+  && ok "PHP GD — OG image generator جاهز" \
+  || warn "PHP GD غير مفعّل — تفعيله في php.ini: extension=gd"
 
 # ══════════════════════════════════════════════════════════════════════
 echo -e "\n${G}══════════════════════════════════════════════${N}"

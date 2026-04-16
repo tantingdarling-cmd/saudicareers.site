@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Web\OgImageController;
 use App\Models\Job;
 use App\Http\Requests\StoreJobRequest;
 use App\Http\Requests\UpdateJobRequest;
@@ -102,7 +103,8 @@ class JobController extends Controller
     public function update(UpdateJobRequest $request, Job $job)
     {
         $job->update($request->validated());
-        Cache::flush(); // invalidate jobs cache on write
+        Cache::flush();                         // invalidate jobs cache on write
+        OgImageController::clearCache($job->id); // invalidate OG image cache
         return response()->json([
             'message' => 'تم تحديث الوظيفة بنجاح',
             'data'    => new JobResource($job),
@@ -111,8 +113,10 @@ class JobController extends Controller
 
     public function destroy(Job $job)
     {
+        $jobId = $job->id;
         $job->delete();
-        Cache::flush(); // invalidate jobs cache on write
+        Cache::flush();
+        OgImageController::clearCache($jobId);
         return response()->json([
             'message' => 'تم حذف الوظيفة بنجاح',
         ]);

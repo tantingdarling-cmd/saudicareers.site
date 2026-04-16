@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use App\Models\Job;
 use App\Models\CareerTip;
+use App\Http\Controllers\Web\JobPageController;
+use App\Http\Controllers\Web\OgImageController;
 
 /*
 |--------------------------------------------------------------------------
@@ -12,6 +14,27 @@ use App\Models\CareerTip;
 | robots.txt   — served by Laravel (fallback if static file isn't found)
 |--------------------------------------------------------------------------
 */
+
+// ═══════════════════════════════════════════════════════════════════
+// Hybrid SEO Routes — صفحات الوظائف مخدومة من Laravel لضمان الـ SEO
+//
+// الآلية:
+//   nginx يوجّه /jobs/* و /og/* إلى Laravel (index.php)
+//   Laravel يقرأ React's index.html، يحقن meta الوظيفة، يُعيد HTML كامل
+//   React تتولى التفاعل بعد التحميل (hydration)
+//
+// يتطلب في nginx.conf إضافة:
+//   location ~ ^/(jobs|og)(/.*)?$ { try_files $uri @laravel; }
+// ═══════════════════════════════════════════════════════════════════
+
+Route::get('/jobs/{idOrSlug}', [JobPageController::class, 'show'])
+    ->middleware('throttle:120,1')
+    ->name('jobs.show');
+
+Route::get('/og/jobs/{id}', [OgImageController::class, 'job'])
+    ->middleware('throttle:60,1')
+    ->where('id', '[0-9]+')
+    ->name('og.jobs');
 
 Route::get('/sitemap.xml', function () {
     $baseUrl = 'https://saudicareers.site';

@@ -13,6 +13,7 @@ use App\Notifications\HighMatchApplicationNotification;
 use App\Services\MatchService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Str;
 
 class ApplicationController extends Controller
 {
@@ -21,15 +22,16 @@ class ApplicationController extends Controller
         $aiConsent = filter_var($request->input('ai_consent', false), FILTER_VALIDATE_BOOLEAN);
 
         $application = JobApplication::create([
-            'job_id'        => $request->job_id,
-            'name'          => $request->name,
-            'email'         => $request->email,
-            'phone'         => $request->phone,
-            'cover_letter'  => $request->cover_letter,
-            'linkedin_url'  => $request->linkedin_url,
-            'portfolio_url' => $request->portfolio_url,
-            'ai_consent'    => $aiConsent,
-            'applied_at'    => now(),
+            'job_id'         => $request->job_id,
+            'name'           => $request->name,
+            'email'          => $request->email,
+            'phone'          => $request->phone,
+            'cover_letter'   => $request->cover_letter,
+            'linkedin_url'   => $request->linkedin_url,
+            'portfolio_url'  => $request->portfolio_url,
+            'ai_consent'     => $aiConsent,
+            'applied_at'     => now(),
+            'tracking_token' => Str::random(32),
         ]);
 
         $cvPath = null;
@@ -78,10 +80,49 @@ class ApplicationController extends Controller
         }
 
         return response()->json([
-            'message'     => 'تم إرسال طلب التقديم بنجاح',
-            'data'        => new ApplicationResource($application),
-            'match_score' => $aiConsent ? ($application->match_score ?? null) : null,
+            'message'        => 'تم إرسال طلب التقديم بنجاح',
+            'data'           => new ApplicationResource($application),
+            'match_score'    => $aiConsent ? ($application->match_score ?? null) : null,
+            'tracking_token' => $application->tracking_token,
         ], 201);
+    }
+
+    /**
+     * endpoint عام — يُعيد بيانات الحالة فقط بدون أي PII
+     * GET /api/v1/track/{token}
+     */
+    public function track(string $token)
+    {
+        $application = JobApplication::where('tracking_token', $token)
+            ->with('job:id,title,company,location,category')
+            ->firstOrFail();
+
+        $stages = [
+            ['key' => 'pending',   'label' => 'تم استلام الطلب',       'icon' => '📥'],
+            ['key' => 'reviewed',  'label' => 'قيد المراجعة',           'icon' => '🔍'],
+            ['key' => 'interview', 'label' => 'تم الاختيار للمقابلة',   'icon' => '🤝'],
+            ['key' => 'accepted',  'label' => 'تهانينا! تم القبول',     'icon' => '🎉'],
+        ];
+
+        $stageOrder = ['pending' => 0, 'reviewed' => 1, 'interview' => 2, 'accepted' => 3, 'rejected' => 2, 'withdrawn' => 0];
+        $currentOrder = $stageOrder[$application->status] ?? 0;
+
+        return response()->json([
+            'status'       => $application->status,
+            'status_label' => $application->status_label,
+            'applied_at'   => $application->applied_at?->format('Y-m-d H:i'),
+            'match_score'  => $application->ai_consent ? $application->match_score : null,
+            'is_rejected'  => $application->status === 'rejected',
+            'is_withdrawn' => $application->status === 'withdrawn',
+            'current_stage_order' => $currentOrder,
+            'stages'       => $stages,
+            'job'          => $application->job ? [
+                'title'    => $application->job->title,
+                'company'  => $application->job->company,
+                'location' => $application->job->location,
+                'category' => $application->job->category,
+            ] : null,
+        ]);
     }
     
     public function index(Request $request)
