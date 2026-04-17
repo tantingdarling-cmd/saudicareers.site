@@ -39,9 +39,9 @@ class ResumeAnalyzer
         $this->parser = new Parser();
     }
 
-    public function analyze(string $pdfPath): array
+    public function analyze(string $filePath): array
     {
-        $text = $this->extractText($pdfPath);
+        $text = $this->extractText($filePath);
 
         $hasContact        = $this->checkContact($text);
         $hasHeadings       = $this->checkHeadings($text);
@@ -70,6 +70,7 @@ class ResumeAnalyzer
 
         return [
             'score'           => $score,
+            'raw_text'        => $text,
             'passed'          => $passed,
             'failed'          => $failed,
             'recommendations' => $this->buildTips($hasContact, $hasHeadings, $keywords, $wordCount),
@@ -79,13 +80,16 @@ class ResumeAnalyzer
 
     // ── Private helpers ──────────────────────────────────────────────
 
-    private function extractText(string $pdfPath): string
+    private function extractText(string $filePath): string
     {
+        if (str_ends_with(strtolower($filePath), '.txt')) {
+            return file_get_contents($filePath) ?: '';
+        }
+
         try {
-            $pdf = $this->parser->parseFile($pdfPath);
+            $pdf = $this->parser->parseFile($filePath);
             return $pdf->getText();
-        } catch (\Throwable $e) {
-            // If parsing fails, return empty string — analyzer will give low score
+        } catch (\Throwable) {
             return '';
         }
     }

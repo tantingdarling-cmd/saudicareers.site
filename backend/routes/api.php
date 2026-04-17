@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BulkJobController;
 use App\Http\Controllers\Api\SitemapController;
 use App\Http\Controllers\Api\ResumeController;
+use App\Http\Controllers\Api\ResumeOptimizeController;
 use App\Http\Controllers\Api\ProbationController;
 use App\Http\Controllers\Api\SettingsController;
 
@@ -39,6 +40,15 @@ Route::prefix('v1')->group(function () {
     Route::post('/resume/analyze', [ResumeController::class, 'analyze'])
         ->middleware('throttle:3,1')
         ->name('resume.analyze');
+
+    // AI Resume Optimizer — queue-based, 5 req/min per IP
+    Route::post('/resume/optimize', [ResumeOptimizeController::class, 'optimize'])
+        ->middleware('throttle:5,1')
+        ->name('resume.optimize');
+
+    Route::get('/resume/status/{jobId}', [ResumeOptimizeController::class, 'status'])
+        ->middleware('throttle:60,1')
+        ->name('resume.status');
 
     // Rate limited to 5 attempts per minute per IP
     Route::post('/login', [AuthController::class, 'login'])

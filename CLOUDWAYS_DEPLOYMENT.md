@@ -3,7 +3,7 @@
 ## هيكل المشروع
 
 ```
-saudicareers#1/
+saudicareers#2/
 ├── frontend/          # React (Vite)
 │   ├── src/
 │   ├── public/

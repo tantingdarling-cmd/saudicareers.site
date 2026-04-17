@@ -7,6 +7,8 @@ import ApplyModal from '../components/ApplyModal.jsx'
 import JobStructuredData from '../components/JobStructuredData.jsx'
 import { JOBS as FALLBACK_JOBS, TIPS as FALLBACK_TIPS, CATEGORIES } from '../data'
 import { jobsApi, tipsApi, subscribersApi } from '../services/api'
+import { useFadeIn } from '../hooks/useFadeIn'
+import AnimatedNumber from '../components/AnimatedNumber.jsx'
 
 const CATEGORY_ICONS = {
   tech: '💻', finance: '🏦', energy: '⚡', construction: '🏗️',
@@ -75,29 +77,8 @@ function Reveal({ children, delay = 0, style = {} }) {
   )
 }
 
-/* ── CountUp hook ────────────────────────── */
-function useCountUp(target, visible, duration = 1600) {
-  const [count, setCount] = useState(0)
-  useEffect(() => {
-    if (!visible || !target) return
-    let startTime = null
-    const animate = ts => {
-      if (!startTime) startTime = ts
-      const progress = Math.min((ts - startTime) / duration, 1)
-      const eased = 1 - Math.pow(1 - progress, 3)
-      setCount(Math.round(eased * target))
-      if (progress < 1) requestAnimationFrame(animate)
-    }
-    requestAnimationFrame(animate)
-  }, [visible, target, duration])
-  return count
-}
-
-const toAr = n => String(n).replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d])
-
 function StatItem({ val, prefix = '', accent, label }) {
   const [ref, vis] = useReveal()
-  const count = useCountUp(val, vis)
   return (
     <div ref={ref} style={{
       opacity: vis ? 1 : 0,
@@ -105,7 +86,7 @@ function StatItem({ val, prefix = '', accent, label }) {
       transition: 'opacity 0.65s ease, transform 0.65s ease',
     }}>
       <div style={{ fontSize:'clamp(2rem,4vw,2.8rem)', fontWeight:800, color:'var(--white)', lineHeight:1, marginBottom:6, fontFamily:'var(--font-en)' }}>
-        {prefix}{toAr(count)}<span style={{ color:'var(--gold400)' }}>{accent}</span>
+        {prefix}<AnimatedNumber target={val} arabic={true} /><span style={{ color:'var(--gold400)' }}>{accent}</span>
       </div>
       <div style={{ fontSize:14, color:'rgba(255,255,255,0.6)' }}>{label}</div>
     </div>
@@ -211,10 +192,10 @@ function SignupForm({ id }) {
               width:'100%', padding:14, marginTop:4,
               background: loading ? 'var(--g600)' : 'var(--g900)', color:'var(--white)',
               border:'none', borderRadius:'var(--r-md)',
-              fontSize:15, fontWeight:600, transition:'all 0.2s', cursor:'pointer',
+              fontSize:15, fontWeight:600, transition:'all 0.25s cubic-bezier(0.4,0,0.2,1)', cursor: loading ? 'not-allowed' : 'pointer',
             }}
-            onMouseEnter={e=>!loading&&(e.currentTarget.style.background='var(--g700)')}
-            onMouseLeave={e=>!loading&&(e.currentTarget.style.background='var(--g900)')}>
+            onMouseEnter={e=>{ if(!loading){ e.currentTarget.style.background='var(--g700)'; e.currentTarget.style.boxShadow='0 0 0 3px rgba(197,160,89,0.22), 0 6px 24px rgba(197,160,89,0.18)' }}}
+            onMouseLeave={e=>{ if(!loading){ e.currentTarget.style.background='var(--g900)'; e.currentTarget.style.boxShadow='none' }}}>
               {loading ? '...جارٍ التسجيل' : 'احصل على تحسين سيرتك مجاناً ←'}
             </button>
           </RevealField>
@@ -318,6 +299,9 @@ export default function Home() {
       .catch(() => {/* keep fallback */})
   }, [])
 
+  const heroHeadingRef = useFadeIn()
+  const heroDescRef = useFadeIn()
+
   const filteredJobs = activeCategory === 'all'
     ? jobs
     : jobs.filter(j => j.category === activeCategory)
@@ -328,52 +312,53 @@ export default function Home() {
 
   return (
     <>
-      {/* ── HERO (Minimalist) ── */}
+      {/* ── HERO ── */}
       <section style={{
         minHeight: '100vh',
         padding: '120px clamp(1rem,4vw,3rem) 80px',
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
         textAlign: 'center',
-        background: 'radial-gradient(ellipse 80% 50% at 50% -5%, rgba(0,61,43,0.06) 0%, transparent 65%), radial-gradient(ellipse 50% 40% at 95% 40%, rgba(197,160,89,0.04) 0%, transparent 55%), #F5F5F7',
+        background: 'radial-gradient(ellipse 80% 55% at 50% 0%, rgba(197,160,89,0.14) 0%, transparent 60%), radial-gradient(ellipse 55% 45% at 100% 55%, rgba(197,160,89,0.07) 0%, transparent 55%), var(--g900)',
         position: 'relative', overflow: 'hidden',
       }}>
         {/* خط عرضي خفيف في الأعلى */}
-        <div style={{ position:'absolute', top:0, left:0, right:0, height:3, background:'linear-gradient(90deg, transparent, var(--g700) 40%, var(--gold500) 70%, transparent)' }}/>
+        <div style={{ position:'absolute', top:0, left:0, right:0, height:2, background:'linear-gradient(90deg, transparent, var(--gold600) 30%, var(--gold400) 65%, transparent)' }}/>
 
         <div style={{ position:'relative', zIndex:1, display:'flex', flexDirection:'column', alignItems:'center', maxWidth:680 }}>
 
           {/* badge */}
           <div style={{
             display:'inline-flex', alignItems:'center', gap:8,
-            background:'var(--white)', color:'var(--g800)',
-            border:'1px solid var(--gray200)',
+            background:'rgba(197,160,89,0.1)', color:'var(--gold300)',
+            border:'1px solid rgba(197,160,89,0.28)',
             padding:'5px 16px 5px 12px', borderRadius:50,
             fontSize:13, fontWeight:500, marginBottom:32,
-            boxShadow:'0 1px 4px rgba(0,61,43,0.06)',
+            boxShadow:'0 1px 12px rgba(197,160,89,0.12)',
           }}>
-            <span style={{ width:7, height:7, background:'var(--g600)', borderRadius:'50%', animation:'pulse 2s infinite', display:'block' }}/>
+            <span style={{ width:7, height:7, background:'var(--gold500)', borderRadius:'50%', animation:'pulse 2s infinite', display:'block' }}/>
             وصول مبكر مجاني — سجّل الآن
           </div>
 
           {/* heading */}
-          <h1 style={{
+          <h1 ref={heroHeadingRef} className="fade-in-section" style={{
             fontSize: 'clamp(2.2rem,5.5vw,3.8rem)',
             fontWeight: 700,
             lineHeight: 1.2,
-            color: 'var(--g950)',
+            color: 'var(--white)',
             maxWidth: 640,
             marginBottom: 20,
             letterSpacing: '-0.5px',
             fontFamily: 'var(--font-ar)',
             fontVariationSettings: "'wght' 700",
           }}>
-            ارفع مستواك في سوق العمل
+            ارفع مستواك في{' '}
+            <span style={{ color:'var(--gold500)' }}>سوق العمل</span>
           </h1>
 
           {/* sub */}
-          <p style={{
+          <p ref={heroDescRef} className="fade-in-section delay-1" style={{
             fontSize: 'clamp(1rem,2vw,1.1rem)',
-            color: 'var(--gray600)',
+            color: 'rgba(255,255,255,0.62)',
             maxWidth: 520,
             marginBottom: 44,
             lineHeight: 1.9,
@@ -387,36 +372,36 @@ export default function Home() {
           <div style={{ display:'flex', gap:12, flexWrap:'wrap', justifyContent:'center', marginBottom:48 }}>
             <Link to="/resume-analyzer" style={{
               display:'inline-flex', alignItems:'center', gap:8,
-              background:'linear-gradient(135deg, var(--g900) 0%, var(--g950) 100%)',
-              color:'var(--white)',
+              background:'linear-gradient(135deg, var(--gold500) 0%, var(--gold600) 100%)',
+              color:'var(--g950)',
               padding:'13px 28px', borderRadius:'var(--r-md)',
-              fontSize:15, fontWeight:600, textDecoration:'none',
-              transition:'background 0.2s',
+              fontSize:15, fontWeight:700, textDecoration:'none',
+              transition:'background 0.2s', boxShadow:'0 4px 20px rgba(197,160,89,0.35)',
             }}
-            onMouseEnter={e=>e.currentTarget.style.background='var(--g700)'}
-            onMouseLeave={e=>e.currentTarget.style.background='linear-gradient(135deg, var(--g900) 0%, var(--g950) 100%)'}
+            onMouseEnter={e=>e.currentTarget.style.background='var(--gold400)'}
+            onMouseLeave={e=>e.currentTarget.style.background='linear-gradient(135deg, var(--gold500) 0%, var(--gold600) 100%)'}
             >
               افحص سيرتك مجاناً ✦
             </Link>
             <button onClick={() => document.getElementById('jobs')?.scrollIntoView({ behavior:'smooth' })} style={{
               display:'inline-flex', alignItems:'center', gap:8,
-              background:'var(--white)', color:'var(--g900)',
+              background:'rgba(255,255,255,0.07)', color:'var(--white)',
               padding:'13px 28px', borderRadius:'var(--r-md)',
-              fontSize:15, fontWeight:600, border:'1.5px solid var(--gray200)',
-              cursor:'pointer', transition:'border-color 0.2s',
+              fontSize:15, fontWeight:600, border:'1.5px solid rgba(255,255,255,0.2)',
+              cursor:'pointer', transition:'border-color 0.2s, background 0.2s',
             }}
-            onMouseEnter={e=>e.currentTarget.style.borderColor='var(--g600)'}
-            onMouseLeave={e=>e.currentTarget.style.borderColor='var(--gray200)'}
+            onMouseEnter={e=>{e.currentTarget.style.borderColor='rgba(255,255,255,0.45)';e.currentTarget.style.background='rgba(255,255,255,0.12)'}}
+            onMouseLeave={e=>{e.currentTarget.style.borderColor='rgba(255,255,255,0.2)';e.currentTarget.style.background='rgba(255,255,255,0.07)'}}
             >
               تصفّح الوظائف
             </button>
           </div>
 
-          {/* ── Notion-style floating AI preview card ── */}
+          {/* ── Floating AI preview card ── */}
           <div aria-hidden="true" style={{
             position:'relative', width:'100%', maxWidth:360, margin:'0 auto 40px',
             animation:'float 6s ease-in-out infinite',
-            filter:'drop-shadow(0 16px 40px rgba(0,61,43,0.12))',
+            filter:'drop-shadow(0 20px 48px rgba(0,0,0,0.45))',
           }}>
             <div style={{
               background:'var(--white)', borderRadius:'var(--r-xl)',
@@ -497,19 +482,19 @@ export default function Home() {
           </div>
 
           {/* social proof */}
-          <div style={{ display:'flex', alignItems:'center', gap:12, fontSize:13, color:'var(--gray400)' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:12, fontSize:13, color:'rgba(255,255,255,0.45)' }}>
             <div style={{ display:'flex', direction:'ltr' }}>
               {['أح','سم','عب','+'].map((t,i) => (
                 <div key={i} style={{
-                  width:28, height:28, borderRadius:'50%', border:'2px solid #FAFAF9',
+                  width:28, height:28, borderRadius:'50%', border:'2px solid rgba(255,255,255,0.12)',
                   marginRight:-8, display:'flex', alignItems:'center', justifyContent:'center',
                   fontSize:10, fontWeight:700,
-                  background: i===3 ? 'var(--g900)' : ['var(--g100)','var(--gold100)','var(--g200)'][i],
-                  color: i===3 ? 'var(--white)' : ['var(--g800)','var(--gold700)','var(--g900)'][i],
+                  background: i===3 ? 'var(--gold500)' : ['var(--g600)','var(--gold600)','var(--g500)'][i],
+                  color: 'var(--white)',
                 }}>{t}</div>
               ))}
             </div>
-            <span>انضم أكثر من <strong style={{ color:'var(--g800)' }}>120+</strong> محترف</span>
+            <span>انضم أكثر من <strong style={{ color:'var(--gold300)' }}>120+</strong> محترف</span>
           </div>
         </div>
       </section>
@@ -678,7 +663,7 @@ export default function Home() {
 
       <style>{`
         @keyframes float    { 0%,100%{transform:translateY(0px) rotate(-1deg)} 50%{transform:translateY(-12px) rotate(1deg)} }
-        @keyframes pulse    { 0%,100%{box-shadow:0 0 0 0 rgba(59,175,122,0.55);transform:scale(1)} 50%{box-shadow:0 0 0 6px rgba(59,175,122,0);transform:scale(1.15)} }
+        @keyframes pulse    { 0%,100%{box-shadow:0 0 0 0 rgba(197,160,89,0.6);transform:scale(1)} 50%{box-shadow:0 0 0 6px rgba(197,160,89,0);transform:scale(1.15)} }
         @keyframes ringFill { from{stroke-dashoffset:170} }
         @media (prefers-reduced-motion: reduce) {
           [style*="float"], [style*="pulse"] { animation: none !important; }

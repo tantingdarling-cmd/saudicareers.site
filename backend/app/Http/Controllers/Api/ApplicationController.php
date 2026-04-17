@@ -12,6 +12,7 @@ use App\Notifications\AdminHQLAlertNotification;
 use App\Notifications\HighMatchApplicationNotification;
 use App\Services\MatchService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 
@@ -79,12 +80,38 @@ class ApplicationController extends Controller
             }
         }
 
+        // Telegram admin notification — non-blocking, fails silently
+        try {
+            $jobTitle = isset($job) ? $job->title : (Job::find($request->job_id)?->title ?? "وظيفة #{$request->job_id}");
+            $this->notifyTelegram($application, $jobTitle);
+        } catch (\Throwable) {}
+
         return response()->json([
             'message'        => 'تم إرسال طلب التقديم بنجاح',
             'data'           => new ApplicationResource($application),
             'match_score'    => $aiConsent ? ($application->match_score ?? null) : null,
             'tracking_token' => $application->tracking_token,
         ], 201);
+    }
+
+    private function notifyTelegram(JobApplication $application, string $jobTitle): void
+    {
+        $token  = config('services.telegram.bot_token');
+        $chatId = config('services.telegram.chat_id');
+        if (!$token || !$chatId) return;
+
+        $score = $application->match_score !== null
+            ? " | 🎯 المطابقة: {$application->match_score}%"
+            : '';
+
+        $text = "📬 *طلب تقديم جديد*\n"
+              . "📋 الوظيفة: {$jobTitle}{$score}\n"
+              . "🕐 " . now()->format('Y-m-d H:i');
+
+        Http::timeout(4)->post(
+            "https://api.telegram.org/bot{$token}/sendMessage",
+            ['chat_id' => $chatId, 'text' => $text, 'parse_mode' => 'Markdown']
+        );
     }
 
     /**
