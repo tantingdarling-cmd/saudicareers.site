@@ -15,6 +15,7 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'resume_path',
     ];
 
     protected $hidden = [

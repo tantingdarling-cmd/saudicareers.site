@@ -19,6 +19,7 @@ const Terms             = lazy(() => import('./pages/Terms.jsx'))
 const TrackApplication  = lazy(() => import('./pages/TrackApplication.jsx'))
 const SavedJobs         = lazy(() => import('./pages/SavedJobs.jsx'))
 const Alerts            = lazy(() => import('./pages/Alerts.jsx'))
+const Profile           = lazy(() => import('./pages/Profile.jsx'))
 
 export default function App() {
   return (
@@ -40,6 +41,7 @@ export default function App() {
             <Route path="/track/:token"        element={<TrackApplication />} />
             <Route path="/saved"               element={<SavedJobs />} />
             <Route path="/alerts"              element={<Alerts />} />
+            <Route path="/profile"             element={<Profile />} />
           </Routes>
         </Suspense>
       </main>
