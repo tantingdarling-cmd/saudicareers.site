@@ -87,6 +87,9 @@ ok "Composer — vendor optimized"
 if [[ "$SKIP_MIGRATE" == false ]]; then
   step "3/7  Migrations وSettingsSeeder"
 
+  # مسح الكاش القديم أولاً (قد يتسبب في فشل الاتصال)
+  php artisan config:clear --no-interaction > /dev/null 2>&1 || true
+
   # اختبار اتصال DB قبل المتابعة
   php artisan tinker --execute="DB::connection()->getPdo();" > /dev/null 2>&1 \
     || abort "لا يمكن الاتصال بقاعدة البيانات — تحقق من DB_* في .env"
