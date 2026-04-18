@@ -206,6 +206,11 @@ export default function ApplyModal({ job, onClose }) {
   useEffect(() => {
     document.body.style.overflow = 'hidden'
     nameRef.current?.focus()
+    // fire start_application pixel — user opened the apply form
+    if (localStorage.getItem('consent_analytics') === 'true') {
+      if (window.snaptr) window.snaptr('track', 'START_CHECKOUT', { item_ids: [String(job?.id)] })
+      if (window.twq)   window.twq('event', 'tw-InitiateCheckout', { value: null })
+    }
     return () => { document.body.style.overflow = '' }
   }, [])
 
@@ -312,6 +317,11 @@ export default function ApplyModal({ job, onClose }) {
               match_score: score,
               job_id:      job.id,
             })
+          }
+          // fire application_submitted pixel — primary conversion event
+          if (localStorage.getItem('consent_analytics') === 'true') {
+            if (window.snaptr) window.snaptr('track', 'PURCHASE', { item_ids: [String(job.id)], price: '0', currency: 'SAR' })
+            if (window.twq)   window.twq('event', 'tw-Purchase', { value: 0, currency: 'SAR' })
           }
         } catch (_) {}
 
@@ -510,7 +520,7 @@ export default function ApplyModal({ job, onClose }) {
               </span>
             </label>
 
-            <button onClick={handleSubmit} disabled={loading} style={{
+            <button onClick={handleSubmit} disabled={loading} data-track="apply_cta" style={{
               width:'100%', padding:14, marginTop:4,
               background: loading ? 'var(--g600)' : 'var(--g900)', color:'var(--white)',
               border:'none', borderRadius:'var(--r-md)',

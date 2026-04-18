@@ -46,9 +46,15 @@ export default function JobDetail() {
     jobsApi.getById(id)
       .then(data => {
         // §4: show() returns { data: Job, similar_jobs: Job[], seo: { title, description, json_ld } }
-        setJob(data.data || data)
+        const j = data.data || data
+        setJob(j)
         setSimilar(data.similar_jobs?.data || data.similar_jobs || [])
         if (data.seo) setSeoMeta(data.seo)
+        // fire view_job pixel event if user has consented
+        if (localStorage.getItem('consent_analytics') === 'true') {
+          if (window.snaptr) window.snaptr('track', 'VIEW_CONTENT', { item_ids: [String(j.id)], item_category: j.category })
+          if (window.twq)   window.twq('event', 'tw-ViewContent', { value: null })
+        }
       })
       .catch(() => setError('تعذّر تحميل الوظيفة'))
       .finally(() => setLoading(false))

@@ -230,6 +230,29 @@ function SignupForm({ id }) {
 }
 
 /* ── Main Page ───────────────────────────── */
+function ConsentBanner() {
+  const [visible, setVisible] = useState(() => !localStorage.getItem('consent_analytics'))
+  if (!visible) return null
+  return (
+    <div style={{
+      position:'fixed', bottom:0, left:0, right:0, zIndex:9999,
+      background:'#003D2B', color:'#fff',
+      padding:'12px 20px', fontSize:14, textAlign:'center',
+    }}>
+      نستخدم ملفات تعريف الارتباط لتحسين تجربتك.
+      <button onClick={() => {
+        localStorage.setItem('consent_analytics', 'true')
+        document.dispatchEvent(new Event('consent:granted'))
+        setVisible(false)
+      }} style={{
+        background:'#fff', color:'#003D2B', border:'none',
+        padding:'6px 16px', borderRadius:20, margin:'0 8px',
+        fontWeight:600, cursor:'pointer',
+      }}>موافق</button>
+    </div>
+  )
+}
+
 export default function Home() {
   const [activeCategory, setActiveCategory] = useState('all')
   const [selectedJob, setSelectedJob] = useState(null)
@@ -312,8 +335,9 @@ export default function Home() {
 
   return (
     <>
+      <ConsentBanner />
       {/* ── HERO ── */}
-      <section style={{
+      <section className="hero-section" style={{
         minHeight: '100vh',
         padding: '120px clamp(1rem,4vw,3rem) 80px',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -363,7 +387,7 @@ export default function Home() {
 
             {/* CTAs */}
             <div style={{ display:'flex', gap:12, flexWrap:'wrap', marginBottom:32 }}>
-              <Link to="/resume-analyzer" style={{
+              <Link to="/resume-analyzer" data-track="hero_cta" style={{
                 background:'linear-gradient(135deg,var(--g900) 0%,var(--g950) 100%)', color:'var(--white)',
                 padding:'13px 28px', borderRadius:'var(--r-md)',
                 fontSize:15, fontWeight:700, textDecoration:'none',

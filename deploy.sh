@@ -108,11 +108,22 @@ fi
 # 4. Laravel Cache
 # ──────────────────────────────────────────────────────────────────────
 step "4/7  Laravel Cache"
-php artisan config:cache  --no-interaction
+
+# Pre-deploy guard: catch missing/broken config files before they hit production
+php artisan config:cache --no-interaction \
+  || abort "config:cache فشل — تحقق من ملفات config/ (session.php, queue.php, view.php)"
+
 php artisan route:cache   --no-interaction
-php artisan view:cache    --no-interaction
+php artisan view:cache    --no-interaction 2>/dev/null || true  # API-only: no views
 php artisan event:cache   --no-interaction 2>/dev/null || true  # L10+
 ok "config / route / view / event — مكبوتة"
+
+# ── Storage permissions (755 base, 775 writable dirs — PHP-FPM safe) ──
+step "4.5/7  Storage Permissions"
+chmod -R 755 storage bootstrap/cache
+chmod -R 775 storage/logs storage/framework bootstrap/cache
+[[ -f storage/logs/laravel.log ]] && chmod 664 storage/logs/laravel.log
+ok "storage 755 / logs+framework+cache 775"
 
 # ──────────────────────────────────────────────────────────────────────
 # 5. Frontend Build

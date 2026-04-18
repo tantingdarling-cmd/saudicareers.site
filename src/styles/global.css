@@ -161,6 +161,23 @@ img { max-width: 100%; display: block; }
   animation-direction: reverse;
 }
 
+/* ── Hero: single-column on mobile (Snapchat / Twitter in-app browsers) ── */
+@media (max-width: 767px) {
+  .hero-section {
+    min-height: 0 !important;
+    padding-top: 80px !important;
+    padding-bottom: 48px !important;
+  }
+  .hero-grid {
+    grid-template-columns: 1fr !important;
+    gap: 32px !important;
+  }
+  /* hide decorative visual column — saves render budget in in-app browsers */
+  .hero-grid > *:last-child {
+    display: none !important;
+  }
+}
+
 /* ── prefers-reduced-motion: إيقاف كل الحركات للمستخدمين الحساسين ──── */
 /* يشمل: دوار الدهليز، الصرع الضوئي، وإعاقات الإدراك الحركي           */
 @media (prefers-reduced-motion: reduce) {
