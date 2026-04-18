@@ -52,7 +52,7 @@ export default function Navbar() {
 
         {/* Desktop links */}
         <div style={{ display:'flex', alignItems:'center', gap:4 }} className="desktop-nav">
-          {[['jobs','الوظائف'],['services','خدماتنا'],['tips','نصائح مهنية'],['how','كيف يعمل']].map(([id,label]) => (
+          {[['jobs','الوظائف'],['services','خدماتنا'],['how','كيف يعمل']].map(([id,label]) => (
             <button key={id} onClick={() => scrollTo(id)} style={{
               fontSize:14, fontWeight:500, color:'var(--gray600)',
               padding:'7px 14px', borderRadius:'var(--r-sm)',
@@ -64,6 +64,15 @@ export default function Navbar() {
               {label}
             </button>
           ))}
+          <Link to="/tips" style={{
+            fontSize:14, fontWeight:500, color:'var(--gray600)',
+            padding:'7px 14px', borderRadius:'var(--r-sm)',
+            textDecoration:'none', transition:'all 0.2s',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.background='var(--g50)'; e.currentTarget.style.color='var(--g800)' }}
+          onMouseLeave={e => { e.currentTarget.style.background='transparent'; e.currentTarget.style.color='var(--gray600)' }}>
+            نصائح
+          </Link>
         </div>
 
         <div style={{ display:'flex', alignItems:'center', gap:10 }}>
@@ -101,7 +110,7 @@ export default function Navbar() {
           display:'flex', flexDirection:'column', gap:6,
           boxShadow:'var(--shadow-lg)',
         }}>
-          {[['jobs','الوظائف'],['services','خدماتنا'],['tips','نصائح مهنية'],['how','كيف يعمل']].map(([id,label]) => (
+          {[['jobs','الوظائف'],['services','خدماتنا'],['how','كيف يعمل']].map(([id,label]) => (
             <button key={id} onClick={() => scrollTo(id)} style={{
               fontSize:15, fontWeight:500, color:'var(--gray600)',
               padding:'12px 16px', borderRadius:'var(--r-md)',
@@ -113,6 +122,16 @@ export default function Navbar() {
               {label}
             </button>
           ))}
+          <Link to="/tips" onClick={() => setMenuOpen(false)} style={{
+            fontSize:15, fontWeight:500, color:'var(--gray600)',
+            padding:'12px 16px', borderRadius:'var(--r-md)',
+            textDecoration:'none', textAlign:'right', display:'block',
+            transition:'all 0.2s',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.background='var(--g50)'; e.currentTarget.style.color='var(--g800)' }}
+          onMouseLeave={e => { e.currentTarget.style.background='transparent'; e.currentTarget.style.color='var(--gray600)' }}>
+            نصائح
+          </Link>
           <button onClick={() => scrollTo('signup')} style={{
             marginTop:8, background:'var(--g900)', color:'var(--white)',
             border:'none', padding:13, borderRadius:'var(--r-md)',

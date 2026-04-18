@@ -20,6 +20,8 @@ class CareerTipResource extends JsonResource
             'category_label' => $this->getCategoryLabel(),
             'image' => $this->image,
             'author' => $this->author,
+            'read_time' => $this->read_time,
+            'is_featured' => $this->is_featured,
             'published_at' => $this->published_at?->diffForHumans(),
             'created_at' => $this->created_at,
         ];
@@ -33,8 +35,9 @@ class CareerTipResource extends JsonResource
             'linkedin' => 'لينكد إن',
             'career' => 'مسار карьера',
             'salary' => 'الراتب',
-            'skills' => 'المهارات',
-            default => 'أخرى',
+            'skills'    => 'المهارات',
+            'fresh_grad' => 'الخريجون',
+            default     => 'أخرى',
         };
     }
 }

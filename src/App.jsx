@@ -9,6 +9,7 @@ import ProtectedRoute from './components/ProtectedRoute.jsx'
 const Home           = lazy(() => import('./pages/Home.jsx'))
 const JobDetail      = lazy(() => import('./pages/JobDetail.jsx'))
 const TipDetail      = lazy(() => import('./pages/TipDetail.jsx'))
+const Tips           = lazy(() => import('./pages/Tips.jsx'))
 const Admin          = lazy(() => import('./pages/Admin.jsx'))
 const ResumeAnalyzer = lazy(() => import('./pages/ResumeAnalyzer.jsx'))
 const ResumeResults  = lazy(() => import('./pages/ResumeResults.jsx'))
@@ -35,6 +36,7 @@ export default function App() {
           <Routes>
             <Route path="/"           element={<Home />} />
             <Route path="/jobs/:id"   element={<JobDetail />} />
+            <Route path="/tips"        element={<Tips />} />
             <Route path="/tips/:slug" element={<TipDetail />} />
             <Route path="/admin"                element={<Admin />} />
             <Route path="/login"               element={<Login />} />
