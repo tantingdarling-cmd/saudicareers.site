@@ -122,6 +122,13 @@ export const settingsApi = {
   update:  (key, value) => api.patch(`/admin/settings/${encodeURIComponent(key)}`, { value }),
 };
 
+export const alertsApi = {
+  getAll:  ()     => api.get('/v1/alerts'),
+  create:  (data) => api.post('/v1/alerts', data),
+  delete:  (id)   => api.delete(`/v1/alerts/${id}`),
+  toggle:  (id)   => api.patch(`/v1/alerts/${id}/toggle`, {}),
+};
+
 export const savedJobsApi = {
   getAll:  ()      => api.get('/v1/saved-jobs'),
   save:    (jobId) => api.post(`/v1/saved-jobs/${jobId}`, {}),

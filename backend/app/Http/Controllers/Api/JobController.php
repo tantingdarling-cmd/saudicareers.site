@@ -11,6 +11,7 @@ use App\Http\Resources\JobResource;
 use App\Http\Resources\JobCollection;
 use App\Services\SeoService;
 use Illuminate\Http\Request;
+use App\Jobs\SendJobAlert;
 use Illuminate\Support\Facades\Cache;
 
 class JobController extends Controller
@@ -71,7 +72,8 @@ class JobController extends Controller
     public function store(StoreJobRequest $request)
     {
         $job = Job::create($request->validated());
-        Cache::flush(); // invalidate jobs cache on write
+        Cache::flush();
+        SendJobAlert::dispatch($job)->onQueue('notifications');
         return response()->json([
             'message' => 'تم إنشاء الوظيفة بنجاح',
             'data'    => new JobResource($job),

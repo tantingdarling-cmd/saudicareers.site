@@ -36,4 +36,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(SavedJob::class);
     }
+
+    public function jobAlerts()
+    {
+        return $this->hasMany(JobAlert::class);
+    }
 }
