@@ -731,18 +731,33 @@ export default function Home() {
                 ? <div style={{ gridColumn:'1/-1', textAlign:'center', color:'var(--gray400)', padding:'48px 0', fontSize:15 }}>لا توجد وظائف تطابق البحث</div>
                 : jobs.map((job, i) => (
                     <Reveal key={job.id} delay={i * 60}>
-                      <JobCard
-                        job={job}
-                        onApply={setSelectedJob}
-                        onDetails={setBottomSheetJob}
-                        onTagClick={tag => {
-                          const cat = CATEGORIES.find(c => c.label === tag)
-                          if (cat) {
-                            handleFilterChange({ ...filters, category: cat.key })
-                            document.getElementById('jobs')?.scrollIntoView({ behavior: 'smooth' })
-                          }
-                        }}
-                      />
+                      {job.is_government_partner ? (
+                        <GovJobCard
+                          job={job}
+                          onApply={setSelectedJob}
+                          onDetails={setBottomSheetJob}
+                          onTagClick={tag => {
+                            const cat = CATEGORIES.find(c => c.label === tag)
+                            if (cat) {
+                              handleFilterChange({ ...filters, category: cat.key })
+                              document.getElementById('jobs')?.scrollIntoView({ behavior: 'smooth' })
+                            }
+                          }}
+                        />
+                      ) : (
+                        <JobCard
+                          job={job}
+                          onApply={setSelectedJob}
+                          onDetails={setBottomSheetJob}
+                          onTagClick={tag => {
+                            const cat = CATEGORIES.find(c => c.label === tag)
+                            if (cat) {
+                              handleFilterChange({ ...filters, category: cat.key })
+                              document.getElementById('jobs')?.scrollIntoView({ behavior: 'smooth' })
+                            }
+                          }}
+                        />
+                      )}
                     </Reveal>
                   ))
             }
