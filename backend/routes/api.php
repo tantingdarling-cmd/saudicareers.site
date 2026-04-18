@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\SavedJobController;
 use App\Http\Controllers\Api\JobAlertController;
 use App\Http\Controllers\Api\ProfileController;
+use App\Http\Controllers\Api\EmployerJobController;
 
 // §6: Sitemap — public, no auth, outside v1 prefix.
 // Accessible at /api/sitemap.xml. For static /sitemap.xml run: php artisan sitemap:generate
@@ -73,6 +74,13 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::post('/profile/resume',           [ProfileController::class,     'uploadResume']);
 
     Route::get('/applications/my',           [ApplicationController::class, 'my']);
+
+    Route::prefix('employer')->middleware('employer')->group(function () {
+        Route::get('/jobs',          [EmployerJobController::class, 'index']);
+        Route::post('/jobs',         [EmployerJobController::class, 'store']);
+        Route::put('/jobs/{job}',    [EmployerJobController::class, 'update']);
+        Route::delete('/jobs/{job}', [EmployerJobController::class, 'destroy']);
+    });
 });
 
 Route::middleware(['auth:sanctum'])->group(function () {

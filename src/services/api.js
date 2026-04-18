@@ -123,6 +123,13 @@ export const settingsApi = {
   update:  (key, value) => api.patch(`/admin/settings/${encodeURIComponent(key)}`, { value }),
 };
 
+export const employerApi = {
+  getJobs:    ()          => api.get('/v1/employer/jobs'),
+  createJob:  (data)      => api.post('/v1/employer/jobs', data),
+  updateJob:  (id, data)  => api.put(`/v1/employer/jobs/${id}`, data),
+  deleteJob:  (id)        => api.delete(`/v1/employer/jobs/${id}`),
+};
+
 export const alertsApi = {
   getAll:  ()     => api.get('/v1/alerts'),
   create:  (data) => api.post('/v1/alerts', data),

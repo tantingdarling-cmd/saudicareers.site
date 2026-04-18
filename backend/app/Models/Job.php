@@ -31,6 +31,9 @@ class Job extends Model
         'is_featured',
         'apply_url',
         'posted_at',
+        'company_id',
+        'post_status',
+        'user_id',
     ];
 
     protected $casts = [
@@ -90,6 +93,11 @@ class Job extends Model
     public function applications()
     {
         return $this->hasMany(JobApplication::class);
+    }
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
     }
 
     public function scopeActive($query)
