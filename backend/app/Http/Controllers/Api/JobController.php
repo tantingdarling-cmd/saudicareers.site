@@ -27,7 +27,7 @@ class JobController extends Controller
         }
 
         $cacheKey = 'jobs:' . md5(json_encode(
-            $request->only(['category', 'location', 'experience_level', 'page'])
+            $request->only(['category', 'location', 'experience_level', 'job_type', 'salary_min', 'salary_max', 'q', 'search', 'page'])
         ));
 
         $jobs = Cache::remember($cacheKey, 3600, fn () => $this->buildQuery($request));
@@ -48,22 +48,34 @@ class JobController extends Controller
             $query->featured();
         }
 
-        if ($request->filled('search')) {
-            $search = $request->search;
+        $search = $request->filled('q') ? $request->q : $request->search;
+        if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('title',    'LIKE', "%{$search}%")
                   ->orWhere('company', 'LIKE', "%{$search}%")
-                  ->orWhere('location','LIKE', "%{$search}%");
+                  ->orWhere('location','LIKE', "%{$search}%")
+                  ->orWhere('description', 'LIKE', "%{$search}%");
             });
         }
 
-        // §9: location + experience_level are valid cache-key params → also filter by them
         if ($request->filled('location')) {
             $query->where('location', 'LIKE', '%' . $request->location . '%');
         }
 
         if ($request->filled('experience_level')) {
             $query->where('experience_level', $request->experience_level);
+        }
+
+        if ($request->filled('job_type')) {
+            $query->where('job_type', $request->job_type);
+        }
+
+        if ($request->filled('salary_min')) {
+            $query->where('salary_max', '>=', (int) $request->salary_min);
+        }
+
+        if ($request->filled('salary_max')) {
+            $query->where('salary_min', '<=', (int) $request->salary_max);
         }
 
         return $query->paginate($perPage);

@@ -1,10 +1,11 @@
-import { useState, useEffect, useRef } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { Link, useLocation, useSearchParams } from 'react-router-dom'
 import { CheckCircle, FileText, Briefcase, Lightbulb, ArrowLeft, Clock } from 'lucide-react'
 import JobCard from '../components/JobCard.jsx'
 import JobSkeleton from '../components/JobSkeleton.jsx'
 import ApplyModal from '../components/ApplyModal.jsx'
 import JobStructuredData from '../components/JobStructuredData.jsx'
+import FilterBar from '../components/FilterBar.jsx'
 import { JOBS as FALLBACK_JOBS, TIPS as FALLBACK_TIPS, CATEGORIES } from '../data'
 import { jobsApi, tipsApi, subscribersApi } from '../services/api'
 import { normalizeJob } from '../utils/normalizeJob.js'
@@ -258,14 +259,44 @@ function ConsentBanner() {
   )
 }
 
+const EMPTY_FILTERS = { q: '', location: '', category: '', job_type: '', experience_level: '', salary_min: '', salary_max: '' }
+
+function useDebounce(value, delay) {
+  const [dv, setDv] = useState(value)
+  useEffect(() => {
+    const t = setTimeout(() => setDv(value), delay)
+    return () => clearTimeout(t)
+  }, [value, delay])
+  return dv
+}
+
 export default function Home() {
-  const [activeCategory, setActiveCategory] = useState('all')
   const [selectedJob, setSelectedJob] = useState(null)
   const [bottomSheetJob, setBottomSheetJob] = useState(null)
   const [jobs, setJobs] = useState(FALLBACK_JOBS)
   const [tips, setTips] = useState(FALLBACK_TIPS)
   const [loadingJobs, setLoadingJobs] = useState(true)
   const location = useLocation()
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  const [filters, setFilters] = useState(() => ({
+    q: searchParams.get('q') || '',
+    location: searchParams.get('location') || '',
+    category: searchParams.get('category') || '',
+    job_type: searchParams.get('job_type') || '',
+    experience_level: searchParams.get('experience_level') || '',
+    salary_min: searchParams.get('salary_min') || '',
+    salary_max: searchParams.get('salary_max') || '',
+  }))
+
+  const debouncedFilters = useDebounce(filters, 400)
+
+  function handleFilterChange(newFilters) {
+    setFilters(newFilters)
+    const params = {}
+    Object.entries(newFilters).forEach(([k, v]) => { if (v) params[k] = v })
+    setSearchParams(params, { replace: true })
+  }
 
   // تنفيذ الـ scroll عند الوصول من صفحة أخرى عبر navigate('/', { state: { scrollTo: id } })
   useEffect(() => {
@@ -307,16 +338,21 @@ export default function Home() {
   }, [])
 
   useEffect(() => {
-    jobsApi.getAll({ per_page: 50, active: 1 })
+    setLoadingJobs(true)
+    const params = { per_page: 50 }
+    Object.entries(debouncedFilters).forEach(([k, v]) => { if (v) params[k] = v })
+    jobsApi.getAll(params)
       .then(res => {
         const apiJobs = res?.data
-        if (Array.isArray(apiJobs) && apiJobs.length > 0) {
-          setJobs(apiJobs.map(normalizeJob))
+        if (Array.isArray(apiJobs)) {
+          setJobs(apiJobs.length > 0 ? apiJobs.map(normalizeJob) : [])
         }
       })
       .catch(() => {/* keep fallback */})
       .finally(() => setLoadingJobs(false))
+  }, [debouncedFilters])
 
+  useEffect(() => {
     tipsApi.getAll({ per_page: 6 })
       .then(res => {
         const apiTips = res?.data
@@ -329,10 +365,6 @@ export default function Home() {
 
   const heroHeadingRef = useFadeIn()
   const heroDescRef = useFadeIn()
-
-  const filteredJobs = activeCategory === 'all'
-    ? jobs
-    : jobs.filter(j => j.category === activeCategory)
 
   const sectionTitle = { fontSize:'clamp(1.6rem,3.5vw,2.4rem)', fontWeight:700, color:'var(--g950)', lineHeight:1.25, marginBottom:14 }
   const sectionSub = { fontSize:'1rem', color:'var(--gray600)', maxWidth:540, lineHeight:1.85, marginBottom:48 }
@@ -558,44 +590,31 @@ export default function Home() {
             <p style={sectionSub}>نجمع الفرص الوظيفية من مصادرها الرسمية ونتحقق من صحتها قبل نشرها</p>
           </Reveal>
 
-          {/* Filter */}
           <Reveal delay={100}>
-            <div style={{ display:'flex', flexWrap:'wrap', gap:10, marginBottom:36 }}>
-              {CATEGORIES.map(({ key, label }) => (
-                <button key={key} onClick={() => setActiveCategory(key)} style={{
-                  padding:'8px 20px', borderRadius:50,
-                  border: activeCategory===key ? '1.5px solid var(--g900)' : '1.5px solid var(--gray200)',
-                  fontSize:13, fontWeight:500,
-                  color: activeCategory===key ? 'var(--white)' : 'var(--gray600)',
-                  background: activeCategory===key ? 'var(--g900)' : 'var(--white)',
-                  cursor:'pointer', transition:'all 0.2s',
-                }}>{label}</button>
-              ))}
-            </div>
+            <FilterBar filters={filters} onChange={handleFilterChange} />
           </Reveal>
 
           <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(min(100%,320px),1fr))', gap:20 }}>
-            {/* §6 / §7: Show JobSkeleton while API call is in-flight.
-                Fallback static data renders immediately → no blank state.
-                Skeletons show ONLY during the first load (loadingJobs=true). */}
             {loadingJobs
               ? Array.from({ length: 6 }).map((_, i) => <JobSkeleton key={i} />)
-              : filteredJobs.map((job, i) => (
-                  <Reveal key={job.id} delay={i * 60}>
-                    <JobCard
-                      job={job}
-                      onApply={setSelectedJob}
-                      onDetails={setBottomSheetJob}
-                      onTagClick={tag => {
-                        const cat = CATEGORIES.find(c => c.label === tag)
-                        if (cat) {
-                          setActiveCategory(cat.key)
-                          document.getElementById('jobs')?.scrollIntoView({ behavior: 'smooth' })
-                        }
-                      }}
-                    />
-                  </Reveal>
-                ))
+              : jobs.length === 0
+                ? <div style={{ gridColumn:'1/-1', textAlign:'center', color:'var(--gray400)', padding:'48px 0', fontSize:15 }}>لا توجد وظائف تطابق البحث</div>
+                : jobs.map((job, i) => (
+                    <Reveal key={job.id} delay={i * 60}>
+                      <JobCard
+                        job={job}
+                        onApply={setSelectedJob}
+                        onDetails={setBottomSheetJob}
+                        onTagClick={tag => {
+                          const cat = CATEGORIES.find(c => c.label === tag)
+                          if (cat) {
+                            handleFilterChange({ ...filters, category: cat.key })
+                            document.getElementById('jobs')?.scrollIntoView({ behavior: 'smooth' })
+                          }
+                        }}
+                      />
+                    </Reveal>
+                  ))
             }
           </div>
         </div>
