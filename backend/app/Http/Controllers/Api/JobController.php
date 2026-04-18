@@ -116,6 +116,32 @@ class JobController extends Controller
         ]);
     }
 
+    // GET /api/v1/jobs/{id}/similar — same category & location, limit 3
+    public function similar(Job $job)
+    {
+        $query = Job::where('id', '!=', $job->id)
+            ->where('category', $job->category)
+            ->active();
+
+        if ($job->location) {
+            $query->where('location', 'LIKE', '%' . $job->location . '%');
+        }
+
+        $similar = $query->inRandomOrder()->limit(3)->get();
+
+        // fallback: drop location filter if no results
+        if ($similar->isEmpty()) {
+            $similar = Job::where('id', '!=', $job->id)
+                ->where('category', $job->category)
+                ->active()
+                ->inRandomOrder()
+                ->limit(3)
+                ->get();
+        }
+
+        return response()->json(['data' => JobResource::collection($similar)]);
+    }
+
     public function update(UpdateJobRequest $request, Job $job)
     {
         $job->update($request->validated());

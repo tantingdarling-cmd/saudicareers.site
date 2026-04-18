@@ -28,6 +28,7 @@ Route::prefix('v1')->group(function () {
     Route::get('/jobs', [JobController::class, 'index']);
     Route::get('/jobs/featured', [JobController::class, 'index'])->defaults('featured', true);
     Route::get('/jobs/salary-stats', [SalaryStatsController::class, 'index']);
+    Route::get('/jobs/{job}/similar', [JobController::class, 'similar']);
     Route::get('/jobs/{job}', [JobController::class, 'show']);
 
     Route::post('/applications', [ApplicationController::class, 'store']);
