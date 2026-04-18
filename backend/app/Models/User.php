@@ -31,4 +31,9 @@ class User extends Authenticatable
     {
         return $this->role === 'admin';
     }
+
+    public function savedJobs()
+    {
+        return $this->hasMany(SavedJob::class);
+    }
 }

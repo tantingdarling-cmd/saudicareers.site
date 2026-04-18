@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\ResumeController;
 use App\Http\Controllers\Api\ResumeOptimizeController;
 use App\Http\Controllers\Api\ProbationController;
 use App\Http\Controllers\Api\SettingsController;
+use App\Http\Controllers\Api\SavedJobController;
 
 // §6: Sitemap — public, no auth, outside v1 prefix.
 // Accessible at /api/sitemap.xml. For static /sitemap.xml run: php artisan sitemap:generate
@@ -54,6 +55,12 @@ Route::prefix('v1')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])
         ->middleware('throttle:5,1')
         ->name('login');
+});
+
+Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
+    Route::get('/saved-jobs',             [SavedJobController::class, 'index']);
+    Route::post('/saved-jobs/{job}',      [SavedJobController::class, 'store']);
+    Route::delete('/saved-jobs/{job}',    [SavedJobController::class, 'destroy']);
 });
 
 Route::middleware(['auth:sanctum'])->group(function () {

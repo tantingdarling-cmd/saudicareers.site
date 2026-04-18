@@ -1,0 +1,28 @@
+const CATEGORY_ICONS = {
+  tech: '💻', finance: '🏦', energy: '⚡', construction: '🏗️',
+  hr: '👥', marketing: '📣', healthcare: '🏥', education: '🎓', other: '💼',
+}
+
+const EXP_LABELS = {
+  entry: 'مبتدئ', mid: 'متوسط', senior: 'خبير', lead: 'قائد', executive: 'تنفيذي',
+}
+
+export function normalizeJob(job) {
+  const tags = [job.category_label, EXP_LABELS[job.experience_level], job.job_type_label]
+    .filter(Boolean).slice(0, 3)
+  return {
+    id: job.id,
+    company: job.company,
+    icon: CATEGORY_ICONS[job.category] || '💼',
+    title: job.title,
+    location: job.location,
+    type: job.job_type_label || job.job_type,
+    salary: job.salary || 'يُحدد عند التواصل',
+    tags,
+    badge: job.is_featured ? 'featured' : '',
+    badgeText: job.is_featured ? 'حصرية' : '',
+    posted: job.posted_at || 'حديثاً',
+    category: job.category,
+    description: job.description,
+  }
+}

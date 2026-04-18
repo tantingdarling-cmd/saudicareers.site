@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { MapPin, Briefcase, Coins, ArrowLeft } from 'lucide-react'
+import { MapPin, Briefcase, Coins, ArrowLeft, Heart } from 'lucide-react'
+import { savedJobsApi } from '../services/api.js'
 
 /* توحيد أسلوب الأزرار — يُدمج مع أي خصائص إضافية */
 function createButtonStyle(overrides = {}) {
@@ -16,6 +17,26 @@ function createButtonStyle(overrides = {}) {
 export default function JobCard({ job, onApply, onDetails, onTagClick, delay = 0 }) {
   const [hovered, setHovered] = useState(false)
   const [pressed, setPressed] = useState(false)
+
+  const isSavedInit = () => {
+    try { return JSON.parse(localStorage.getItem('saved_jobs') || '[]').includes(job.id) }
+    catch { return false }
+  }
+  const [saved, setSaved] = useState(isSavedInit)
+  const [toast, setToast] = useState(false)
+
+  function toggleSave(e) {
+    e.preventDefault(); e.stopPropagation()
+    const list = JSON.parse(localStorage.getItem('saved_jobs') || '[]')
+    const next = saved ? list.filter(id => id !== job.id) : [...list, job.id]
+    localStorage.setItem('saved_jobs', JSON.stringify(next))
+    setSaved(!saved)
+    if (!saved) { setToast(true); setTimeout(() => setToast(false), 2000) }
+    const token = localStorage.getItem('auth_token')
+    if (token) {
+      saved ? savedJobsApi.unsave(job.id).catch(() => {}) : savedJobsApi.save(job.id).catch(() => {})
+    }
+  }
 
   const badgeColors = {
     hot: { bg:'rgba(220,38,38,0.08)', color:'#B91C1C', border:'rgba(220,38,38,0.15)' },
@@ -45,6 +66,16 @@ export default function JobCard({ job, onApply, onDetails, onTagClick, delay = 0
         cursor: 'default',
       }}>
 
+      {/* Save toast */}
+      {toast && (
+        <div style={{
+          position:'absolute', top:12, left:12, zIndex:10,
+          background:'var(--g900)', color:'#fff',
+          padding:'6px 14px', borderRadius:20, fontSize:12, fontWeight:600,
+          pointerEvents:'none',
+        }}>تم الحفظ ✓</div>
+      )}
+
       {/* Top row */}
       <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', marginBottom:16 }}>
         <div style={{ display:'flex', alignItems:'center', gap:10 }}>
@@ -59,13 +90,30 @@ export default function JobCard({ job, onApply, onDetails, onTagClick, delay = 0
             <div style={{ fontSize:11, color:'var(--gray400)', marginTop:2 }}>{job.posted}</div>
           </div>
         </div>
-        {job.badge && (
-          <span style={{
-            fontSize:11, fontWeight:600, padding:'4px 10px', borderRadius:50,
-            whiteSpace:'nowrap', flexShrink:0,
-            background:bc.bg, color:bc.color, border:`1px solid ${bc.border}`,
-          }}>{job.badgeText}</span>
-        )}
+        <div style={{ display:'flex', alignItems:'center', gap:8, flexShrink:0 }}>
+          {job.badge && (
+            <span style={{
+              fontSize:11, fontWeight:600, padding:'4px 10px', borderRadius:50,
+              whiteSpace:'nowrap',
+              background:bc.bg, color:bc.color, border:`1px solid ${bc.border}`,
+            }}>{job.badgeText}</span>
+          )}
+          <button
+            onClick={toggleSave}
+            data-testid="save-job-btn"
+            aria-label={saved ? 'إلغاء الحفظ' : 'حفظ الوظيفة'}
+            style={createButtonStyle({
+              width:32, height:32, borderRadius:'50%', padding:0,
+              display:'flex', alignItems:'center', justifyContent:'center',
+              background: saved ? 'rgba(220,38,38,0.08)' : 'var(--gray100)',
+              color: saved ? '#DC2626' : 'var(--gray400)',
+            })}
+            onMouseEnter={e => { e.currentTarget.style.background = saved ? 'rgba(220,38,38,0.15)' : 'var(--g50)' }}
+            onMouseLeave={e => { e.currentTarget.style.background = saved ? 'rgba(220,38,38,0.08)' : 'var(--gray100)' }}
+          >
+            <Heart size={15} fill={saved ? '#DC2626' : 'none'} />
+          </button>
+        </div>
       </div>
 
       {/* Title — clickable link to job detail */}
