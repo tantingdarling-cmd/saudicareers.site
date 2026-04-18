@@ -23,19 +23,22 @@ export default function JobCard({ job, onApply, onDetails, onTagClick, delay = 0
     catch { return false }
   }
   const [saved, setSaved] = useState(isSavedInit)
-  const [toast, setToast] = useState(false)
+  const [toast, setToast] = useState('')
 
   function toggleSave(e) {
     e.preventDefault(); e.stopPropagation()
+    const token = localStorage.getItem('auth_token')
+    if (!token) {
+      setToast('سجّل دخولك أولاً')
+      setTimeout(() => setToast(''), 2500)
+      return
+    }
     const list = JSON.parse(localStorage.getItem('saved_jobs') || '[]')
     const next = saved ? list.filter(id => id !== job.id) : [...list, job.id]
     localStorage.setItem('saved_jobs', JSON.stringify(next))
     setSaved(!saved)
-    if (!saved) { setToast(true); setTimeout(() => setToast(false), 2000) }
-    const token = localStorage.getItem('auth_token')
-    if (token) {
-      saved ? savedJobsApi.unsave(job.id).catch(() => {}) : savedJobsApi.save(job.id).catch(() => {})
-    }
+    if (!saved) { setToast('تم الحفظ ✓'); setTimeout(() => setToast(''), 2000) }
+    saved ? savedJobsApi.unsave(job.id).catch(() => {}) : savedJobsApi.save(job.id).catch(() => {})
   }
 
   const badgeColors = {
@@ -73,7 +76,7 @@ export default function JobCard({ job, onApply, onDetails, onTagClick, delay = 0
           background:'var(--g900)', color:'#fff',
           padding:'6px 14px', borderRadius:20, fontSize:12, fontWeight:600,
           pointerEvents:'none',
-        }}>تم الحفظ ✓</div>
+        }}>{toast}</div>
       )}
 
       {/* Top row */}
