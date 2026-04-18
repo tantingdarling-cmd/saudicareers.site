@@ -125,10 +125,12 @@ export const settingsApi = {
 };
 
 export const employerApi = {
-  getJobs:    ()          => api.get('/v1/employer/jobs'),
-  createJob:  (data)      => api.post('/v1/employer/jobs', data),
-  updateJob:  (id, data)  => api.put(`/v1/employer/jobs/${id}`, data),
-  deleteJob:  (id)        => api.delete(`/v1/employer/jobs/${id}`),
+  getJobs:                ()              => api.get('/v1/employer/jobs'),
+  createJob:              (data)          => api.post('/v1/employer/jobs', data),
+  updateJob:              (id, data)      => api.put(`/v1/employer/jobs/${id}`, data),
+  deleteJob:              (id)            => api.delete(`/v1/employer/jobs/${id}`),
+  getApplications:        (jobId, params) => api.get(`/v1/employer/jobs/${jobId}/applications`, params),
+  updateApplicationStatus:(id, status, notes = '') => api.patch(`/v1/employer/applications/${id}/status`, { status, notes }),
 };
 
 export const salaryApi = {

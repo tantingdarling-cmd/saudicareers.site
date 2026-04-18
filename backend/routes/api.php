@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\SavedJobController;
 use App\Http\Controllers\Api\JobAlertController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\EmployerJobController;
+use App\Http\Controllers\Api\EmployerApplicationController;
 use App\Http\Controllers\Api\CompanyController;
 use App\Http\Controllers\Api\SalaryStatsController;
 
@@ -82,10 +83,12 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::post('/jobs/{job}/apply',         [ApplicationController::class, 'nativeApply']);
 
     Route::prefix('employer')->middleware('employer')->group(function () {
-        Route::get('/jobs',          [EmployerJobController::class, 'index']);
-        Route::post('/jobs',         [EmployerJobController::class, 'store']);
-        Route::put('/jobs/{job}',    [EmployerJobController::class, 'update']);
-        Route::delete('/jobs/{job}', [EmployerJobController::class, 'destroy']);
+        Route::get('/jobs',                                    [EmployerJobController::class,        'index']);
+        Route::post('/jobs',                                   [EmployerJobController::class,        'store']);
+        Route::put('/jobs/{job}',                              [EmployerJobController::class,        'update']);
+        Route::delete('/jobs/{job}',                           [EmployerJobController::class,        'destroy']);
+        Route::get('/jobs/{job}/applications',                 [EmployerApplicationController::class,'index']);
+        Route::patch('/applications/{application}/status',     [EmployerApplicationController::class,'updateStatus']);
     });
 });
 

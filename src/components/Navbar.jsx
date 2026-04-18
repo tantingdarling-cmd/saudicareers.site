@@ -32,11 +32,11 @@ export default function Navbar() {
         position:'fixed', top:0, insetInline:0, zIndex:200,
         height:68, display:'flex', alignItems:'center', justifyContent:'space-between',
         padding:'0 clamp(1rem,4vw,3rem)',
-        background: scrolled ? 'rgba(255,255,255,0.82)' : 'rgba(255,255,255,0.72)',
-        backdropFilter:'blur(15px) saturate(180%)',
-        borderBottom:'1px solid var(--gray200)',
+        background: scrolled ? 'rgba(255,255,255,0.88)' : 'rgba(255,255,255,0.75)',
+        backdropFilter:'blur(18px) saturate(200%)',
+        borderBottom: scrolled ? '1px solid var(--gray200)' : '1px solid rgba(217,226,220,0.5)',
         boxShadow: scrolled ? 'var(--shadow-md)' : 'none',
-        transition:'all 0.3s',
+        transition:'all 0.35s var(--ease-expo)',
       }}>
         <Link to="/" style={{ display:'flex', alignItems:'center', gap:10 }}>
           <picture>
@@ -67,18 +67,24 @@ export default function Navbar() {
         </div>
 
         <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-          <Link to="/resume-analyzer" style={{
-            background:'var(--gold500)', color:'var(--g950)',
+          <Link to="/resume-analyzer" className="resume-cta-desktop" style={{
+            background:'linear-gradient(135deg,var(--g900) 0%,var(--g700) 100%)',
+            color:'var(--white)',
             padding:'9px 20px', borderRadius:50,
             fontSize:14, fontWeight:700, textDecoration:'none',
-            transition:'background 0.2s',
+            transition:'all 0.25s var(--ease-pop)',
+            boxShadow:'0 4px 14px rgba(0,61,43,0.22)',
           }}
-          onMouseEnter={e => e.currentTarget.style.background='var(--gold400)'}
-          onMouseLeave={e => e.currentTarget.style.background='var(--gold500)'}>
+          onMouseEnter={e => { e.currentTarget.style.transform='translateY(-1px)'; e.currentTarget.style.boxShadow='0 6px 20px rgba(0,61,43,0.3)' }}
+          onMouseLeave={e => { e.currentTarget.style.transform='translateY(0)'; e.currentTarget.style.boxShadow='0 4px 14px rgba(0,61,43,0.22)' }}
+          onMouseDown={e => e.currentTarget.style.transform='translateY(0) scale(0.97)'}
+          onMouseUp={e => e.currentTarget.style.transform='translateY(-1px) scale(1)'}>
             افحص سيرتك مجاناً ✦
           </Link>
           <button onClick={() => setMenuOpen(!menuOpen)} style={{
-            display:'none', background:'none', border:'none', padding:4
+            display:'none', background:'none', border:'none', padding:8,
+            borderRadius:'var(--r-sm)', minWidth:44, minHeight:44,
+            alignItems:'center', justifyContent:'center',
           }} className="hamburger-btn" aria-label="القائمة">
             {menuOpen ? <X size={22} color="var(--g900)" /> : <Menu size={22} color="var(--g900)" />}
           </button>
@@ -122,6 +128,10 @@ export default function Navbar() {
           .desktop-nav { display: none !important; }
           .hamburger-btn { display: flex !important; }
           .resume-cta-desktop { display: none !important; }
+          .navbar-logo-center { justify-content: center !important; position: absolute !important; left: 50% !important; transform: translateX(-50%) !important; }
+        }
+        @media (min-width: 861px) {
+          .navbar-logo-center { position: static !important; transform: none !important; }
         }
       `}</style>
     </>

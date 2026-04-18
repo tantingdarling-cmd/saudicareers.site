@@ -52,6 +52,47 @@ function Reveal({ children, delay = 0, style = {} }) {
   )
 }
 
+function PainPointCard() {
+  const [ref, vis] = useReveal()
+  const circumference = 2 * Math.PI * 40 // r=40
+  const offset = circumference - (75 / 100) * circumference
+  return (
+    <div ref={ref} style={{
+      opacity: vis ? 1 : 0,
+      transform: vis ? 'translateY(0)' : 'translateY(28px)',
+      transition: 'opacity 0.65s ease, transform 0.65s ease',
+      background:'linear-gradient(135deg,rgba(197,160,89,0.12) 0%,rgba(0,102,68,0.18) 100%)',
+      border:'1px solid rgba(197,160,89,0.2)',
+      borderRadius:20, padding:'28px 24px',
+      display:'flex', flexDirection:'column', alignItems:'center', gap:14,
+      backdropFilter:'blur(8px)',
+    }}>
+      <svg width="110" height="110" viewBox="0 0 110 110" aria-hidden="true">
+        <circle cx="55" cy="55" r="40" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="10"/>
+        <circle cx="55" cy="55" r="40" fill="none"
+          stroke="url(#painGrad)" strokeWidth="10"
+          strokeLinecap="round" strokeDasharray={circumference}
+          strokeDashoffset={vis ? offset : circumference}
+          transform="rotate(-90 55 55)"
+          style={{ transition: vis ? 'stroke-dashoffset 1.6s cubic-bezier(0.19,1,0.22,1) 0.3s' : 'none' }}
+        />
+        <defs>
+          <linearGradient id="painGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="var(--gold400)"/>
+            <stop offset="100%" stopColor="var(--gold600)"/>
+          </linearGradient>
+        </defs>
+        <text x="55" y="50" textAnchor="middle" fontSize="26" fontWeight="800" fill="var(--white)" fontFamily="Plus Jakarta Sans">75</text>
+        <text x="55" y="68" textAnchor="middle" fontSize="13" fontWeight="700" fill="var(--gold400)" fontFamily="Plus Jakarta Sans">%</text>
+      </svg>
+      <div style={{ textAlign:'center' }}>
+        <div style={{ fontSize:13, fontWeight:700, color:'var(--gold300)', letterSpacing:'0.5px', marginBottom:4 }}>نقطة الألم</div>
+        <div style={{ fontSize:13, color:'rgba(255,255,255,0.75)', lineHeight:1.7 }}>من السير الذاتية تُرفض آلياً قبل أن يراها أحد</div>
+      </div>
+    </div>
+  )
+}
+
 function StatItem({ val, prefix = '', accent, label }) {
   const [ref, vis] = useReveal()
   return (
@@ -239,23 +280,44 @@ function SignupForm({ id }) {
 /* ── Main Page ───────────────────────────── */
 function ConsentBanner() {
   const [visible, setVisible] = useState(() => !localStorage.getItem('consent_analytics'))
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => { if (visible) setTimeout(() => setMounted(true), 100) }, [visible])
   if (!visible) return null
   return (
     <div style={{
-      position:'fixed', bottom:0, left:0, right:0, zIndex:9999,
-      background:'#003D2B', color:'#fff',
-      padding:'12px 20px', fontSize:14, textAlign:'center',
+      position:'fixed', bottom:20, left:'50%', transform:'translateX(-50%)',
+      zIndex:9999, width:'calc(100% - 32px)', maxWidth:460,
+      background:'linear-gradient(135deg,var(--g950) 0%,var(--g900) 100%)',
+      color:'#fff', borderRadius:16,
+      padding:'14px 18px',
+      boxShadow:'0 8px 32px rgba(0,0,0,0.25), 0 2px 8px rgba(0,61,43,0.3)',
+      border:'1px solid rgba(197,160,89,0.18)',
+      display:'flex', alignItems:'center', justifyContent:'space-between', gap:12,
+      opacity: mounted ? 1 : 0,
+      transform: mounted ? 'translateX(-50%) translateY(0)' : 'translateX(-50%) translateY(20px)',
+      transition:'opacity 0.4s var(--ease-expo), transform 0.4s var(--ease-expo)',
     }}>
-      نستخدم ملفات تعريف الارتباط لتحسين تجربتك.
+      <span style={{ fontSize:13, lineHeight:1.6, color:'rgba(255,255,255,0.85)' }}>
+        نستخدم ملفات تعريف الارتباط لتحسين تجربتك.
+      </span>
       <button onClick={() => {
         localStorage.setItem('consent_analytics', 'true')
         document.dispatchEvent(new Event('consent:granted'))
-        setVisible(false)
+        setMounted(false)
+        setTimeout(() => setVisible(false), 400)
       }} style={{
-        background:'#fff', color:'#003D2B', border:'none',
-        padding:'6px 16px', borderRadius:20, margin:'0 8px',
-        fontWeight:600, cursor:'pointer',
-      }}>موافق</button>
+        background:'linear-gradient(135deg,var(--gold500),var(--gold400))',
+        color:'var(--g950)', border:'none',
+        padding:'8px 18px', borderRadius:50, flexShrink:0,
+        fontWeight:700, fontSize:13, cursor:'pointer',
+        transition:'all 0.2s var(--ease-pop)',
+        minHeight:36,
+        boxShadow:'var(--shadow-gold)',
+      }}
+      onMouseEnter={e=>e.currentTarget.style.transform='scale(1.04)'}
+      onMouseLeave={e=>e.currentTarget.style.transform='scale(1)'}>
+        موافق
+      </button>
     </div>
   )
 }
@@ -408,17 +470,21 @@ export default function Home() {
 
             {/* Heading */}
             <h1 ref={heroHeadingRef} className="fade-in-section" style={{
-              fontSize:'clamp(2rem,4.8vw,3.4rem)', fontWeight:700, lineHeight:1.2,
-              color:'var(--g950)', marginBottom:20, letterSpacing:'-0.5px',
+              fontSize:'clamp(1.9rem,5.5vw,3.4rem)', fontWeight:700, lineHeight:1.25,
+              color:'var(--g950)', marginBottom:20, letterSpacing:'-0.3px',
               fontFamily:'var(--font-ar)',
             }}>
-              ارفع مستواك في سوق العمل
+              ارفع مستواك في{' '}
+              <span style={{ background:'linear-gradient(135deg,var(--g700) 0%,var(--gold600) 100%)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text' }}>
+                سوق العمل
+              </span>
             </h1>
 
             {/* Description */}
             <p ref={heroDescRef} className="fade-in-section delay-1" style={{
-              fontSize:'clamp(1rem,1.6vw,1.1rem)', color:'var(--gray600)',
-              maxWidth:480, marginBottom:36, lineHeight:1.9, fontWeight:500,
+              fontSize:'clamp(1rem,1.6vw,1.1rem)', color:'var(--gray800)',
+              maxWidth:480, marginBottom:36, lineHeight:2, fontWeight:400,
+              letterSpacing:'0.01em',
             }}>
               حلّل سيرتك الذاتية، اكتشف نقاط التحسين، وتنافس على أفضل الفرص في السوق السعودي.
             </p>
@@ -426,23 +492,31 @@ export default function Home() {
             {/* CTAs */}
             <div style={{ display:'flex', gap:12, flexWrap:'wrap', marginBottom:32 }}>
               <Link to="/resume-analyzer" data-track="hero_cta" style={{
-                background:'linear-gradient(135deg,var(--g900) 0%,var(--g950) 100%)', color:'var(--white)',
-                padding:'13px 28px', borderRadius:'var(--r-md)',
+                background:'linear-gradient(135deg,var(--g900) 0%,var(--g700) 100%)', color:'var(--white)',
+                padding:'14px 30px', borderRadius:'var(--r-md)',
                 fontSize:15, fontWeight:700, textDecoration:'none',
-                transition:'background 0.2s', boxShadow:'var(--shadow-md)',
+                transition:'all 0.25s var(--ease-pop)',
+                boxShadow:'0 6px 24px rgba(0,61,43,0.28), 0 2px 6px rgba(197,160,89,0.18)',
+                minHeight:48,
               }}
-              onMouseEnter={e=>e.currentTarget.style.background='var(--g700)'}
-              onMouseLeave={e=>e.currentTarget.style.background='linear-gradient(135deg,var(--g900) 0%,var(--g950) 100%)'}>
+              onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-2px)';e.currentTarget.style.boxShadow='0 10px 32px rgba(0,61,43,0.32), 0 4px 12px rgba(197,160,89,0.22)'}}
+              onMouseLeave={e=>{e.currentTarget.style.transform='translateY(0)';e.currentTarget.style.boxShadow='0 6px 24px rgba(0,61,43,0.28), 0 2px 6px rgba(197,160,89,0.18)'}}
+              onMouseDown={e=>e.currentTarget.style.transform='translateY(0) scale(0.97)'}
+              onMouseUp={e=>e.currentTarget.style.transform='translateY(-2px) scale(1)'}>
                 افحص سيرتك مجاناً ✦
               </Link>
               <button onClick={() => document.getElementById('jobs')?.scrollIntoView({ behavior:'smooth' })} style={{
-                background:'var(--white)', color:'var(--g900)',
-                padding:'13px 28px', borderRadius:'var(--r-md)',
-                fontSize:15, fontWeight:600, border:'1.5px solid var(--gray200)',
-                cursor:'pointer', transition:'border-color 0.2s, box-shadow 0.2s',
+                background:'transparent', color:'var(--g900)',
+                padding:'14px 28px', borderRadius:'var(--r-md)',
+                fontSize:15, fontWeight:600,
+                border:'2px solid var(--g900)',
+                cursor:'pointer', minHeight:48,
+                transition:'all 0.25s var(--ease-pop)',
               }}
-              onMouseEnter={e=>{e.currentTarget.style.borderColor='var(--g400)';e.currentTarget.style.boxShadow='var(--shadow-sm)'}}
-              onMouseLeave={e=>{e.currentTarget.style.borderColor='var(--gray200)';e.currentTarget.style.boxShadow='none'}}>
+              onMouseEnter={e=>{e.currentTarget.style.background='var(--g900)';e.currentTarget.style.color='var(--white)'}}
+              onMouseLeave={e=>{e.currentTarget.style.background='transparent';e.currentTarget.style.color='var(--g900)'}}
+              onMouseDown={e=>e.currentTarget.style.transform='scale(0.97)'}
+              onMouseUp={e=>e.currentTarget.style.transform='scale(1)'}>
                 تصفّح الوظائف
               </button>
             </div>
@@ -569,10 +643,13 @@ export default function Home() {
       </section>
 
       {/* ── STATS ── */}
-      <div style={{ background:'var(--g900)', padding:'clamp(40px,6vw,64px) clamp(1rem,4vw,3rem)' }}>
-        <div style={{ maxWidth:1160, margin:'0 auto', display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))', gap:32, textAlign:'center' }}>
+      <div style={{ background:'linear-gradient(160deg,var(--g950) 0%,var(--g900) 60%,var(--g800) 100%)', padding:'clamp(40px,6vw,64px) clamp(1rem,4vw,3rem)' }}>
+        <div style={{ maxWidth:1160, margin:'0 auto', display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))', gap:32, alignItems:'center' }}>
+
+          {/* Pain-point card: 75% with progress ring */}
+          <PainPointCard />
+
           {[
-            { val:75, prefix:'', accent:'٪', label:'من السير الذاتية تُرفض آلياً قبل مراجعتها' },
             { val:2,  prefix:'+', accent:'م', label:'باحث عن عمل في السعودية' },
             { val:70, prefix:'', accent:'٪', label:'نسبة التوطين المستهدفة برؤية 2030' },
             { val:48, prefix:'', accent:'س', label:'لتحسين سيرتك الذاتية عند التسجيل' },

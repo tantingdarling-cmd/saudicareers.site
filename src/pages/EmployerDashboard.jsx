@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Plus, Trash2, Edit2, CheckCircle } from 'lucide-react'
+import { Plus, Trash2, CheckCircle, Users } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { employerApi } from '../services/api.js'
 
 const STATUS_STYLE = {
@@ -210,11 +211,25 @@ export default function EmployerDashboard() {
                 <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--g950)' }}>{job.title}</div>
                 <div style={{ fontSize: 12, color: 'var(--gray400)', marginTop: 3 }}>{job.location} — {job.created_at?.slice(0,10)}</div>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                 <span style={{ fontSize: 12, fontWeight: 600, padding: '3px 12px', borderRadius: 50,
                   background: s.bg, color: s.color }}>{s.label}</span>
+                <Link to={`/employer/jobs/${job.id}/applicants`} style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 5,
+                  fontSize: 12, fontWeight: 600, padding: '5px 14px',
+                  borderRadius: 8, border: '1.5px solid var(--g200)',
+                  background: 'var(--g50)', color: 'var(--g700)',
+                  textDecoration: 'none', minHeight: 32,
+                  transition: 'all 0.2s',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'var(--g900)'; e.currentTarget.style.color = '#fff' }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'var(--g50)'; e.currentTarget.style.color = 'var(--g700)' }}>
+                  <Users size={13} />
+                  عرض المتقدمين {job.applications_count > 0 ? `(${job.applications_count})` : ''}
+                </Link>
                 <button onClick={() => handleDelete(job.id)} style={{ background: 'none', border: 'none',
-                  cursor: 'pointer', color: '#DC2626', padding: 4 }}>
+                  cursor: 'pointer', color: '#DC2626', padding: 4, minHeight: 32, minWidth: 32,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Trash2 size={16} />
                 </button>
               </div>

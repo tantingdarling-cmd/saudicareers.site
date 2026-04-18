@@ -20,6 +20,7 @@ const Alerts            = lazy(() => import('./pages/Alerts.jsx'))
 const Profile           = lazy(() => import('./pages/Profile.jsx'))
 const MyApplications      = lazy(() => import('./pages/MyApplications.jsx'))
 const EmployerDashboard   = lazy(() => import('./pages/EmployerDashboard.jsx'))
+const EmployerApplicants  = lazy(() => import('./pages/EmployerApplicants.jsx'))
 const CompanyProfile      = lazy(() => import('./pages/CompanyProfile.jsx'))
 const Login               = lazy(() => import('./pages/Login.jsx'))
 const SalaryInsights      = lazy(() => import('./pages/SalaryInsights.jsx'))
@@ -48,7 +49,8 @@ export default function App() {
             <Route path="/alerts"              element={<ProtectedRoute><Alerts /></ProtectedRoute>} />
             <Route path="/profile"             element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/my-applications"     element={<ProtectedRoute><MyApplications /></ProtectedRoute>} />
-            <Route path="/employer/dashboard"  element={<ProtectedRoute><EmployerDashboard /></ProtectedRoute>} />
+            <Route path="/employer/dashboard"            element={<ProtectedRoute><EmployerDashboard /></ProtectedRoute>} />
+            <Route path="/employer/jobs/:id/applicants"  element={<ProtectedRoute><EmployerApplicants /></ProtectedRoute>} />
           </Routes>
         </Suspense>
       </main>
