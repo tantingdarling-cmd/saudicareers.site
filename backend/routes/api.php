@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\SavedJobController;
 use App\Http\Controllers\Api\JobAlertController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\EmployerJobController;
+use App\Http\Controllers\Api\CompanyController;
 
 // §6: Sitemap — public, no auth, outside v1 prefix.
 // Accessible at /api/sitemap.xml. For static /sitemap.xml run: php artisan sitemap:generate
@@ -35,6 +36,8 @@ Route::prefix('v1')->group(function () {
     Route::get('/tips/{tip}', [CareerTipController::class, 'show']);
 
     Route::post('/subscribe', [SubscriberController::class, 'store']);
+
+    Route::get('/companies/{slug}', [CompanyController::class, 'show']);
 
     // Public settings (GA/GTM/Pixel IDs) — no auth, cached 1h
     Route::get('/settings/public', [SettingsController::class, 'public'])

@@ -13,6 +13,7 @@ export function normalizeJob(job) {
   return {
     id: job.id,
     company: job.company,
+    company_slug: job.company_slug || null,
     icon: CATEGORY_ICONS[job.category] || '💼',
     title: job.title,
     location: job.location,

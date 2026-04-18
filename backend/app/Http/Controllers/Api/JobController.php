@@ -38,7 +38,7 @@ class JobController extends Controller
     private function buildQuery(Request $request)
     {
         $perPage = $request->input('per_page', 12);
-        $query   = Job::active()->latest();
+        $query   = Job::active()->with('company')->latest();
 
         if ($request->filled('category') && $request->category !== 'all') {
             $query->byCategory($request->category);
@@ -85,6 +85,8 @@ class JobController extends Controller
     // inRandomOrder() keeps the section feeling fresh on every visit.
     public function show(Job $job, SeoService $seo)
     {
+        $job->loadMissing('company');
+
         $similar = Job::where('id', '!=', $job->id)
             ->where('category', $job->category)
             ->active()

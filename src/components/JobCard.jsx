@@ -86,7 +86,17 @@ export default function JobCard({ job, onApply, onDetails, onTagClick, delay = 0
             fontSize:22, flexShrink:0,
           }}>{job.icon}</div>
           <div>
-            <div style={{ fontSize:13, fontWeight:600, color:'var(--g800)' }}>{job.company}</div>
+            {job.company_slug ? (
+              <Link
+                to={`/company/${job.company_slug}`}
+                style={{ fontSize:13, fontWeight:600, color:'var(--g800)', textDecoration:'none' }}
+                onMouseEnter={e => e.currentTarget.style.color='var(--g500)'}
+                onMouseLeave={e => e.currentTarget.style.color='var(--g800)'}
+                onClick={e => e.stopPropagation()}
+              >{job.company}</Link>
+            ) : (
+              <div style={{ fontSize:13, fontWeight:600, color:'var(--g800)' }}>{job.company}</div>
+            )}
             <div style={{ fontSize:11, color:'var(--gray400)', marginTop:2 }}>{job.posted}</div>
           </div>
         </div>

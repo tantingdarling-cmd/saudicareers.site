@@ -130,6 +130,10 @@ export const employerApi = {
   deleteJob:  (id)        => api.delete(`/v1/employer/jobs/${id}`),
 };
 
+export const companyApi = {
+  getBySlug: (slug) => api.get(`/v1/companies/${slug}`),
+};
+
 export const alertsApi = {
   getAll:  ()     => api.get('/v1/alerts'),
   create:  (data) => api.post('/v1/alerts', data),

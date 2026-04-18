@@ -15,6 +15,7 @@ class JobResource extends JsonResource
             'title_en' => $this->title_en,
             'company' => $this->company,
             'company_logo' => $this->company_logo,
+            'company_slug' => $this->relationLoaded('company') ? $this->getRelation('company')?->slug : null,
             'location' => $this->location,
             'salary_min' => $this->salary_min,
             'salary_max' => $this->salary_max,
