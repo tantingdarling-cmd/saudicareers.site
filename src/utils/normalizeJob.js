@@ -19,6 +19,8 @@ export function normalizeJob(job) {
     location: job.location,
     type: job.job_type_label || job.job_type,
     salary: job.salary || 'يُحدد عند التواصل',
+    salary_min: job.salary_min || null,
+    salary_max: job.salary_max || null,
     tags,
     badge: job.is_featured ? 'featured' : '',
     badgeText: job.is_featured ? 'حصرية' : '',

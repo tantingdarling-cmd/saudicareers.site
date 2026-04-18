@@ -176,9 +176,17 @@ export default function JobCard({ job, onApply, onDetails, onTagClick, delay = 0
       </div>
 
       {/* Salary */}
-      <div style={{ fontSize:15, fontWeight:700, color:'var(--g800)', marginBottom:20, display:'flex', alignItems:'center', gap:6 }}>
-        <Coins size={15} style={{ color:'var(--gold500)' }} />
-        {job.salary} <span style={{ fontSize:12, fontWeight:400, color:'var(--gray400)' }}>ر.س / شهرياً</span>
+      <div style={{ marginBottom:20, display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:8 }}>
+        <div style={{ fontSize:15, fontWeight:700, color:'var(--g800)', display:'flex', alignItems:'center', gap:6 }}>
+          <Coins size={15} style={{ color:'var(--gold500)' }} />
+          {job.salary} <span style={{ fontSize:12, fontWeight:400, color:'var(--gray400)' }}>ر.س / شهرياً</span>
+        </div>
+        {job.salary_min && job.salary_max && (
+          <span style={{ fontSize:11, fontWeight:600, padding:'3px 10px', borderRadius:50,
+            background:'rgba(22,163,74,0.08)', color:'#15803D', border:'1px solid rgba(22,163,74,0.2)' }}>
+            متوسط: {Math.round((job.salary_min + job.salary_max) / 2).toLocaleString('en')} ر.س
+          </span>
+        )}
       </div>
 
       {/* Actions */}

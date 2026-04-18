@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\JobAlertController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\EmployerJobController;
 use App\Http\Controllers\Api\CompanyController;
+use App\Http\Controllers\Api\SalaryStatsController;
 
 // §6: Sitemap — public, no auth, outside v1 prefix.
 // Accessible at /api/sitemap.xml. For static /sitemap.xml run: php artisan sitemap:generate
@@ -25,6 +26,7 @@ Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap')
 Route::prefix('v1')->group(function () {
     Route::get('/jobs', [JobController::class, 'index']);
     Route::get('/jobs/featured', [JobController::class, 'index'])->defaults('featured', true);
+    Route::get('/jobs/salary-stats', [SalaryStatsController::class, 'index']);
     Route::get('/jobs/{job}', [JobController::class, 'show']);
 
     Route::post('/applications', [ApplicationController::class, 'store']);
