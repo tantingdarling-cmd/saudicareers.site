@@ -88,7 +88,7 @@ if [[ "$SKIP_MIGRATE" == false ]]; then
   step "3/7  Migrations وSettingsSeeder"
 
   # اختبار اتصال DB قبل المتابعة
-  php artisan db:show --no-interaction > /dev/null 2>&1 \
+  php artisan tinker --execute="DB::connection()->getPdo();" > /dev/null 2>&1 \
     || abort "لا يمكن الاتصال بقاعدة البيانات — تحقق من DB_* في .env"
 
   php artisan migrate --force --no-interaction
