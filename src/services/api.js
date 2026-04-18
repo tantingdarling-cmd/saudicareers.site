@@ -104,6 +104,7 @@ export const applicationsApi = {
   submit: (data) => api.post('/v1/applications', data),
   track: (token) => api.get(`/v1/track/${token}`),
   my: () => api.get('/v1/applications/my'),
+  nativeApply: (jobId, data) => api.post(`/v1/jobs/${jobId}/apply`, data),
   getAll: (params = {}) => api.get('/admin/applications', params),
   updateStatus: (id, status, notes = '') => api.patch(`/admin/applications/${id}/status`, { status, notes }),
 };

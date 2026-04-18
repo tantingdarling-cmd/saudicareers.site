@@ -79,6 +79,7 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::post('/profile/resume',           [ProfileController::class,     'uploadResume']);
 
     Route::get('/applications/my',           [ApplicationController::class, 'my']);
+    Route::post('/jobs/{job}/apply',         [ApplicationController::class, 'nativeApply']);
 
     Route::prefix('employer')->middleware('employer')->group(function () {
         Route::get('/jobs',          [EmployerJobController::class, 'index']);

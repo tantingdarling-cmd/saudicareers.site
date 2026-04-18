@@ -5,6 +5,7 @@ import { MapPin, Briefcase, Coins, ArrowRight, Clock, CheckCircle, Loader, Build
 import { QRCodeSVG } from 'qrcode.react'
 import html2canvas from 'html2canvas'
 import ApplyModal from '../components/ApplyModal.jsx'
+import NativeApplyModal from '../components/NativeApplyModal.jsx'
 import { jobsApi } from '../services/api'
 
 // §5: Maps DB job_type enum → Schema.org employmentType
@@ -459,7 +460,11 @@ export default function JobDetail() {
         </div>
       </div>
 
-      {showApply && <ApplyModal job={job} onClose={() => setShowApply(false)} />}
+      {showApply && (
+        isAuth
+          ? <NativeApplyModal job={job} onClose={() => setShowApply(false)} />
+          : <ApplyModal job={job} onClose={() => setShowApply(false)} />
+      )}
 
       <style>{`
         @media (max-width: 700px) {

@@ -169,6 +169,44 @@ class ApplicationController extends Controller
         return ApplicationResource::collection($applications);
     }
     
+    public function nativeApply(Request $request, Job $job)
+    {
+        $request->validate(['cover_letter' => 'nullable|string|max:3000']);
+
+        $user = $request->user();
+
+        $existing = JobApplication::where('job_id', $job->id)->where('email', $user->email)->first();
+        if ($existing) {
+            return response()->json([
+                'message'        => 'لقد تقدمت على هذه الوظيفة مسبقاً',
+                'tracking_token' => $existing->tracking_token,
+            ], 422);
+        }
+
+        $application = JobApplication::create([
+            'job_id'         => $job->id,
+            'name'           => $user->name,
+            'email'          => $user->email,
+            'cv_path'        => $user->resume_path,
+            'cover_letter'   => $request->cover_letter,
+            'ai_consent'     => false,
+            'applied_at'     => now(),
+            'tracking_token' => Str::random(32),
+            'status'         => 'pending',
+        ]);
+
+        try {
+            \Mail::to($user->email)->queue(new \App\Mail\ApplicationConfirmationMail($application, $job));
+        } catch (\Throwable) {}
+
+        try { $this->notifyTelegram($application, $job->title); } catch (\Throwable) {}
+
+        return response()->json([
+            'message'        => 'تم إرسال طلب التقديم بنجاح',
+            'tracking_token' => $application->tracking_token,
+        ], 201);
+    }
+
     public function my(Request $request)
     {
         $email = $request->user()->email;
