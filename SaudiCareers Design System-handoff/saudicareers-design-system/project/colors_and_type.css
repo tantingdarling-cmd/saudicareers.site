@@ -1,0 +1,206 @@
+/* ═══════════════════════════════════════════════════════════════
+   SaudiCareers Design System — Colors & Type
+   Source of truth: extracted from reference/src/styles/global.css
+   RTL-first (Arabic). Primary language: ar-SA.
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Fonts ─────────────────────────────────────────────────────
+   Arabic: Noto Sans Arabic (brand, shipped locally as variable font)
+   English: Plus Jakarta Sans (Google Fonts — for Latin numerals & brand wordmark)
+   NOTE: production uses "IBM Plex Sans Arabic" — we substitute with the
+   user-provided Noto Sans Arabic variable font. Both are geometric humanist
+   sans-serifs with excellent Arabic coverage; visual match is very close.
+   ─────────────────────────────────────────────────────────────── */
+@font-face {
+  font-family: 'Noto Sans Arabic';
+  src: url('fonts/NotoSansArabic-VariableFont_wdth_wght.ttf') format('truetype-variations'),
+       url('fonts/NotoSansArabic-VariableFont_wdth_wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-stretch: 62.5% 100%;
+  font-style: normal;
+  font-display: swap;
+}
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+
+:root {
+  /* ── Brand Greens (g-scale) — Saudi flag-inspired deep green ── */
+  --g950: #001a0d;   /* darkest — used for headings on light bg, deep section backgrounds */
+  --g900: #003D2B;   /* PRIMARY brand green — CTAs, nav, strong emphasis */
+  --g800: #004D33;
+  --g700: #006644;   /* hover state for primary */
+  --g600: #1B7A52;   /* focus rings, success states */
+  --g500: #238C5E;
+  --g400: #3AAF7A;   /* success-positive, progress bar fills */
+  --g200: #A8D5BC;
+  --g100: #D4EDE0;
+  --g50:  #EDF7F2;   /* subtle success tint, badge backgrounds */
+
+  /* ── Gold accents — luxury / premium / exclusivity signals ── */
+  --gold700: #8B6914;
+  --gold600: #A67C1A;
+  --gold500: #C5A059; /* PRIMARY gold — featured CTAs, brand accent */
+  --gold400: #D4B478; /* hover state for gold */
+  --gold300: #E8CFA0;
+  --gold100: #FAF3E0; /* gold badge background */
+
+  /* ── Neutrals — green-tinted grays for cohesion ── */
+  --white:   #FFFFFF;
+  --gray50:  #F8FAFA;  /* page bg alt */
+  --gray100: #EEF2F0;  /* tag bg, skeleton base */
+  --gray200: #D9E2DC;  /* borders, dividers */
+  --gray400: #8FA69A;  /* subdued text, meta */
+  --gray600: #4A6358;  /* body copy secondary */
+  --gray800: #1E3028;  /* body copy primary */
+
+  /* Page chrome */
+  --page-bg: #F5F5F7; /* main body background — very light warm gray */
+
+  /* ── Semantic aliases ── */
+  --fg-primary:    var(--g950);
+  --fg-secondary:  var(--gray800);
+  --fg-muted:      var(--gray600);
+  --fg-subtle:     var(--gray400);
+  --fg-on-dark:    var(--white);
+  --fg-on-dark-muted: rgba(255,255,255,0.55);
+
+  --bg-page:       var(--page-bg);
+  --bg-card:       var(--white);
+  --bg-section-alt: var(--gray50);
+  --bg-section-dark: var(--g950);
+  --bg-accent-dark: var(--g900);
+
+  --accent-primary:   var(--g900);
+  --accent-primary-hover: var(--g700);
+  --accent-gold:      var(--gold500);
+  --accent-gold-hover: var(--gold400);
+
+  --border-default:  var(--gray200);
+  --border-accent:   var(--g400);
+  --border-gold:     rgba(197,160,89,0.25);
+
+  /* ── Typography ── */
+  --font-ar: 'Noto Sans Arabic', system-ui, sans-serif;
+  --font-en: 'Plus Jakarta Sans', system-ui, sans-serif;
+
+  /* Type scale (used throughout the codebase via inline styles) */
+  --fs-hero:   clamp(2.2rem, 5.5vw, 3.8rem);  /* H1 hero */
+  --fs-h2:     clamp(1.6rem, 3.5vw, 2.4rem);  /* section titles */
+  --fs-h3:     1.25rem;
+  --fs-lead:   clamp(1rem, 2vw, 1.1rem);
+  --fs-body:   1rem;
+  --fs-sm:     0.875rem;   /* 14px — most body copy */
+  --fs-xs:     0.8125rem;  /* 13px — meta, tags */
+  --fs-xxs:    0.6875rem;  /* 11px — eyebrows */
+
+  /* Weights used */
+  --fw-regular: 400;
+  --fw-medium:  500;   /* heading default (IBM Plex Arabic medium) */
+  --fw-semibold: 600;
+  --fw-bold:    700;
+  --fw-xbold:   800;   /* EN stat numbers only */
+
+  /* Line heights */
+  --lh-tight:  1.2;
+  --lh-snug:   1.35;
+  --lh-normal: 1.75;  /* body default */
+  --lh-loose:  1.9;
+
+  /* ── Radii (from global.css) ── */
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 18px;
+  --r-xl: 24px;
+  --r-pill: 50px;
+
+  /* ── Shadows ── */
+  --shadow-sm: 0 1px 4px rgba(0,61,43,0.08);
+  --shadow-md: 0 4px 16px rgba(0,61,43,0.10);
+  --shadow-lg: 0 12px 40px rgba(0,61,43,0.14);
+  --shadow-gold: 0 4px 20px rgba(197,160,89,0.3);
+  --shadow-card: 0 8px 32px rgba(0,0,0,0.08);
+
+  /* ── Easing (used for micro-interactions) ── */
+  --ease-expo: cubic-bezier(0.19, 1, 0.22, 1);
+  --ease-pop:  cubic-bezier(0.32, 0.72, 0, 1);
+
+  /* ── Spacing (implicit in the codebase; documented here) ── */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 100px;
+}
+
+/* ═══ Semantic text styles ═══════════════════════════════════════ */
+.ds-hero {
+  font-family: var(--font-ar);
+  font-size: var(--fs-hero);
+  font-weight: var(--fw-bold);
+  font-variation-settings: 'wght' 700;
+  line-height: var(--lh-tight);
+  color: var(--fg-primary);
+  letter-spacing: -0.5px;
+}
+.ds-h2 {
+  font-family: var(--font-ar);
+  font-size: var(--fs-h2);
+  font-weight: var(--fw-bold);
+  line-height: 1.25;
+  color: var(--fg-primary);
+}
+.ds-h3 {
+  font-family: var(--font-ar);
+  font-size: var(--fs-h3);
+  font-weight: var(--fw-bold);
+  color: var(--fg-primary);
+}
+.ds-lead {
+  font-family: var(--font-ar);
+  font-size: var(--fs-lead);
+  font-weight: var(--fw-medium);
+  line-height: var(--lh-loose);
+  color: var(--fg-muted);
+}
+.ds-body {
+  font-family: var(--font-ar);
+  font-size: var(--fs-sm);
+  line-height: var(--lh-normal);
+  color: var(--fg-muted);
+}
+.ds-meta {
+  font-family: var(--font-ar);
+  font-size: var(--fs-xs);
+  color: var(--fg-subtle);
+}
+.ds-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-ar);
+  font-size: var(--fs-xxs);
+  font-weight: var(--fw-bold);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--gold600);
+}
+.ds-stat-number {
+  font-family: var(--font-en);
+  font-weight: var(--fw-xbold);
+  font-size: clamp(2rem, 4vw, 2.8rem);
+  line-height: 1;
+  color: var(--white);
+}
+.ds-brandmark {
+  font-family: var(--font-en);
+  font-weight: var(--fw-bold);
+  font-size: 17px;
+  color: var(--g900);
+}
+.ds-brandmark-accent { color: var(--gold500); }

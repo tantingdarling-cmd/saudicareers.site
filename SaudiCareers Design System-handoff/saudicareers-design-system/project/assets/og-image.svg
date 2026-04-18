@@ -1,0 +1,67 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#001a0d"></stop>
+      <stop offset="100%" style="stop-color:#003D2B"></stop>
+    </linearGradient>
+    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#C5A059"></stop>
+      <stop offset="100%" style="stop-color:#E8C97A"></stop>
+    </linearGradient>
+  </defs>
+
+  
+  <rect width="1200" height="630" fill="url(#bg)"></rect>
+
+  
+  <g opacity="0.05">
+    <line x1="0" y1="105" x2="1200" y2="105" stroke="white" stroke-width="1"></line>
+    <line x1="0" y1="210" x2="1200" y2="210" stroke="white" stroke-width="1"></line>
+    <line x1="0" y1="315" x2="1200" y2="315" stroke="white" stroke-width="1"></line>
+    <line x1="0" y1="420" x2="1200" y2="420" stroke="white" stroke-width="1"></line>
+    <line x1="0" y1="525" x2="1200" y2="525" stroke="white" stroke-width="1"></line>
+    <line x1="200" y1="0" x2="200" y2="630" stroke="white" stroke-width="1"></line>
+    <line x1="400" y1="0" x2="400" y2="630" stroke="white" stroke-width="1"></line>
+    <line x1="600" y1="0" x2="600" y2="630" stroke="white" stroke-width="1"></line>
+    <line x1="800" y1="0" x2="800" y2="630" stroke="white" stroke-width="1"></line>
+    <line x1="1000" y1="0" x2="1000" y2="630" stroke="white" stroke-width="1"></line>
+  </g>
+
+  
+  <rect x="0" y="0" width="1200" height="6" fill="url(#gold)"></rect>
+
+  
+  <circle cx="600" cy="220" r="70" fill="rgba(255,255,255,0.07)" stroke="rgba(197,160,89,0.4)" stroke-width="2"></circle>
+  <text x="600" y="235" text-anchor="middle" font-size="56">🇸🇦</text>
+
+  
+  <text x="600" y="340" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="52" font-weight="700" fill="white">
+    Saudi Careers
+  </text>
+
+  
+  <text x="600" y="400" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="28" font-weight="400" fill="rgba(255,255,255,0.7)">
+    طريقك للفرصة في سوق العمل السعودي
+  </text>
+
+  
+  <rect x="480" y="430" width="240" height="2" fill="url(#gold)" rx="1"></rect>
+
+  
+  <rect x="240" y="460" width="200" height="40" rx="20" fill="rgba(197,160,89,0.15)" stroke="rgba(197,160,89,0.3)" stroke-width="1"></rect>
+  <text x="340" y="486" text-anchor="middle" font-family="system-ui, sans-serif" font-size="16" fill="#C5A059">افحص سيرتك الذاتية</text>
+
+  <rect x="500" y="460" width="200" height="40" rx="20" fill="rgba(197,160,89,0.15)" stroke="rgba(197,160,89,0.3)" stroke-width="1"></rect>
+  <text x="600" y="486" text-anchor="middle" font-family="system-ui, sans-serif" font-size="16" fill="#C5A059">استعرض الفرص الوظيفية</text>
+
+  <rect x="760" y="460" width="200" height="40" rx="20" fill="rgba(197,160,89,0.15)" stroke="rgba(197,160,89,0.3)" stroke-width="1"></rect>
+  <text x="860" y="486" text-anchor="middle" font-family="system-ui, sans-serif" font-size="16" fill="#C5A059">رؤية 2030</text>
+
+  
+  <text x="600" y="575" text-anchor="middle" font-family="system-ui, monospace, sans-serif" font-size="18" fill="rgba(255,255,255,0.35)">
+    saudicareers.site
+  </text>
+
+  
+  <rect x="0" y="624" width="1200" height="6" fill="url(#gold)"></rect>
+</svg>

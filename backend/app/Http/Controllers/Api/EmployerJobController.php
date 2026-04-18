@@ -12,6 +12,7 @@ class EmployerJobController extends Controller
     public function index(Request $request)
     {
         $jobs = Job::where('user_id', $request->user()->id)
+            ->withCount('applications')
             ->latest()
             ->get(['id', 'title', 'location', 'post_status', 'is_active', 'posted_at', 'created_at']);
 

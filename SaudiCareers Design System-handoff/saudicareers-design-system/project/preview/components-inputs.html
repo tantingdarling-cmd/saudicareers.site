@@ -1,0 +1,17 @@
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><link rel="stylesheet" href="../colors_and_type.css"><style>
+html,body{margin:0;background:var(--bg-page);font-family:var(--font-ar)}
+.card{padding:22px;background:var(--white);min-height:150px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.inp{width:100%;padding:13px 18px;border:1.5px solid #D9E2DC;border-radius:12px;font-size:14px;font-family:var(--font-ar);color:#1E3028;background:#F8FAFA;outline:none;text-align:right;direction:rtl;box-sizing:border-box}
+.inp.focus{border-color:#1B7A52;background:#fff;box-shadow:0 0 0 3px rgba(0,102,68,0.1)}
+.lbl{font-family:var(--font-en);font-size:9px;color:var(--fg-subtle);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.success{background:#EDF7F2;border:1px solid #A8D5BC;border-radius:12px;padding:14px 18px;display:flex;align-items:center;gap:12px;color:#006644;font-weight:500;font-size:13px;grid-column:1/-1}
+.dots{display:flex;justify-content:center;gap:6px;grid-column:1/-1;margin-top:-4px}
+.dots div{height:6px;border-radius:3px;transition:all .3s}
+</style></head><body><div class="card">
+<div><div class="lbl">Input · default</div><input class="inp" placeholder="اسمك الكريم" value=""></div>
+<div><div class="lbl">Input · focused</div><input class="inp focus" placeholder="بريدك الإلكتروني" value="ahmed@example.com"></div>
+<div><div class="lbl">Select</div><select class="inp"><option>مجالك المهني</option><option>تقنية المعلومات</option></select></div>
+<div><div class="lbl">Input · filled</div><input class="inp" value="مطوّر واجهات أمامية" style="background:#fff"></div>
+<div class="dots"><div style="background:#006644;width:20px"></div><div style="background:#006644;width:20px"></div><div style="background:#D9E2DC;width:6px"></div></div>
+<div class="success">✓ تم التسجيل! سنتواصل معك خلال 48 ساعة بمراجعة سيرتك.</div>
+</div></body></html>

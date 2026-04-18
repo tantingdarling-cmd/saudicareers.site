@@ -1,0 +1,173 @@
+:root {
+  --g950: #001a0d;
+  --g900: #003D2B;
+  --g800: #004D33;
+  --g700: #006644;
+  --g600: #1B7A52;
+  --g500: #238C5E;
+  --g400: #3AAF7A;
+  --g200: #A8D5BC;
+  --g100: #D4EDE0;
+  --g50:  #EDF7F2;
+  --gold700: #8B6914;
+  --gold600: #A67C1A;
+  --gold500: #C5A059;
+  --gold400: #D4B478;
+  --gold300: #E8CFA0;
+  --gold100: #FAF3E0;
+  --white: #FFFFFF;
+  --gray50: #F8FAFA;
+  --gray100: #EEF2F0;
+  --gray200: #D9E2DC;
+  --gray400: #8FA69A;
+  --gray600: #4A6358;
+  --gray800: #1E3028;
+  --font-ar: 'IBM Plex Sans Arabic', sans-serif;
+  --font-en: 'Plus Jakarta Sans', sans-serif;
+  --r-sm: 8px; --r-md: 12px; --r-lg: 18px; --r-xl: 24px;
+  --shadow-sm: 0 1px 4px rgba(0,61,43,0.08);
+  --shadow-md: 0 4px 16px rgba(0,61,43,0.10);
+  --shadow-lg: 0 12px 40px rgba(0,61,43,0.14);
+  --shadow-gold: 0 4px 20px rgba(197,160,89,0.3);
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; font-size:16px; }
+
+body {
+  font-family: var(--font-ar);
+  background: #F5F5F7;
+  color: var(--gray800);
+  line-height: 1.75;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* IBM Plex Sans Arabic — Medium (500) لجميع العناوين */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-ar);
+  font-weight: 500;
+  font-variation-settings: 'wght' 500;
+}
+
+a { text-decoration: none; color: inherit; }
+button { cursor: pointer; font-family: var(--font-ar); }
+img { max-width: 100%; display: block; }
+
+/* scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--gray50); }
+::-webkit-scrollbar-thumb { background: var(--g400); border-radius: 3px; }
+
+/* ── Fade-in on scroll (useFadeIn hook) ── */
+.fade-in-section {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s cubic-bezier(0.19, 1, 0.22, 1),
+              transform 0.8s cubic-bezier(0.19, 1, 0.22, 1);
+  will-change: opacity, transform;
+}
+.fade-in-section.is-visible {
+  opacity: 1;
+  transform: none;
+}
+.fade-in-section.delay-1 { transition-delay: 100ms; }
+.fade-in-section.delay-2 { transition-delay: 200ms; }
+.fade-in-section.delay-3 { transition-delay: 300ms; }
+
+/* ── View Transitions (progressive enhancement) ── */
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 0.25s;
+    animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+  }
+}
+
+/* ── Micro-interaction keyframes ─────────────────────────────────── */
+
+/* الدوت المباشر في الهيدر (Hero badge) */
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(59,175,122,0.55); transform: scale(1); }
+  50%       { box-shadow: 0 0 0 6px rgba(59,175,122,0);  transform: scale(1.15); }
+}
+
+/* بطاقة الهيرو الطائفة (Notion-style float) */
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(-1deg); }
+  50%       { transform: translateY(-12px) rotate(1deg); }
+}
+
+/* تعبئة حلقة الـ Score (SVG stroke-dashoffset) */
+@keyframes scoreRingFill {
+  from { stroke-dashoffset: 226; }
+}
+
+/* ظهور بطاقة الـ Score في Success State */
+@keyframes successPop {
+  0%   { opacity: 0; transform: scale(0.6); }
+  70%  { transform: scale(1.05); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* نبض خلفية البطاقة الخضراء عند HQL */
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 0 0   rgba(0,61,43,0.15); }
+  50%       { box-shadow: 0 0 24px 4px rgba(0,61,43,0.12); }
+}
+
+/* ── Utility classes ──────────────────────────────────────────────── */
+
+/* زر: ضغطة خفيفة عند النقر */
+.btn-press:active { transform: scale(0.97); transition: transform 0.1s; }
+
+/* بطاقة: ارتفاع عند hover */
+.card-lift {
+  transition: transform 0.25s cubic-bezier(0.19,1,0.22,1),
+              box-shadow 0.25s cubic-bezier(0.19,1,0.22,1);
+}
+.card-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* input: حلقة focus ملونة */
+.input-focus:focus {
+  outline: none;
+  border-color: var(--g600) !important;
+  background: var(--white) !important;
+  box-shadow: 0 0 0 3px rgba(0,102,68,0.1);
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+/* Shimmer لـ Skeleton loading */
+@keyframes shimmer {
+  from { background-position: -400px 0; }
+  to   { background-position:  400px 0; }
+}
+.skeleton-shimmer {
+  background: linear-gradient(90deg, var(--gray100) 25%, var(--gray50) 50%, var(--gray100) 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.4s infinite ease-in-out;
+}
+
+/* RTL: عكس اتجاه الـ Shimmer ليتدفق من اليمين لليسار */
+[dir="rtl"] .skeleton-shimmer {
+  animation-direction: reverse;
+}
+
+/* ── prefers-reduced-motion: إيقاف كل الحركات للمستخدمين الحساسين ──── */
+/* يشمل: دوار الدهليز، الصرع الضوئي، وإعاقات الإدراك الحركي           */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration:       0.01ms !important;
+    animation-iteration-count: 1     !important;
+    transition-duration:      0.01ms !important;
+    scroll-behavior:          auto   !important;
+  }
+  /* أوقف الـ float و pulse تماماً — لا تستبدلهما بشيء آخر */
+  .skeleton-shimmer {
+    animation: none !important;
+    background: var(--gray100) !important;
+  }
+}
