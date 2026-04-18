@@ -31,6 +31,7 @@ class JobResource extends JsonResource
             'experience_level' => $this->experience_level,
             'is_featured' => $this->is_featured,
             'is_government_partner' => $this->is_government_partner,
+            'is_urgent' => $this->is_urgent,
             'partner_logo' => $this->partner_logo,
             'apply_url' => $this->apply_url,
             'posted_at' => $this->posted_at?->diffForHumans(),

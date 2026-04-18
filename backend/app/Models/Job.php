@@ -36,12 +36,14 @@ class Job extends Model
         'user_id',
         'is_government_partner',
         'partner_logo',
+        'is_urgent',
     ];
 
     protected $casts = [
         'is_active'             => 'boolean',
         'is_featured'           => 'boolean',
         'is_government_partner' => 'boolean',
+        'is_urgent'             => 'boolean',
         'posted_at'             => 'datetime',
         'salary_min' => 'integer',
         'salary_max' => 'integer',

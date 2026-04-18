@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { Link, useLocation, useSearchParams } from 'react-router-dom'
 import { CheckCircle, FileText, Briefcase, Lightbulb, ArrowLeft, Clock } from 'lucide-react'
 import JobCard from '../components/JobCard.jsx'
+import GovJobCard from '../components/GovJobCard.jsx'
 import JobSkeleton from '../components/JobSkeleton.jsx'
 import ApplyModal from '../components/ApplyModal.jsx'
 import JobStructuredData from '../components/JobStructuredData.jsx'
@@ -417,7 +418,7 @@ export default function Home() {
   }, [debouncedFilters])
 
   useEffect(() => {
-    jobsApi.getAll({ featured_partners: 1 })
+    jobsApi.getAll({ gov_partner: 1 })
       .then(res => {
         const data = res?.data
         if (Array.isArray(data) && data.length > 0) {
@@ -699,10 +700,9 @@ export default function Home() {
                 </div>
                 <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(min(100%,320px),1fr))', gap:20 }}>
                   {govJobs.map((job, i) => (
-                    <JobCard
+                    <GovJobCard
                       key={job.id}
                       job={job}
-                      variant="government"
                       onApply={setSelectedJob}
                       onDetails={setBottomSheetJob}
                       onTagClick={tag => {
