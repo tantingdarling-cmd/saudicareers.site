@@ -123,9 +123,9 @@ ok "config / route / view / event — مكبوتة"
 
 # ── Storage permissions (755 base, 775 writable dirs — PHP-FPM safe) ──
 step "4.5/7  Storage Permissions"
-chmod -R 755 storage bootstrap/cache
-chmod -R 775 storage/logs storage/framework bootstrap/cache
-[[ -f storage/logs/laravel.log ]] && chmod 664 storage/logs/laravel.log
+chmod -R 755 storage bootstrap/cache 2>/dev/null || true
+chmod -R 775 storage/logs storage/framework bootstrap/cache 2>/dev/null || true
+[[ -f storage/logs/laravel.log ]] && chmod 664 storage/logs/laravel.log 2>/dev/null || true
 ok "storage 755 / logs+framework+cache 775"
 
 # ──────────────────────────────────────────────────────────────────────
