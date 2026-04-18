@@ -316,185 +316,192 @@ export default function Home() {
       <section style={{
         minHeight: '100vh',
         padding: '120px clamp(1rem,4vw,3rem) 80px',
-        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-        textAlign: 'center',
-        background: 'radial-gradient(ellipse 80% 55% at 50% 0%, rgba(197,160,89,0.14) 0%, transparent 60%), radial-gradient(ellipse 55% 45% at 100% 55%, rgba(197,160,89,0.07) 0%, transparent 55%), var(--g900)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: 'radial-gradient(ellipse 80% 50% at 50% -5%, rgba(0,61,43,0.06) 0%, transparent 65%), radial-gradient(ellipse 50% 40% at 5% 60%, rgba(197,160,89,0.05) 0%, transparent 55%), #F5F5F7',
         position: 'relative', overflow: 'hidden',
       }}>
-        {/* خط عرضي خفيف في الأعلى */}
-        <div style={{ position:'absolute', top:0, left:0, right:0, height:2, background:'linear-gradient(90deg, transparent, var(--gold600) 30%, var(--gold400) 65%, transparent)' }}/>
+        {/* Top accent bar */}
+        <div style={{ position:'absolute', top:0, left:0, right:0, height:3, background:'linear-gradient(90deg, transparent, var(--g700) 40%, var(--gold500) 70%, transparent)' }} />
 
-        <div style={{ position:'relative', zIndex:1, display:'flex', flexDirection:'column', alignItems:'center', maxWidth:680 }}>
+        <div style={{
+          maxWidth:1160, width:'100%', margin:'0 auto',
+          display:'grid', gridTemplateColumns:'minmax(320px,1fr) minmax(320px,1.15fr)',
+          gap:'clamp(32px,5vw,64px)', alignItems:'center',
+        }} className="hero-grid">
 
-          {/* badge */}
-          <div style={{
-            display:'inline-flex', alignItems:'center', gap:8,
-            background:'rgba(197,160,89,0.1)', color:'var(--gold300)',
-            border:'1px solid rgba(197,160,89,0.28)',
-            padding:'5px 16px 5px 12px', borderRadius:50,
-            fontSize:13, fontWeight:500, marginBottom:32,
-            boxShadow:'0 1px 12px rgba(197,160,89,0.12)',
-          }}>
-            <span style={{ width:7, height:7, background:'var(--gold500)', borderRadius:'50%', animation:'pulse 2s infinite', display:'block' }}/>
-            وصول مبكر مجاني — سجّل الآن
-          </div>
-
-          {/* heading */}
-          <h1 ref={heroHeadingRef} className="fade-in-section" style={{
-            fontSize: 'clamp(2.2rem,5.5vw,3.8rem)',
-            fontWeight: 700,
-            lineHeight: 1.2,
-            color: 'var(--white)',
-            maxWidth: 640,
-            marginBottom: 20,
-            letterSpacing: '-0.5px',
-            fontFamily: 'var(--font-ar)',
-            fontVariationSettings: "'wght' 700",
-          }}>
-            ارفع مستواك في{' '}
-            <span style={{ color:'var(--gold500)' }}>سوق العمل</span>
-          </h1>
-
-          {/* sub */}
-          <p ref={heroDescRef} className="fade-in-section delay-1" style={{
-            fontSize: 'clamp(1rem,2vw,1.1rem)',
-            color: 'rgba(255,255,255,0.62)',
-            maxWidth: 520,
-            marginBottom: 44,
-            lineHeight: 1.9,
-            fontFamily: 'var(--font-ar)',
-            fontVariationSettings: "'wght' 500",
-          }}>
-            مقالات مبنية على أبحاث الموارد البشرية ومعطيات سوق العمل السعودي.
-          </p>
-
-          {/* CTA buttons */}
-          <div style={{ display:'flex', gap:12, flexWrap:'wrap', justifyContent:'center', marginBottom:48 }}>
-            <Link to="/resume-analyzer" style={{
-              display:'inline-flex', alignItems:'center', gap:8,
-              background:'linear-gradient(135deg, var(--gold500) 0%, var(--gold600) 100%)',
-              color:'var(--g950)',
-              padding:'13px 28px', borderRadius:'var(--r-md)',
-              fontSize:15, fontWeight:700, textDecoration:'none',
-              transition:'background 0.2s', boxShadow:'0 4px 20px rgba(197,160,89,0.35)',
-            }}
-            onMouseEnter={e=>e.currentTarget.style.background='var(--gold400)'}
-            onMouseLeave={e=>e.currentTarget.style.background='linear-gradient(135deg, var(--gold500) 0%, var(--gold600) 100%)'}
-            >
-              افحص سيرتك مجاناً ✦
-            </Link>
-            <button onClick={() => document.getElementById('jobs')?.scrollIntoView({ behavior:'smooth' })} style={{
-              display:'inline-flex', alignItems:'center', gap:8,
-              background:'rgba(255,255,255,0.07)', color:'var(--white)',
-              padding:'13px 28px', borderRadius:'var(--r-md)',
-              fontSize:15, fontWeight:600, border:'1.5px solid rgba(255,255,255,0.2)',
-              cursor:'pointer', transition:'border-color 0.2s, background 0.2s',
-            }}
-            onMouseEnter={e=>{e.currentTarget.style.borderColor='rgba(255,255,255,0.45)';e.currentTarget.style.background='rgba(255,255,255,0.12)'}}
-            onMouseLeave={e=>{e.currentTarget.style.borderColor='rgba(255,255,255,0.2)';e.currentTarget.style.background='rgba(255,255,255,0.07)'}}
-            >
-              تصفّح الوظائف
-            </button>
-          </div>
-
-          {/* ── Floating AI preview card ── */}
-          <div aria-hidden="true" style={{
-            position:'relative', width:'100%', maxWidth:360, margin:'0 auto 40px',
-            animation:'float 6s ease-in-out infinite',
-            filter:'drop-shadow(0 20px 48px rgba(0,0,0,0.45))',
-          }}>
+          {/* RIGHT COLUMN (RTL first): copy */}
+          <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-start' }}>
+            {/* Early access badge */}
             <div style={{
-              background:'var(--white)', borderRadius:'var(--r-xl)',
+              display:'inline-flex', alignItems:'center', gap:8,
+              background:'var(--white)', color:'var(--g800)',
               border:'1px solid var(--gray200)',
-              padding:'20px 24px',
-              textAlign:'right',
+              padding:'5px 16px 5px 12px', borderRadius:50,
+              fontSize:13, fontWeight:500, marginBottom:28,
+              boxShadow:'0 1px 4px rgba(0,61,43,0.06)',
             }}>
-              {/* رأس البطاقة */}
-              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:16 }}>
-                <div style={{
-                  fontSize:11, fontWeight:700, color:'var(--g700)',
-                  background:'var(--g50)', padding:'3px 10px', borderRadius:20,
-                  letterSpacing:'0.5px',
-                }}>
-                  🤖 نتيجة مطابقتك
+              <span style={{ width:7, height:7, background:'var(--g600)', borderRadius:'50%', animation:'pulse 2s infinite', display:'block' }} />
+              وصول مبكر مجاني — سجّل الآن
+            </div>
+
+            {/* Heading */}
+            <h1 ref={heroHeadingRef} className="fade-in-section" style={{
+              fontSize:'clamp(2rem,4.8vw,3.4rem)', fontWeight:700, lineHeight:1.2,
+              color:'var(--g950)', marginBottom:20, letterSpacing:'-0.5px',
+              fontFamily:'var(--font-ar)',
+            }}>
+              ارفع مستواك في سوق العمل
+            </h1>
+
+            {/* Description */}
+            <p ref={heroDescRef} className="fade-in-section delay-1" style={{
+              fontSize:'clamp(1rem,1.6vw,1.1rem)', color:'var(--gray600)',
+              maxWidth:480, marginBottom:36, lineHeight:1.9, fontWeight:500,
+            }}>
+              حلّل سيرتك الذاتية، اكتشف نقاط التحسين، وتنافس على أفضل الفرص في السوق السعودي.
+            </p>
+
+            {/* CTAs */}
+            <div style={{ display:'flex', gap:12, flexWrap:'wrap', marginBottom:32 }}>
+              <Link to="/resume-analyzer" style={{
+                background:'linear-gradient(135deg,var(--g900) 0%,var(--g950) 100%)', color:'var(--white)',
+                padding:'13px 28px', borderRadius:'var(--r-md)',
+                fontSize:15, fontWeight:700, textDecoration:'none',
+                transition:'background 0.2s', boxShadow:'var(--shadow-md)',
+              }}
+              onMouseEnter={e=>e.currentTarget.style.background='var(--g700)'}
+              onMouseLeave={e=>e.currentTarget.style.background='linear-gradient(135deg,var(--g900) 0%,var(--g950) 100%)'}>
+                افحص سيرتك مجاناً ✦
+              </Link>
+              <button onClick={() => document.getElementById('jobs')?.scrollIntoView({ behavior:'smooth' })} style={{
+                background:'var(--white)', color:'var(--g900)',
+                padding:'13px 28px', borderRadius:'var(--r-md)',
+                fontSize:15, fontWeight:600, border:'1.5px solid var(--gray200)',
+                cursor:'pointer', transition:'border-color 0.2s, box-shadow 0.2s',
+              }}
+              onMouseEnter={e=>{e.currentTarget.style.borderColor='var(--g400)';e.currentTarget.style.boxShadow='var(--shadow-sm)'}}
+              onMouseLeave={e=>{e.currentTarget.style.borderColor='var(--gray200)';e.currentTarget.style.boxShadow='none'}}>
+                تصفّح الوظائف
+              </button>
+            </div>
+
+            {/* Social proof */}
+            <div style={{ display:'flex', alignItems:'center', gap:12, fontSize:13, color:'var(--gray400)' }}>
+              <div style={{ display:'flex', direction:'ltr' }}>
+                {['أح','سم','عب','+'].map((t,i) => (
+                  <div key={i} style={{
+                    width:28, height:28, borderRadius:'50%', border:'2px solid #F5F5F7',
+                    marginRight:-8, display:'flex', alignItems:'center', justifyContent:'center',
+                    fontSize:10, fontWeight:700,
+                    background: i===3 ? 'var(--g900)' : ['var(--g100)','var(--gold100)','var(--g200)'][i],
+                    color: i===3 ? 'var(--white)' : ['var(--g800)','var(--gold700)','var(--g900)'][i],
+                  }}>{t}</div>
+                ))}
+              </div>
+              <span>انضم أكثر من <strong style={{ color:'var(--g800)' }}>120+</strong> محترف</span>
+            </div>
+          </div>
+
+          {/* LEFT COLUMN: resume composition with animated badges */}
+          <div aria-hidden="true" style={{ position:'relative', width:'100%', aspectRatio:'4/3', maxHeight:560 }}>
+            {/* Resume base card */}
+            <div style={{
+              position:'absolute', inset:'4% 6% 8% 6%',
+              borderRadius:20, overflow:'hidden',
+              boxShadow:'0 24px 60px rgba(0,61,43,0.15), 0 4px 14px rgba(0,0,0,0.06)',
+              background:'var(--white)',
+              animation:'heroFloat 7s ease-in-out infinite',
+              transform:'rotate(-1.5deg)',
+              padding:'28px 24px',
+            }}>
+              {/* CV Header row */}
+              <div style={{ display:'flex', alignItems:'center', gap:14, marginBottom:20, paddingBottom:16, borderBottom:'1.5px solid var(--gray100)' }}>
+                <div style={{ width:48, height:48, borderRadius:'50%', background:'linear-gradient(135deg,var(--g200),var(--g100))', flexShrink:0 }} />
+                <div style={{ flex:1 }}>
+                  <div style={{ height:11, background:'var(--g950)', borderRadius:4, width:'60%', marginBottom:6 }} />
+                  <div style={{ height:8, background:'var(--gray200)', borderRadius:4, width:'45%' }} />
                 </div>
-                <div style={{ display:'flex', gap:5 }}>
-                  {['var(--g200)','var(--gold300)','var(--gray200)'].map((c,i) => (
-                    <div key={i} style={{ width:8, height:8, borderRadius:'50%', background:c }}/>
+              </div>
+              {/* CV content lines */}
+              {[['60%','75%','55%'],['90%','65%','50%'],['70%','80%','40%']].map((widths,gi) => (
+                <div key={gi} style={{ marginBottom:14 }}>
+                  <div style={{ height:7, background: gi===0?'var(--gold100)':'var(--g50)', borderRadius:3, width:gi===0?'38%':'30%', marginBottom:7 }} />
+                  {widths.map((w,i) => (
+                    <div key={i} style={{ height:6, background: i===0?'var(--g100)':'var(--gray100)', borderRadius:3, width:w, marginBottom:5 }} />
                   ))}
                 </div>
-              </div>
-
-              {/* حلقة الـ Score المتحركة */}
-              <div style={{ display:'flex', alignItems:'center', gap:16, marginBottom:16 }}>
-                <svg width="64" height="64" viewBox="0 0 64 64" style={{ flexShrink:0 }}>
-                  <circle cx="32" cy="32" r="27" fill="none" stroke="var(--g100)" strokeWidth="6"/>
-                  <circle cx="32" cy="32" r="27" fill="none"
-                    stroke="var(--g600)" strokeWidth="6" strokeLinecap="round"
-                    strokeDasharray="170" strokeDashoffset="25"
-                    transform="rotate(-90 32 32)"
-                    style={{ animation:'ringFill 2.5s cubic-bezier(0.19,1,0.22,1) 0.3s both' }}
-                  />
-                  <text x="32" y="32" textAnchor="middle" dominantBaseline="central"
-                    fontSize="13" fontWeight="800" fill="var(--g900)"
-                    fontFamily="'Plus Jakarta Sans',sans-serif">85%</text>
-                </svg>
-                <div>
-                  <div style={{ fontSize:15, fontWeight:700, color:'var(--g950)', marginBottom:3 }}>
-                    مطور واجهات أمامية
-                  </div>
-                  <div style={{ fontSize:12, color:'var(--gray600)' }}>شركة الرياض التقنية</div>
-                  <div style={{
-                    display:'inline-flex', alignItems:'center', gap:4, marginTop:6,
-                    fontSize:11, fontWeight:700, color:'#065F46',
-                    background:'#D1FAE5', padding:'2px 8px', borderRadius:20,
-                  }}>
-                    🏆 مطابقة ممتازة
-                  </div>
-                </div>
-              </div>
-
-              {/* شريط أبعاد خفيف */}
-              {[['المهارات','85%','var(--g600)',0.85],['الخبرة','90%','var(--g500)',0.9],['الموقع','100%','var(--gold500)',1]].map(([label,pct,color,ratio]) => (
-                <div key={label} style={{ marginBottom:7 }}>
-                  <div style={{ display:'flex', justifyContent:'space-between', fontSize:11, color:'var(--gray600)', marginBottom:3 }}>
-                    <span style={{ color, fontWeight:600 }}>{pct}</span>
-                    <span>{label}</span>
-                  </div>
-                  <div style={{ height:4, background:'var(--gray100)', borderRadius:2, overflow:'hidden' }}>
-                    <div style={{
-                      height:'100%', width:`${ratio*100}%`, background:color, borderRadius:2,
-                      animation:`ringFill 1.8s ease ${0.5 + ratio * 0.3}s both`,
-                      animationName:'none',  /* لا نعيد animate CSS هنا — static يكفي للمعاينة */
-                    }}/>
-                  </div>
-                </div>
               ))}
-
-              {/* Trust badge صغير */}
-              <div style={{
-                marginTop:12, paddingTop:12, borderTop:'1px solid var(--gray100)',
-                fontSize:10, color:'var(--gray400)', display:'flex', alignItems:'center', justifyContent:'center', gap:4,
-              }}>
-                🔒 بياناتك محمية وفق PDPL
+              {/* Skill chips */}
+              <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginTop:8 }}>
+                {[['var(--g50)','var(--g200)',52],['var(--gold100)','var(--gold300)',64],['var(--gray100)','var(--gray200)',44],['var(--g50)','var(--g100)',56]].map(([bg,border,w],i) => (
+                  <div key={i} style={{ height:20, width:w, borderRadius:10, background:bg, border:`1px solid ${border}` }} />
+                ))}
               </div>
             </div>
-          </div>
 
-          {/* social proof */}
-          <div style={{ display:'flex', alignItems:'center', gap:12, fontSize:13, color:'rgba(255,255,255,0.45)' }}>
-            <div style={{ display:'flex', direction:'ltr' }}>
-              {['أح','سم','عب','+'].map((t,i) => (
-                <div key={i} style={{
-                  width:28, height:28, borderRadius:'50%', border:'2px solid rgba(255,255,255,0.12)',
-                  marginRight:-8, display:'flex', alignItems:'center', justifyContent:'center',
-                  fontSize:10, fontWeight:700,
-                  background: i===3 ? 'var(--gold500)' : ['var(--g600)','var(--gold600)','var(--g500)'][i],
-                  color: 'var(--white)',
-                }}>{t}</div>
-              ))}
+            {/* Target badge — top-end */}
+            <div style={{
+              position:'absolute', top:'18%', insetInlineEnd:'-2%',
+              width:86, height:86, borderRadius:22,
+              background:'linear-gradient(135deg,var(--g50) 0%,var(--g100) 100%)',
+              border:'1px solid var(--g200)',
+              display:'flex', alignItems:'center', justifyContent:'center',
+              boxShadow:'0 12px 32px rgba(0,61,43,0.14)',
+              animation:'heroBadge1 5s ease-in-out infinite',
+            }}>
+              <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="var(--g700)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2" fill="var(--g700)"/>
+              </svg>
             </div>
-            <span>انضم أكثر من <strong style={{ color:'var(--gold300)' }}>120+</strong> محترف</span>
+
+            {/* Score ring — start side */}
+            <div style={{
+              position:'absolute', top:'38%', insetInlineStart:'-4%',
+              width:150, height:150, borderRadius:'50%',
+              background:'var(--white)',
+              boxShadow:'0 16px 40px rgba(0,61,43,0.16)',
+              display:'flex', alignItems:'center', justifyContent:'center',
+              animation:'heroBadge2 6s ease-in-out infinite',
+            }}>
+              <svg width="150" height="150" viewBox="0 0 150 150">
+                <circle cx="75" cy="75" r="62" fill="none" stroke="var(--gray100)" strokeWidth="11" />
+                <circle cx="75" cy="75" r="62" fill="none" stroke="var(--g600)" strokeWidth="11" strokeLinecap="round"
+                  strokeDasharray="390" strokeDashoffset="56" transform="rotate(-90 75 75)">
+                  <animate attributeName="stroke-dashoffset" from="390" to="56" dur="2.5s" fill="freeze" />
+                </circle>
+                <text x="75" y="70" textAnchor="middle" dominantBaseline="central"
+                  fontSize="34" fontWeight="800" fill="var(--g950)" fontFamily="Plus Jakarta Sans">85</text>
+                <text x="75" y="98" textAnchor="middle" fontSize="11" fontWeight="600" fill="var(--gray600)" fontFamily="Noto Sans Arabic">المعدل: جيد جداً</text>
+              </svg>
+            </div>
+
+            {/* Suggestions pill — bottom */}
+            <div style={{
+              position:'absolute', bottom:'4%', insetInlineEnd:'14%',
+              display:'inline-flex', alignItems:'center', gap:12,
+              background:'var(--white)',
+              padding:'12px 22px 12px 12px', borderRadius:50,
+              boxShadow:'0 12px 32px rgba(0,61,43,0.14)',
+              animation:'heroBadge3 5.5s ease-in-out infinite',
+            }}>
+              <span style={{
+                width:34, height:34, borderRadius:'50%',
+                background:'var(--g700)', color:'var(--white)',
+                display:'inline-flex', alignItems:'center', justifyContent:'center',
+                fontSize:18, fontWeight:700,
+              }}>!</span>
+              <span style={{ fontSize:15, fontWeight:700, color:'var(--g950)', whiteSpace:'nowrap' }}>
+                <span style={{ fontFamily:'var(--font-en)', color:'var(--gold600)' }}>4</span> اقتراحات للتحسين
+              </span>
+            </div>
+
+            {/* Sparkle dot */}
+            <div style={{
+              position:'absolute', top:'8%', insetInlineStart:'12%',
+              width:10, height:10, borderRadius:'50%', background:'var(--gold500)',
+              boxShadow:'0 0 0 4px rgba(197,160,89,0.18)',
+              animation:'heroSpark 2.4s ease-in-out infinite',
+            }} />
           </div>
         </div>
       </section>
@@ -662,11 +669,19 @@ export default function Home() {
       <JobStructuredData jobs={jobs} />
 
       <style>{`
-        @keyframes float    { 0%,100%{transform:translateY(0px) rotate(-1deg)} 50%{transform:translateY(-12px) rotate(1deg)} }
-        @keyframes pulse    { 0%,100%{box-shadow:0 0 0 0 rgba(197,160,89,0.6);transform:scale(1)} 50%{box-shadow:0 0 0 6px rgba(197,160,89,0);transform:scale(1.15)} }
-        @keyframes ringFill { from{stroke-dashoffset:170} }
+        @keyframes heroFloat  { 0%,100%{transform:rotate(-1.5deg) translateY(0px)} 50%{transform:rotate(-1.5deg) translateY(-10px)} }
+        @keyframes heroBadge1 { 0%,100%{transform:translateY(0px) scale(1)} 50%{transform:translateY(-8px) scale(1.02)} }
+        @keyframes heroBadge2 { 0%,100%{transform:translateY(0px)} 50%{transform:translateY(-12px)} }
+        @keyframes heroBadge3 { 0%,100%{transform:translateY(0px)} 50%{transform:translateY(-6px)} }
+        @keyframes heroSpark  { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(1.5)} }
+        @keyframes ringFill   { from{stroke-dashoffset:170} }
+        .hero-grid { }
+        @media (max-width: 768px) {
+          .hero-grid { grid-template-columns: 1fr !important; }
+          .hero-grid > div:last-child { display: none; }
+        }
         @media (prefers-reduced-motion: reduce) {
-          [style*="float"], [style*="pulse"] { animation: none !important; }
+          [style*="heroFloat"],[style*="heroBadge"],[style*="heroSpark"] { animation: none !important; }
         }
       `}</style>
 

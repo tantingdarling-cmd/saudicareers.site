@@ -29,6 +29,11 @@
   --shadow-md: 0 4px 16px rgba(0,61,43,0.10);
   --shadow-lg: 0 12px 40px rgba(0,61,43,0.14);
   --shadow-gold: 0 4px 20px rgba(197,160,89,0.3);
+  --shadow-card: 0 8px 32px rgba(0,0,0,0.08);
+  --r-pill: 50px;
+  --ease-expo: cubic-bezier(0.19, 1, 0.22, 1);
+  --ease-pop:  cubic-bezier(0.32, 0.72, 0, 1);
+  --page-bg: #F5F5F7;
 }
 
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
