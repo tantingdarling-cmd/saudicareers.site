@@ -178,6 +178,11 @@ img { max-width: 100%; display: block; }
   }
 }
 
+/* ── Steps connector line: hide on mobile ── */
+@media (max-width: 767px) {
+  .steps-connector { display: none !important; }
+}
+
 /* ── prefers-reduced-motion: إيقاف كل الحركات للمستخدمين الحساسين ──── */
 /* يشمل: دوار الدهليز، الصرع الضوئي، وإعاقات الإدراك الحركي           */
 @media (prefers-reduced-motion: reduce) {

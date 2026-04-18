@@ -7,37 +7,10 @@ import ApplyModal from '../components/ApplyModal.jsx'
 import JobStructuredData from '../components/JobStructuredData.jsx'
 import { JOBS as FALLBACK_JOBS, TIPS as FALLBACK_TIPS, CATEGORIES } from '../data'
 import { jobsApi, tipsApi, subscribersApi } from '../services/api'
+import { normalizeJob } from '../utils/normalizeJob.js'
 import { useFadeIn } from '../hooks/useFadeIn'
 import AnimatedNumber from '../components/AnimatedNumber.jsx'
 
-const CATEGORY_ICONS = {
-  tech: '💻', finance: '🏦', energy: '⚡', construction: '🏗️',
-  hr: '👥', marketing: '📣', healthcare: '🏥', education: '🎓', other: '💼',
-}
-
-const EXP_LABELS = {
-  entry: 'مبتدئ', mid: 'متوسط', senior: 'خبير', lead: 'قائد', executive: 'تنفيذي',
-}
-
-function normalizeJob(job) {
-  const tags = [job.category_label, EXP_LABELS[job.experience_level], job.job_type_label]
-    .filter(Boolean).slice(0, 3)
-  return {
-    id: job.id,
-    company: job.company,
-    icon: CATEGORY_ICONS[job.category] || '💼',
-    title: job.title,
-    location: job.location,
-    type: job.job_type_label || job.job_type,
-    salary: job.salary || 'يُحدد عند التواصل',
-    tags,
-    badge: job.is_featured ? 'featured' : '',
-    badgeText: job.is_featured ? 'حصرية' : '',
-    posted: job.posted_at || 'حديثاً',
-    category: job.category,
-    description: job.description,
-  }
-}
 
 function normalizeTip(tip) {
   return {
@@ -86,9 +59,41 @@ function StatItem({ val, prefix = '', accent, label }) {
       transition: 'opacity 0.65s ease, transform 0.65s ease',
     }}>
       <div style={{ fontSize:'clamp(2rem,4vw,2.8rem)', fontWeight:800, color:'var(--white)', lineHeight:1, marginBottom:6, fontFamily:'var(--font-en)' }}>
-        {prefix}<AnimatedNumber target={val} arabic={true} /><span style={{ color:'var(--gold400)' }}>{accent}</span>
+        {prefix}<AnimatedNumber target={val} arabic={false} /><span style={{ color:'var(--gold400)' }}>{accent}</span>
       </div>
       <div style={{ fontSize:14, color:'rgba(255,255,255,0.6)' }}>{label}</div>
+    </div>
+  )
+}
+
+function StepCard({ n, title, desc, numBg, numColor, numBorder }) {
+  const [hovered, setHovered] = useState(false)
+  return (
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        background:'var(--white)',
+        border:`1.5px solid ${hovered ? 'var(--g300)' : 'var(--gray200)'}`,
+        borderRadius:20,
+        padding:'28px 20px 24px',
+        textAlign:'center',
+        boxShadow: hovered ? 'var(--shadow-lg)' : '0 4px 16px rgba(0,0,0,0.05)',
+        transform: hovered ? 'translateY(-6px)' : 'translateY(0)',
+        transition:'all 0.35s cubic-bezier(0.32,0.72,0,1)',
+      }}
+    >
+      <div style={{
+        width:60, height:60, borderRadius:'50%',
+        background:numBg, border:`2px solid ${numBorder}`,
+        display:'flex', alignItems:'center', justifyContent:'center',
+        fontSize:22, fontWeight:800, color:numColor,
+        margin:'0 auto 20px', fontFamily:'var(--font-en)',
+        boxShadow: hovered ? '0 4px 12px rgba(0,0,0,0.12)' : 'none',
+        transition:'box-shadow 0.35s ease',
+      }}>{n}</div>
+      <div style={{ fontSize:15, fontWeight:700, color:'var(--g950)', marginBottom:8 }}>{title}</div>
+      <div style={{ fontSize:13, color:'var(--gray600)', lineHeight:1.8 }}>{desc}</div>
     </div>
   )
 }
@@ -631,19 +636,27 @@ export default function Home() {
               <h2 style={{ ...sectionTitle, marginBottom:0 }}>أربع خطوات للوظيفة المناسبة</h2>
             </div>
           </Reveal>
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,220px),1fr))', gap:32, position:'relative' }}>
-            {[
-              { n:'١', title:'سجّل مجاناً', desc:'أنشئ حسابك وأخبرنا عن تخصصك وأهدافك المهنية', numBg:'var(--g50)', numColor:'var(--g800)', numBorder:'var(--g200)' },
-              { n:'٢', title:'حسّن سيرتك', desc:'ارفع سيرتك الذاتية واحصل على مراجعة احترافية خلال 48 ساعة', numBg:'var(--gold100)', numColor:'var(--gold700)', numBorder:'var(--gold300)' },
-              { n:'٣', title:'اكتشف الفرص', desc:'تصفّح الوظائف والدورات الموثّقة المناسبة لمجالك وخبرتك', numBg:'var(--g50)', numColor:'var(--g800)', numBorder:'var(--g200)' },
-              { n:'٤', title:'احصل على وظيفتك', desc:'قدّم بثقة مع الإرشادات التي تدعمك في كل خطوة حتى التعيين', numBg:'var(--g900)', numColor:'var(--white)', numBorder:'var(--g700)' },
-            ].map(({ n, title, desc, numBg, numColor, numBorder }, i) => (
-              <Reveal key={title} delay={i*80} style={{ textAlign:'center', padding:'0 12px' }}>
-                <div style={{ width:60, height:60, borderRadius:'50%', background:numBg, border:`2px solid ${numBorder}`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:22, fontWeight:800, color:numColor, margin:'0 auto 20px', position:'relative', zIndex:1 }}>{n}</div>
-                <div style={{ fontSize:15, fontWeight:700, color:'var(--g950)', marginBottom:8 }}>{title}</div>
-                <div style={{ fontSize:13, color:'var(--gray600)', lineHeight:1.75 }}>{desc}</div>
-              </Reveal>
-            ))}
+          <div style={{ position:'relative' }}>
+            {/* Connecting line — desktop only, hidden on mobile via opacity trick */}
+            <div aria-hidden="true" style={{
+              position:'absolute', top:30, right:'12.5%', left:'12.5%', height:2,
+              background:'linear-gradient(to left, var(--g900) 0%, var(--gold400) 50%, var(--g200) 100%)',
+              borderRadius:2, zIndex:0,
+              display:'block',
+            }} className="steps-connector" />
+
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,220px),1fr))', gap:24, position:'relative', zIndex:1 }}>
+              {[
+                { n:'1', title:'سجّل مجاناً', desc:'أنشئ حسابك وأخبرنا عن تخصصك وأهدافك المهنية', numBg:'var(--g50)', numColor:'var(--g800)', numBorder:'var(--g200)' },
+                { n:'2', title:'حسّن سيرتك', desc:'ارفع سيرتك الذاتية واحصل على مراجعة احترافية خلال 48 ساعة', numBg:'var(--gold100)', numColor:'var(--gold700)', numBorder:'var(--gold300)' },
+                { n:'3', title:'اكتشف الفرص', desc:'تصفّح الوظائف والدورات الموثّقة المناسبة لمجالك وخبرتك', numBg:'var(--g50)', numColor:'var(--g800)', numBorder:'var(--g200)' },
+                { n:'4', title:'احصل على وظيفتك', desc:'قدّم بثقة مع الإرشادات التي تدعمك في كل خطوة حتى التعيين', numBg:'var(--g900)', numColor:'var(--white)', numBorder:'var(--g700)' },
+              ].map(({ n, title, desc, numBg, numColor, numBorder }, i) => (
+                <Reveal key={title} delay={i * 80}>
+                  <StepCard n={n} title={title} desc={desc} numBg={numBg} numColor={numColor} numBorder={numBorder} />
+                </Reveal>
+              ))}
+            </div>
           </div>
         </div>
       </section>
