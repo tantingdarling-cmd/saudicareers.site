@@ -27,5 +27,7 @@ export function normalizeJob(job) {
     posted: job.posted_at || 'حديثاً',
     category: job.category,
     description: job.description,
+    is_government_partner: job.is_government_partner || false,
+    partner_logo: job.partner_logo || null,
   }
 }

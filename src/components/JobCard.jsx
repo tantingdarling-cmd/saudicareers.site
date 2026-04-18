@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { MapPin, Briefcase, Coins, ArrowLeft, Heart } from 'lucide-react'
+import { MapPin, Briefcase, Coins, ArrowLeft, Heart, Building2 } from 'lucide-react'
 import { savedJobsApi } from '../services/api.js'
 
 /* توحيد أسلوب الأزرار — يُدمج مع أي خصائص إضافية */
@@ -14,7 +14,8 @@ function createButtonStyle(overrides = {}) {
   }
 }
 
-export default function JobCard({ job, onApply, onDetails, onTagClick, delay = 0 }) {
+export default function JobCard({ job, onApply, onDetails, onTagClick, delay = 0, variant }) {
+  const isGov = variant === 'government'
   const [hovered, setHovered] = useState(false)
   const [pressed, setPressed] = useState(false)
 
@@ -56,14 +57,20 @@ export default function JobCard({ job, onApply, onDetails, onTagClick, delay = 0
       onPointerUp={() => setPressed(false)}
       onPointerCancel={() => setPressed(false)}
       style={{
-        background:'var(--white)',
-        border: hovered ? '1.5px solid var(--g400)' : '1.5px solid var(--gray200)',
+        background: isGov
+          ? 'linear-gradient(var(--white), var(--white)) padding-box, linear-gradient(135deg, #006644, #C5A059) border-box'
+          : 'var(--white)',
+        border: isGov
+          ? '1.5px solid transparent'
+          : hovered ? '1.5px solid var(--g400)' : '1.5px solid var(--gray200)',
         borderRadius:20,
         padding:24,
         display:'flex', flexDirection:'column',
         transition:'all 0.45s cubic-bezier(0.32,0.72,0,1)',
         transform: pressed ? 'scale(0.97)' : hovered ? 'translateY(-4px)' : 'translateY(0)',
-        boxShadow: hovered ? 'var(--shadow-lg)' : '0 8px 32px rgba(0,0,0,0.08)',
+        boxShadow: isGov
+          ? hovered ? '0 8px 32px rgba(0,102,68,0.18)' : '0 4px 20px rgba(0,102,68,0.10)'
+          : hovered ? 'var(--shadow-lg)' : '0 8px 32px rgba(0,0,0,0.08)',
         animationDelay: `${delay}ms`,
         position: 'relative',
         cursor: 'default',
@@ -79,15 +86,26 @@ export default function JobCard({ job, onApply, onDetails, onTagClick, delay = 0
         }}>{toast}</div>
       )}
 
+      {/* Government priority strip */}
+      {isGov && (
+        <div style={{
+          position:'absolute', top:0, left:0, right:0, height:3, borderRadius:'20px 20px 0 0',
+          background:'linear-gradient(90deg, #006644, #C5A059)',
+        }} />
+      )}
+
       {/* Top row */}
       <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', marginBottom:16 }}>
         <div style={{ display:'flex', alignItems:'center', gap:10 }}>
           <div style={{
             width:46, height:46, borderRadius:'var(--r-sm)',
-            background:'var(--g50)', border:'1px solid var(--g100)',
+            background: isGov ? 'rgba(0,102,68,0.08)' : 'var(--g50)',
+            border: isGov ? '1px solid rgba(0,102,68,0.18)' : '1px solid var(--g100)',
             display:'flex', alignItems:'center', justifyContent:'center',
             fontSize:22, flexShrink:0,
-          }}>{job.icon}</div>
+          }}>
+            {isGov ? <Building2 size={22} style={{ color:'#006644' }} /> : job.icon}
+          </div>
           <div>
             {job.company_slug ? (
               <Link
@@ -104,6 +122,13 @@ export default function JobCard({ job, onApply, onDetails, onTagClick, delay = 0
           </div>
         </div>
         <div style={{ display:'flex', alignItems:'center', gap:8, flexShrink:0 }}>
+          {isGov && (
+            <span style={{
+              fontSize:11, fontWeight:700, padding:'4px 10px', borderRadius:50,
+              whiteSpace:'nowrap',
+              background:'rgba(0,102,68,0.08)', color:'#006644', border:'1px solid rgba(0,102,68,0.2)',
+            }}>🏛️ حكومة</span>
+          )}
           {job.badge && (
             <span style={{
               fontSize:11, fontWeight:600, padding:'4px 10px', borderRadius:50,

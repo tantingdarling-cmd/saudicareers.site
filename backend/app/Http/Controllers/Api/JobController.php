@@ -27,7 +27,7 @@ class JobController extends Controller
         }
 
         $cacheKey = 'jobs:' . md5(json_encode(
-            $request->only(['category', 'location', 'experience_level', 'job_type', 'salary_min', 'salary_max', 'q', 'search', 'is_featured', 'featured', 'page'])
+            $request->only(['category', 'location', 'experience_level', 'job_type', 'salary_min', 'salary_max', 'q', 'search', 'is_featured', 'featured', 'featured_partners', 'page'])
         ));
 
         $jobs = Cache::remember($cacheKey, 3600, fn () => $this->buildQuery($request));
@@ -39,6 +39,11 @@ class JobController extends Controller
     {
         $perPage = $request->input('per_page', 12);
         $query   = Job::active()->with('company')->latest();
+
+        if ($request->boolean('featured_partners')) {
+            $query->where('is_government_partner', true);
+            $perPage = 6;
+        }
 
         if ($request->filled('category') && $request->category !== 'all') {
             $query->byCategory($request->category);

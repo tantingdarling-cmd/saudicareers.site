@@ -337,6 +337,7 @@ export default function Home() {
   const [selectedJob, setSelectedJob] = useState(null)
   const [bottomSheetJob, setBottomSheetJob] = useState(null)
   const [jobs, setJobs] = useState(FALLBACK_JOBS)
+  const [govJobs, setGovJobs] = useState([])
   const [tips, setTips] = useState(FALLBACK_TIPS)
   const [loadingJobs, setLoadingJobs] = useState(true)
   const location = useLocation()
@@ -414,6 +415,17 @@ export default function Home() {
       .catch(() => {/* keep fallback */})
       .finally(() => setLoadingJobs(false))
   }, [debouncedFilters])
+
+  useEffect(() => {
+    jobsApi.getAll({ featured_partners: 1 })
+      .then(res => {
+        const data = res?.data
+        if (Array.isArray(data) && data.length > 0) {
+          setGovJobs(data.map(normalizeJob))
+        }
+      })
+      .catch(() => {})
+  }, [])
 
   useEffect(() => {
     tipsApi.getAll({ per_page: 6 })
@@ -671,6 +683,42 @@ export default function Home() {
           <Reveal delay={80}>
             <FeaturedCarousel />
           </Reveal>
+
+          {/* Government Partner Spotlight */}
+          {govJobs.length > 0 && (
+            <Reveal delay={90}>
+              <div style={{ marginBottom:48 }}>
+                <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:20 }}>
+                  <span style={{ fontSize:18 }}>🏛️</span>
+                  <h3 style={{ fontSize:18, fontWeight:700, color:'var(--g950)', margin:0 }}>وظائف حكومية مميزة</h3>
+                  <span style={{
+                    fontSize:11, fontWeight:700, padding:'3px 10px', borderRadius:50,
+                    background:'rgba(0,102,68,0.08)', color:'#006644', border:'1px solid rgba(0,102,68,0.2)',
+                    marginRight:'auto',
+                  }}>شركاء حكوميون</span>
+                </div>
+                <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(min(100%,320px),1fr))', gap:20 }}>
+                  {govJobs.map((job, i) => (
+                    <JobCard
+                      key={job.id}
+                      job={job}
+                      variant="government"
+                      onApply={setSelectedJob}
+                      onDetails={setBottomSheetJob}
+                      onTagClick={tag => {
+                        const cat = CATEGORIES.find(c => c.label === tag)
+                        if (cat) {
+                          handleFilterChange({ ...filters, category: cat.key })
+                          document.getElementById('jobs')?.scrollIntoView({ behavior: 'smooth' })
+                        }
+                      }}
+                      delay={i * 60}
+                    />
+                  ))}
+                </div>
+              </div>
+            </Reveal>
+          )}
 
           <Reveal delay={100}>
             <FilterBar filters={filters} onChange={handleFilterChange} />
