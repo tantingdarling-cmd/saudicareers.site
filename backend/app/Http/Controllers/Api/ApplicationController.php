@@ -169,6 +169,27 @@ class ApplicationController extends Controller
         return ApplicationResource::collection($applications);
     }
     
+    public function my(Request $request)
+    {
+        $email = $request->user()->email;
+
+        $applications = JobApplication::with('job')
+            ->where('email', $email)
+            ->latest('applied_at')
+            ->get()
+            ->map(fn ($app) => [
+                'id'           => $app->id,
+                'tracking_token' => $app->tracking_token,
+                'job_title'    => $app->job?->title,
+                'company'      => $app->job?->company,
+                'status'       => $app->status,
+                'status_label' => $app->status_label,
+                'applied_at'   => $app->applied_at?->toDateString(),
+            ]);
+
+        return response()->json(['data' => $applications]);
+    }
+
     public function updateStatus(Request $request, JobApplication $application)
     {
         $request->validate([

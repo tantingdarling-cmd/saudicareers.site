@@ -69,8 +69,10 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::delete('/alerts/{alert}',        [JobAlertController::class,  'destroy']);
     Route::patch('/alerts/{alert}/toggle',  [JobAlertController::class,  'toggle']);
 
-    Route::get('/profile/resume',           [ProfileController::class,   'show']);
-    Route::post('/profile/resume',          [ProfileController::class,   'uploadResume']);
+    Route::get('/profile/resume',            [ProfileController::class,     'show']);
+    Route::post('/profile/resume',           [ProfileController::class,     'uploadResume']);
+
+    Route::get('/applications/my',           [ApplicationController::class, 'my']);
 });
 
 Route::middleware(['auth:sanctum'])->group(function () {

@@ -20,6 +20,7 @@ const TrackApplication  = lazy(() => import('./pages/TrackApplication.jsx'))
 const SavedJobs         = lazy(() => import('./pages/SavedJobs.jsx'))
 const Alerts            = lazy(() => import('./pages/Alerts.jsx'))
 const Profile           = lazy(() => import('./pages/Profile.jsx'))
+const MyApplications    = lazy(() => import('./pages/MyApplications.jsx'))
 
 export default function App() {
   return (
@@ -42,6 +43,7 @@ export default function App() {
             <Route path="/saved"               element={<SavedJobs />} />
             <Route path="/alerts"              element={<Alerts />} />
             <Route path="/profile"             element={<Profile />} />
+            <Route path="/my-applications"    element={<MyApplications />} />
           </Routes>
         </Suspense>
       </main>
