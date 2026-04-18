@@ -27,6 +27,7 @@ export function normalizeJob(job) {
     posted: job.posted_at || 'حديثاً',
     category: job.category,
     description: job.description,
+    apply_url: job.apply_url || null,
     is_government_partner: job.is_government_partner || false,
     is_urgent: job.is_urgent || false,
     partner_logo: job.partner_logo || null,

@@ -217,22 +217,28 @@ export default function GovJobCard({ job, onApply, onDetails, onTagClick, delay 
       {/* Actions */}
       <div style={{ display: 'flex', gap: 8, marginTop: 'auto' }}>
         <button
-          onClick={() => onApply(job)}
-          onPointerDown={e => e.currentTarget.style.transform = 'scale(0.98)'}
+          onClick={() => job.apply_url ? onApply(job) : null}
+          onPointerDown={e => { if (job.apply_url) e.currentTarget.style.transform = 'scale(0.98)' }}
           onPointerUp={e => e.currentTarget.style.transform = 'scale(1)'}
           onPointerLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+          disabled={!job.apply_url}
           style={{
             flex: 1, padding: '11px 0',
-            background: 'linear-gradient(135deg, #003D2B 0%, #006644 100%)',
-            color: 'var(--white)', border: 'none', borderRadius: 'var(--r-md)',
-            fontSize: 14, fontWeight: 600, cursor: 'pointer',
+            background: job.apply_url
+              ? 'linear-gradient(135deg, #003D2B 0%, #006644 100%)'
+              : 'rgba(0,61,43,0.12)',
+            color: job.apply_url ? 'var(--white)' : '#003D2B',
+            border: 'none', borderRadius: 'var(--r-md)',
+            fontSize: 14, fontWeight: 600,
+            cursor: job.apply_url ? 'pointer' : 'not-allowed',
             fontFamily: 'var(--font-ar)',
+            opacity: job.apply_url ? 1 : 0.75,
             transition: 'all 0.3s cubic-bezier(0.32,0.72,0,1)',
           }}
-          onMouseEnter={e => e.currentTarget.style.background = 'linear-gradient(135deg, #002A1E 0%, #004d33 100%)'}
-          onMouseLeave={e => e.currentTarget.style.background = 'linear-gradient(135deg, #003D2B 0%, #006644 100%)'}
+          onMouseEnter={e => { if (job.apply_url) e.currentTarget.style.background = 'linear-gradient(135deg, #002A1E 0%, #004d33 100%)' }}
+          onMouseLeave={e => { if (job.apply_url) e.currentTarget.style.background = 'linear-gradient(135deg, #003D2B 0%, #006644 100%)' }}
         >
-          التقديم ←
+          {job.apply_url ? 'التقديم ←' : 'التقديم قريبًا'}
         </button>
         {onDetails ? (
           <button
