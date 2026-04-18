@@ -217,26 +217,20 @@ export default function JobCard({ job, onApply, onDetails, onTagClick, delay = 0
       {/* Actions */}
       <div style={{ display:'flex', gap:8, marginTop:'auto' }}>
         <button
-          onClick={() => job.apply_url ? onApply(job) : null}
-          onPointerDown={e => { if (job.apply_url) e.currentTarget.style.transform='scale(0.98)' }}
+          onClick={() => onApply(job)}
+          onPointerDown={e => e.currentTarget.style.transform='scale(0.98)'}
           onPointerUp={e => e.currentTarget.style.transform='scale(1)'}
           onPointerLeave={e => e.currentTarget.style.transform='scale(1)'}
-          disabled={!job.apply_url}
           style={createButtonStyle({
             flex:1, padding:'11px 0',
-            background: job.apply_url
-              ? 'linear-gradient(135deg, var(--g900) 0%, var(--g950) 100%)'
-              : 'var(--gray200)',
-            color: job.apply_url ? 'var(--white)' : 'var(--gray400)',
-            borderRadius:'var(--r-md)',
+            background:'linear-gradient(135deg, var(--g900) 0%, var(--g950) 100%)',
+            color:'var(--white)', borderRadius:'var(--r-md)',
             fontSize:14, fontWeight:600,
-            cursor: job.apply_url ? 'pointer' : 'not-allowed',
-            opacity: job.apply_url ? 1 : 0.8,
           })}
-          onMouseEnter={e => { if (job.apply_url) e.currentTarget.style.background='var(--g700)' }}
-          onMouseLeave={e => { if (job.apply_url) e.currentTarget.style.background='linear-gradient(135deg, var(--g900) 0%, var(--g950) 100%)' }}
+          onMouseEnter={e => e.currentTarget.style.background='var(--g700)'}
+          onMouseLeave={e => e.currentTarget.style.background='linear-gradient(135deg, var(--g900) 0%, var(--g950) 100%)'}
         >
-          {job.apply_url ? 'التقديم ←' : 'التقديم قريبًا'}
+          {(job.is_government_partner || !job.apply_url) ? 'قدّم عبر المنصة' : 'التقديم ←'}
         </button>
         {onDetails ? (
           <button
