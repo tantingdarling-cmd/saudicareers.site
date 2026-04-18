@@ -6,6 +6,7 @@ import JobSkeleton from '../components/JobSkeleton.jsx'
 import ApplyModal from '../components/ApplyModal.jsx'
 import JobStructuredData from '../components/JobStructuredData.jsx'
 import FilterBar from '../components/FilterBar.jsx'
+import FeaturedCarousel from '../components/FeaturedCarousel.jsx'
 import { JOBS as FALLBACK_JOBS, TIPS as FALLBACK_TIPS, CATEGORIES } from '../data'
 import { jobsApi, tipsApi, subscribersApi } from '../services/api'
 import { normalizeJob } from '../utils/normalizeJob.js'
@@ -588,6 +589,10 @@ export default function Home() {
             <div style={eyebrow}><span style={{ width:28, height:2, background:'var(--gold500)', borderRadius:2, display:'block' }}/> فرص موثوقة</div>
             <h2 style={sectionTitle}>أحدث الوظائف في السوق السعودي</h2>
             <p style={sectionSub}>نجمع الفرص الوظيفية من مصادرها الرسمية ونتحقق من صحتها قبل نشرها</p>
+          </Reveal>
+
+          <Reveal delay={80}>
+            <FeaturedCarousel />
           </Reveal>
 
           <Reveal delay={100}>

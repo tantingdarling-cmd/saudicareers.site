@@ -29,6 +29,7 @@ function safeJsonLd(obj) {
 export default function JobDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const isAuth = !!localStorage.getItem('auth_token')
   const [job, setJob] = useState(null)
   const [similar, setSimilar] = useState([])   // §9: similar_jobs from API
   const [loading, setLoading] = useState(true)
@@ -266,7 +267,11 @@ export default function JobDetail() {
                   <h1 style={{ fontSize:'clamp(20px,3vw,26px)', fontWeight:800, color:'var(--g950)', marginBottom:6, lineHeight:1.3 }}>{job.title}</h1>
                   <div style={{ display:'flex', alignItems:'center', gap:6, fontSize:15, color:'var(--g700)', fontWeight:600 }}>
                     <Building2 size={15} />
-                    {job.company}
+                    {job.company_slug ? (
+                      <Link to={`/company/${job.company_slug}`} style={{ color:'var(--g700)', textDecoration:'none' }}
+                        onMouseEnter={e => e.currentTarget.style.color='var(--g500)'}
+                        onMouseLeave={e => e.currentTarget.style.color='var(--g700)'}>{job.company}</Link>
+                    ) : job.company}
                   </div>
                 </div>
                 {job.is_featured && (
@@ -373,11 +378,14 @@ export default function JobDetail() {
             <div style={{ position:'sticky', top:88, display:'flex', flexDirection:'column', gap:16 }}>
               <div style={{ background:'var(--white)', border:'1.5px solid var(--gray200)', borderRadius:'var(--r-lg)', padding:24, boxShadow:'var(--shadow-sm)' }}>
                 <button
-                  onClick={() => setShowApply(true)}
-                  style={{ width:'100%', padding:'14px 0', background:'var(--g900)', color:'var(--white)', border:'none', borderRadius:'var(--r-md)', fontSize:15, fontWeight:700, marginBottom:12, transition:'background 0.2s' }}
+                  onClick={() => {
+                    if (!isAuth) { navigate(`/login?next=/jobs/${id}`); return }
+                    setShowApply(true)
+                  }}
+                  style={{ width:'100%', padding:'14px 0', background:'var(--g900)', color:'var(--white)', border:'none', borderRadius:'var(--r-md)', fontSize:15, fontWeight:700, marginBottom:12, transition:'background 0.2s', cursor:'pointer', fontFamily:'var(--font-ar)' }}
                   onMouseEnter={e => e.target.style.background='var(--g700)'}
                   onMouseLeave={e => e.target.style.background='var(--g900)'}>
-                  التقديم على الوظيفة ←
+                  {isAuth ? 'التقديم على الوظيفة ←' : 'سجّل دخولك للتقديم ←'}
                 </button>
                 {job.apply_url && (
                   <a href={job.apply_url} target="_blank" rel="noopener noreferrer"

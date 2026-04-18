@@ -27,7 +27,7 @@ class JobController extends Controller
         }
 
         $cacheKey = 'jobs:' . md5(json_encode(
-            $request->only(['category', 'location', 'experience_level', 'job_type', 'salary_min', 'salary_max', 'q', 'search', 'page'])
+            $request->only(['category', 'location', 'experience_level', 'job_type', 'salary_min', 'salary_max', 'q', 'search', 'is_featured', 'featured', 'page'])
         ));
 
         $jobs = Cache::remember($cacheKey, 3600, fn () => $this->buildQuery($request));
@@ -44,7 +44,7 @@ class JobController extends Controller
             $query->byCategory($request->category);
         }
 
-        if ($request->has('featured')) {
+        if ($request->has('featured') || $request->boolean('is_featured')) {
             $query->featured();
         }
 

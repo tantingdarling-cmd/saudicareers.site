@@ -114,4 +114,11 @@ class Job extends Model
     {
         return $query->where('category', $category);
     }
+
+    public function resolveRouteBinding($value, $field = null): ?self
+    {
+        return is_numeric($value)
+            ? $this->where('id', $value)->firstOrFail()
+            : $this->where('slug', $value)->active()->firstOrFail();
+    }
 }
