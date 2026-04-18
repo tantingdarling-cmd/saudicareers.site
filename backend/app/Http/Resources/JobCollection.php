@@ -11,19 +11,24 @@ class JobCollection extends ResourceCollection
     
     public function toArray(Request $request): array
     {
+        $p = $this->resource;
         return [
             'data' => $this->collection,
             'meta' => [
-                'current_page' => $this->currentPage(),
-                'last_page' => $this->lastPage(),
-                'per_page' => $this->perPage(),
-                'total' => $this->total(),
+                'current_page' => $p->currentPage(),
+                'last_page'    => $p->lastPage(),
+                'per_page'     => $p->perPage(),
+                'total'        => $p->total(),
+                'from'         => $p->firstItem(),
+                'to'           => $p->lastItem(),
+                'links'        => $p->linkCollection()->toArray(),
+                'path'         => $p->path(),
             ],
             'links' => [
-                'first' => $this->url(1),
-                'last' => $this->url($this->lastPage()),
-                'prev' => $this->previousPageUrl(),
-                'next' => $this->nextPageUrl(),
+                'first' => $p->url(1),
+                'last'  => $p->url($p->lastPage()),
+                'prev'  => $p->previousPageUrl(),
+                'next'  => $p->nextPageUrl(),
             ],
         ];
     }
