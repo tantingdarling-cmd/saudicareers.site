@@ -6,7 +6,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Laravel\Sanctum\HasApiTokens;
 
-class User extends Authenticatable
+use Illuminate\Contracts\Auth\MustVerifyEmail;
+
+class User extends Authenticatable implements MustVerifyEmail
 {
     use HasApiTokens, HasFactory;
 
@@ -18,6 +20,8 @@ class User extends Authenticatable
         'resume_path',
         'resume_data',
         'referral_count',
+        'email_verification_code',
+        'email_verification_expires_at',
     ];
 
     protected $hidden = [
@@ -29,6 +33,7 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password'          => 'hashed',
         'resume_data'       => 'array',
+        'email_verification_expires_at' => 'datetime',
     ];
 
     public function isAdmin(): bool

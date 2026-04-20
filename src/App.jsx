@@ -30,6 +30,7 @@ const SalaryInsights      = lazy(() => import('./pages/SalaryInsights.jsx'))
 const ResumeBuilder       = lazy(() => import('./pages/ResumeBuilder.jsx'))
 const ResumeDashboard     = lazy(() => import('./pages/ResumeDashboard.jsx'))
 const Notifications       = lazy(() => import('./pages/Notifications.jsx'))
+const VerifyEmail         = lazy(() => import('./pages/VerifyEmail.jsx'))
 
 export default function App() {
   useEffect(() => {
@@ -54,6 +55,7 @@ export default function App() {
             <Route path="/admin"                element={<AdminRoute><Admin /></AdminRoute>} />
             <Route path="/login"               element={<Login />} />
             <Route path="/register"            element={<Register />} />
+            <Route path="/verify-email"        element={<VerifyEmail />} />
             <Route path="/resume-analyzer"     element={<ResumeAnalyzer />} />
             <Route path="/resume-results/:id"  element={<ResumeResults />} />
             <Route path="/privacy"             element={<Privacy />} />

@@ -72,7 +72,7 @@ Route::prefix('v1')->group(function () {
         ->name('register.public');
 });
 
-Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
+Route::prefix('v1')->middleware(['auth:sanctum', 'verified'])->group(function () {
     Route::post('/resume/analyze', [ResumeController::class, 'analyze'])
         ->middleware('throttle:3,1')
         ->name('resume.analyze');
@@ -132,6 +132,9 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::get('/user', [AuthController::class, 'user']);
+    Route::post('/verify-email', [AuthController::class, 'verifyEmail']);
+    Route::post('/resend-otp', [AuthController::class, 'resendOtp']);
+
     Route::post('/refresh-token', [AuthController::class, 'refreshToken']);
 
     Route::prefix('admin')->middleware('admin')->group(function () {

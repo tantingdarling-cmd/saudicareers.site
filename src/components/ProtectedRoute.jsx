@@ -8,5 +8,10 @@ export default function ProtectedRoute({ children }) {
     return <Navigate to={`/login?next=${encodeURIComponent(location.pathname)}`} replace />
   }
 
+  const user = JSON.parse(localStorage.getItem('user') || '{}')
+  if (!user.email_verified_at) {
+    return <Navigate to="/verify-email" replace />
+  }
+
   return children
 }

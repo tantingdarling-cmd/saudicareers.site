@@ -97,6 +97,8 @@ export const authApi = {
     return user ? JSON.parse(user) : null;
   },
   isAuthenticated: () => !!getToken(),
+  verifyEmail: (code) => api.post('/verify-email', { code }),
+  resendOtp: () => api.post('/resend-otp', {}),
 };
 
 export const jobsApi = {

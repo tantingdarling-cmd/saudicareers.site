@@ -24,7 +24,7 @@ export default function Register() {
     setLoading(true); setError('')
     try {
       await authApi.register(form.name, form.email, form.password, form.password_confirmation)
-      navigate('/', { replace: true })
+      navigate('/verify-email', { replace: true })
     } catch (err) {
       setError(err.message || 'حدث خطأ أثناء إنشاء الحساب')
     } finally {
