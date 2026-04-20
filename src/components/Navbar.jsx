@@ -280,12 +280,9 @@ export default function Navbar() {
         transition: 'all 0.35s var(--ease-expo)',
       }}>
         <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <picture>
-            <source srcSet="/saudi.webp" type="image/webp" />
-            <img src="/saudi.png" alt="Saudi Careers" fetchPriority="high" decoding="async"
-              style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', background: '#000' }}
-            />
-          </picture>
+          <img src="/logo.svg" alt="Saudi Careers" fetchPriority="high" decoding="async"
+            style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover', background: '#1B5E37' }}
+          />
           <span style={{ fontFamily: 'var(--font-en)', fontWeight: 700, fontSize: 17, color: 'var(--g900)' }}>
             Saudi<span style={{ color: 'var(--gold500)' }}>Careers</span>
           </span>

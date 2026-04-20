@@ -60,6 +60,11 @@ export default function Admin() {
   const [extendingId, setExtendingId]       = useState(null)
   const [extendFile, setExtendFile]         = useState(null)
 
+  // ── Dashboard state ──────────────────────────────────────────────
+  const [stats, setStats]               = useState(null)
+  const [recentApps, setRecentApps]     = useState([])
+  const [loadingDash, setLoadingDash]   = useState(false)
+
   // ── Analytics state ──────────────────────────────────────────────
   const [funnel, setFunnel] = useState(null)
   const [loadingFunnel, setLoadingFunnel] = useState(false)
@@ -88,12 +93,28 @@ export default function Admin() {
 
   useEffect(() => {
     if (!authApi.isAuthenticated()) return
+    if (activeTab === 'dashboard') fetchDashboard()
     if (activeTab === 'applications') fetchApplications()
     if (activeTab === 'subscribers') fetchSubscribers()
     if (activeTab === 'probation') fetchProbation()
     if (activeTab === 'settings') fetchSettings()
     if (activeTab === 'analytics') fetchFunnel()
   }, [activeTab])
+
+  const fetchDashboard = async () => {
+    setLoadingDash(true)
+    try {
+      const token = localStorage.getItem('auth_token')
+      const h = { Authorization: `Bearer ${token}` }
+      const [s, r] = await Promise.all([
+        fetch('/api/admin/stats',               { headers: h }).then(x => x.json()),
+        fetch('/api/admin/recent-applications', { headers: h }).then(x => x.json()),
+      ])
+      setStats(s)
+      setRecentApps(r.data || [])
+    } catch {}
+    finally { setLoadingDash(false) }
+  }
 
   const fetchFunnel = async () => {
     setLoadingFunnel(true)
@@ -457,7 +478,13 @@ export default function Admin() {
           </div>
         </div>
 
-        <div style={{ display:'flex', gap:4, marginBottom:24, background:'var(--gray100)', padding:4, borderRadius:'var(--r-md)', width:'fit-content' }}>
+        <div style={{ display:'flex', gap:4, marginBottom:24, background:'var(--gray100)', padding:4, borderRadius:'var(--r-md)', width:'fit-content', flexWrap:'wrap' }}>
+          <button onClick={() => setActiveTab('dashboard')} style={{
+            padding:'10px 24px', borderRadius:'var(--r-sm)', border:'none', fontSize:14, fontWeight:600, cursor:'pointer',
+            background: activeTab === 'dashboard' ? 'var(--white)' : 'transparent',
+            color: activeTab === 'dashboard' ? 'var(--g900)' : 'var(--gray500)',
+            boxShadow: activeTab === 'dashboard' ? 'var(--shadow-sm)' : 'none',
+          }}>🏠 الرئيسية</button>
           <button onClick={() => setActiveTab('jobs')} style={{
             padding:'10px 24px', borderRadius:'var(--r-sm)', border:'none', fontSize:14, fontWeight:600, cursor:'pointer',
             background: activeTab === 'jobs' ? 'var(--white)' : 'transparent',
@@ -512,6 +539,126 @@ export default function Admin() {
           </button>
         </div>
 
+        {/* ── DASHBOARD TAB ──────────────────────────────────────────── */}
+        {activeTab === 'dashboard' && (
+          loadingDash ? (
+            <div style={{ display:'flex', justifyContent:'center', padding:60 }}>
+              <Loader size={28} color="var(--g600)" style={{ animation:'spin 1s linear infinite' }}/>
+            </div>
+          ) : (
+            <div>
+              {/* Stats cards */}
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))', gap:16, marginBottom:32 }}>
+                {[
+                  { label:'وظائف نشطة',      value: stats?.total_jobs           ?? '—', icon:'💼', color:'var(--g700)' },
+                  { label:'تنبيهات مفعّلة',    value: stats?.active_alerts        ?? '—', icon:'🔔', color:'#7C3AED' },
+                  { label:'مستخدمون جدد (7أ)', value: stats?.new_users_week       ?? '—', icon:'👤', color:'#0369A1' },
+                  { label:'طلبات معلّقة',      value: stats?.applications_pending ?? '—', icon:'📋', color:'#B45309' },
+                ].map(({ label, value, icon, color }) => (
+                  <div key={label} style={{
+                    background:'var(--white)', border:'1.5px solid var(--gray200)',
+                    borderRadius:'var(--r-lg)', padding:'20px 24px',
+                    display:'flex', alignItems:'center', gap:16,
+                  }}>
+                    <span style={{ fontSize:28 }}>{icon}</span>
+                    <div>
+                      <div style={{ fontSize:26, fontWeight:800, color, lineHeight:1 }}>{value}</div>
+                      <div style={{ fontSize:12, color:'var(--gray400)', marginTop:4 }}>{label}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Quick actions */}
+              <div style={{ display:'flex', gap:12, marginBottom:32, flexWrap:'wrap' }}>
+                <button onClick={() => { setActiveTab('jobs'); setTimeout(() => document.querySelector('[data-add-job]')?.click(), 100) }}
+                  style={{ display:'flex', alignItems:'center', gap:8, background:'var(--g900)', color:'#fff',
+                    border:'none', padding:'12px 20px', borderRadius:'var(--r-md)', fontSize:14, fontWeight:600, cursor:'pointer' }}>
+                  <Plus size={16}/> أضف وظيفة
+                </button>
+                <button onClick={() => setActiveTab('applications')}
+                  style={{ display:'flex', alignItems:'center', gap:8, background:'var(--white)', color:'var(--g900)',
+                    border:'1.5px solid var(--gray200)', padding:'12px 20px', borderRadius:'var(--r-md)', fontSize:14, fontWeight:600, cursor:'pointer' }}>
+                  <FileText size={16}/> راجع المتقدمين
+                </button>
+                <button onClick={() => setActiveTab('subscribers')}
+                  style={{ display:'flex', alignItems:'center', gap:8, background:'var(--white)', color:'var(--g900)',
+                    border:'1.5px solid var(--gray200)', padding:'12px 20px', borderRadius:'var(--r-md)', fontSize:14, fontWeight:600, cursor:'pointer' }}>
+                  <Mail size={16}/> أرسل نشرة يدوية
+                </button>
+              </div>
+
+              {/* Recent activity table */}
+              <div style={{ background:'var(--white)', border:'1.5px solid var(--gray200)', borderRadius:'var(--r-lg)', overflow:'hidden' }}>
+                <div style={{ padding:'16px 24px', borderBottom:'1px solid var(--gray200)', fontWeight:700, fontSize:15, color:'var(--g950)' }}>
+                  آخر 10 تقديمات
+                </div>
+                {recentApps.length === 0 ? (
+                  <div style={{ padding:40, textAlign:'center', color:'var(--gray400)' }}>لا توجد تقديمات بعد</div>
+                ) : (
+                  <div style={{ overflowX:'auto' }}>
+                    <table style={{ width:'100%', borderCollapse:'collapse', fontSize:13 }}>
+                      <thead>
+                        <tr style={{ background:'var(--gray50)' }}>
+                          {['الاسم','البريد','الوظيفة','الشركة','التاريخ','الحالة','إجراء'].map(h => (
+                            <th key={h} style={{ padding:'10px 16px', textAlign:'right', fontWeight:600, color:'var(--gray500)', borderBottom:'1px solid var(--gray200)', whiteSpace:'nowrap' }}>{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {recentApps.map((a, i) => (
+                          <tr key={a.id} style={{ borderBottom: i < recentApps.length-1 ? '1px solid var(--gray100)' : 'none' }}>
+                            <td style={{ padding:'12px 16px', color:'var(--g900)', fontWeight:600 }}>{a.name}</td>
+                            <td style={{ padding:'12px 16px', color:'var(--gray500)', fontSize:12 }}>{a.email}</td>
+                            <td style={{ padding:'12px 16px', color:'var(--g800)' }}>{a.job_title || '—'}</td>
+                            <td style={{ padding:'12px 16px', color:'var(--gray500)' }}>{a.company || '—'}</td>
+                            <td style={{ padding:'12px 16px', color:'var(--gray400)', whiteSpace:'nowrap' }}>{a.applied_at}</td>
+                            <td style={{ padding:'12px 16px' }}>
+                              <span style={{
+                                fontSize:11, fontWeight:600, padding:'3px 10px', borderRadius:50,
+                                background: a.status==='accepted'?'rgba(22,163,74,0.1)':a.status==='rejected'?'rgba(220,38,38,0.1)':'rgba(234,179,8,0.1)',
+                                color: a.status==='accepted'?'#15803D':a.status==='rejected'?'#B91C1C':'#92400E',
+                              }}>
+                                {a.status==='pending'?'معلّق':a.status==='accepted'?'مقبول':a.status==='rejected'?'مرفوض':a.status}
+                              </span>
+                            </td>
+                            <td style={{ padding:'12px 16px' }}>
+                              <div style={{ display:'flex', gap:6 }}>
+                                <button onClick={async () => {
+                                  const token = localStorage.getItem('auth_token')
+                                  await fetch(`/api/admin/applications/${a.id}/status`, {
+                                    method:'PATCH', headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`},
+                                    body: JSON.stringify({ status:'accepted' })
+                                  })
+                                  setRecentApps(prev => prev.map(x => x.id===a.id ? {...x,status:'accepted'} : x))
+                                }} style={{ fontSize:11, padding:'4px 10px', borderRadius:6, border:'1px solid rgba(22,163,74,0.3)',
+                                  background:'rgba(22,163,74,0.06)', color:'#15803D', cursor:'pointer', fontFamily:'var(--font-ar)' }}>
+                                  قبول
+                                </button>
+                                <button onClick={async () => {
+                                  const token = localStorage.getItem('auth_token')
+                                  await fetch(`/api/admin/applications/${a.id}/status`, {
+                                    method:'PATCH', headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`},
+                                    body: JSON.stringify({ status:'rejected' })
+                                  })
+                                  setRecentApps(prev => prev.map(x => x.id===a.id ? {...x,status:'rejected'} : x))
+                                }} style={{ fontSize:11, padding:'4px 10px', borderRadius:6, border:'1px solid rgba(220,38,38,0.3)',
+                                  background:'rgba(220,38,38,0.06)', color:'#B91C1C', cursor:'pointer', fontFamily:'var(--font-ar)' }}>
+                                  رفض
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+          )
+        )}
+
         {activeTab === 'jobs' && (
           jobs.length === 0 ? (
             <div style={{ padding:60, textAlign:'center', color:'var(--gray400)', background:'var(--white)', borderRadius:'var(--r-lg)', border:'1.5px solid var(--gray200)' }}>
@@ -564,6 +711,36 @@ export default function Admin() {
                           : job.salary_min ? `من ${Number(job.salary_min).toLocaleString('ar')} ر.س` : `حتى ${Number(job.salary_max).toLocaleString('ar')} ر.س`}
                       </span>
                     )}
+                  </div>
+
+                  {/* gov_partner + urgent toggles */}
+                  <div style={{ display:'flex', gap:6, marginBottom:8 }} onClick={e => e.stopPropagation()}>
+                    <button onClick={async () => {
+                      const token = localStorage.getItem('auth_token')
+                      const val = !job.is_government_partner
+                      await fetch(`/api/admin/jobs/${job.id}`, { method:'PUT',
+                        headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`},
+                        body: JSON.stringify({ ...job, is_government_partner: val }) })
+                      setJobs(prev => prev.map(j => j.id===job.id ? {...j,is_government_partner:val} : j))
+                    }} style={{ fontSize:10, padding:'3px 8px', borderRadius:6,
+                      background: job.is_government_partner ? 'rgba(27,94,55,0.1)' : 'var(--gray100)',
+                      border: '1px solid ' + (job.is_government_partner ? 'var(--g300)' : 'var(--gray200)'),
+                      color: job.is_government_partner ? 'var(--g700)' : 'var(--gray400)', cursor:'pointer', fontFamily:'var(--font-ar)' }}>
+                      🏛 {job.is_government_partner ? 'حكومي ✓' : 'حكومي'}
+                    </button>
+                    <button onClick={async () => {
+                      const token = localStorage.getItem('auth_token')
+                      const val = !job.is_urgent
+                      await fetch(`/api/admin/jobs/${job.id}`, { method:'PUT',
+                        headers:{'Content-Type':'application/json','Authorization':`Bearer ${token}`},
+                        body: JSON.stringify({ ...job, is_urgent: val }) })
+                      setJobs(prev => prev.map(j => j.id===job.id ? {...j,is_urgent:val} : j))
+                    }} style={{ fontSize:10, padding:'3px 8px', borderRadius:6,
+                      background: job.is_urgent ? 'rgba(234,179,8,0.1)' : 'var(--gray100)',
+                      border: '1px solid ' + (job.is_urgent ? 'var(--gold300)' : 'var(--gray200)'),
+                      color: job.is_urgent ? 'var(--gold700)' : 'var(--gray400)', cursor:'pointer', fontFamily:'var(--font-ar)' }}>
+                      ⚡ {job.is_urgent ? 'عاجل ✓' : 'عاجل'}
+                    </button>
                   </div>
 
                   <div style={{ display:'flex', gap:8 }} onClick={e => e.stopPropagation()}>

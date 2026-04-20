@@ -5,6 +5,7 @@ import Footer from './components/Footer.jsx'
 import PageLoader from './components/PageLoader.jsx'
 import AnalyticsHead from './components/AnalyticsHead.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
+import AdminRoute from './components/AdminRoute.jsx'
 
 const Home           = lazy(() => import('./pages/Home.jsx'))
 const JobDetail      = lazy(() => import('./pages/JobDetail.jsx'))
@@ -50,7 +51,7 @@ export default function App() {
             <Route path="/jobs/:id"   element={<JobDetail />} />
             <Route path="/tips"        element={<Tips />} />
             <Route path="/tips/:slug" element={<TipDetail />} />
-            <Route path="/admin"                element={<Admin />} />
+            <Route path="/admin"                element={<AdminRoute><Admin /></AdminRoute>} />
             <Route path="/login"               element={<Login />} />
             <Route path="/register"            element={<Register />} />
             <Route path="/resume-analyzer"     element={<ResumeAnalyzer />} />

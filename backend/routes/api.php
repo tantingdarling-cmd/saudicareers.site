@@ -24,6 +24,7 @@ use App\Http\Controllers\Api\ResumeSnapshotController;
 use App\Http\Controllers\Api\NotificationsController;
 use App\Http\Controllers\Api\AnalyticsController;
 use App\Http\Controllers\Api\ReferralController;
+use App\Http\Controllers\Api\AdminDashboardController;
 
 // §6: Sitemap — public, no auth, outside v1 prefix.
 // Accessible at /api/sitemap.xml. For static /sitemap.xml run: php artisan sitemap:generate
@@ -130,6 +131,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/refresh-token', [AuthController::class, 'refreshToken']);
 
     Route::prefix('admin')->middleware('admin')->group(function () {
+        Route::get('/stats',               [AdminDashboardController::class, 'stats']);
+        Route::get('/recent-applications', [AdminDashboardController::class, 'recentApplications']);
         Route::apiResource('jobs', JobController::class)->except(['index', 'show']);
         Route::post('/jobs/bulk', [BulkJobController::class, 'store']);
         Route::get('/applications', [ApplicationController::class, 'index']);
