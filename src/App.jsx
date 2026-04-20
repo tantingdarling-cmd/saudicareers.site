@@ -25,6 +25,7 @@ const EmployerApplicants  = lazy(() => import('./pages/EmployerApplicants.jsx'))
 const CompanyProfile      = lazy(() => import('./pages/CompanyProfile.jsx'))
 const Login               = lazy(() => import('./pages/Login.jsx'))
 const SalaryInsights      = lazy(() => import('./pages/SalaryInsights.jsx'))
+const ResumeBuilder       = lazy(() => import('./pages/ResumeBuilder.jsx'))
 
 export default function App() {
   return (
@@ -47,6 +48,7 @@ export default function App() {
             <Route path="/track/:token"        element={<TrackApplication />} />
             <Route path="/company/:slug"       element={<CompanyProfile />} />
             <Route path="/salary-insights"     element={<SalaryInsights />} />
+            <Route path="/resume/editor"       element={<ResumeBuilder />} />
             <Route path="/saved"               element={<ProtectedRoute><SavedJobs /></ProtectedRoute>} />
             <Route path="/alerts"              element={<ProtectedRoute><Alerts /></ProtectedRoute>} />
             <Route path="/profile"             element={<ProtectedRoute><Profile /></ProtectedRoute>} />

@@ -154,6 +154,13 @@ export const savedJobsApi = {
   unsave:  (jobId) => api.delete(`/v1/saved-jobs/${jobId}`),
 };
 
+export const resumeBuilderApi = {
+  save:     (data)    => api.post('/v1/profile/resume/save', { resume_data: data }),
+  load:     ()        => api.get('/v1/profile/resume/data'),
+  optimize: (text, jobDescription = '') => api.post('/v1/resume/optimize', { resume_text: text, job_description: jobDescription }),
+  status:   (jobId)   => api.get(`/v1/resume/status/${jobId}`),
+};
+
 export const probationApi = {
   getAll:  (params = {}) => api.get('/admin/probation', params),
   getStatus: (id) => api.get(`/admin/probation/${id}/status`),

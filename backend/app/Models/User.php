@@ -16,6 +16,7 @@ class User extends Authenticatable
         'password',
         'role',
         'resume_path',
+        'resume_data',
     ];
 
     protected $hidden = [
@@ -25,7 +26,8 @@ class User extends Authenticatable
 
     protected $casts = [
         'email_verified_at' => 'datetime',
-        'password' => 'hashed',
+        'password'          => 'hashed',
+        'resume_data'       => 'array',
     ];
 
     public function isAdmin(): bool
