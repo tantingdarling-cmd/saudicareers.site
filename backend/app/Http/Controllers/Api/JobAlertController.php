@@ -20,6 +20,7 @@ class JobAlertController extends Controller
         $validated = $request->validate([
             'keyword'   => 'nullable|string|max:100',
             'location'  => 'nullable|string|max:100',
+            'category'  => 'nullable|string|max:50',
             'frequency' => 'nullable|in:instant,daily,weekly',
         ]);
 

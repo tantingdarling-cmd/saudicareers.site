@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import { MapPin, Briefcase, Coins, ArrowLeft, Heart, Building2 } from 'lucide-react'
-import { savedJobsApi } from '../services/api.js'
+import { Link, useNavigate } from 'react-router-dom'
+import { MapPin, Briefcase, Coins, ArrowLeft, Heart, Building2, Bell } from 'lucide-react'
+import { savedJobsApi, alertsApi } from '../services/api.js'
 
 /* توحيد أسلوب الأزرار — يُدمج مع أي خصائص إضافية */
 function createButtonStyle(overrides = {}) {
@@ -16,6 +16,7 @@ function createButtonStyle(overrides = {}) {
 
 export default function JobCard({ job, onApply, onDetails, onTagClick, delay = 0, variant }) {
   const isGov = variant === 'government'
+  const navigate = useNavigate()
   const [hovered, setHovered] = useState(false)
   const [pressed, setPressed] = useState(false)
 
@@ -23,8 +24,28 @@ export default function JobCard({ job, onApply, onDetails, onTagClick, delay = 0
     try { return JSON.parse(localStorage.getItem('saved_jobs') || '[]').includes(job.id) }
     catch { return false }
   }
-  const [saved, setSaved] = useState(isSavedInit)
-  const [toast, setToast] = useState('')
+  const [saved, setSaved]     = useState(isSavedInit)
+  const [toast, setToast]     = useState('')
+  const [bellDone, setBellDone] = useState(false)
+
+  async function quickAlert(e) {
+    e.preventDefault(); e.stopPropagation()
+    const token = localStorage.getItem('auth_token')
+    if (!token) {
+      sessionStorage.setItem('alert_prefill', JSON.stringify({ q: job.title }))
+      navigate('/alerts')
+      return
+    }
+    try {
+      await alertsApi.create({ keyword: job.title, frequency: 'instant' })
+      setBellDone(true)
+      setToast('تم إنشاء التنبيه ✓')
+      setTimeout(() => setToast(''), 2500)
+    } catch {
+      setToast('فشل إنشاء التنبيه')
+      setTimeout(() => setToast(''), 2000)
+    }
+  }
 
   function toggleSave(e) {
     e.preventDefault(); e.stopPropagation()
@@ -136,6 +157,21 @@ export default function JobCard({ job, onApply, onDetails, onTagClick, delay = 0
               background:bc.bg, color:bc.color, border:`1px solid ${bc.border}`,
             }}>{job.badgeText}</span>
           )}
+          <button
+            onClick={quickAlert}
+            aria-label="تنبيه فوري"
+            title={bellDone ? 'تنبيه مفعّل' : 'تنبيه عند نشر وظائف مشابهة'}
+            style={createButtonStyle({
+              width:32, height:32, borderRadius:'50%', padding:0,
+              display:'flex', alignItems:'center', justifyContent:'center',
+              background: bellDone ? 'rgba(0,102,68,0.1)' : 'var(--gray100)',
+              color: bellDone ? 'var(--g700)' : 'var(--gray400)',
+            })}
+            onMouseEnter={e => { e.currentTarget.style.background = bellDone ? 'rgba(0,102,68,0.18)' : 'rgba(0,102,68,0.08)'; e.currentTarget.style.color = 'var(--g700)' }}
+            onMouseLeave={e => { e.currentTarget.style.background = bellDone ? 'rgba(0,102,68,0.1)' : 'var(--gray100)'; e.currentTarget.style.color = bellDone ? 'var(--g700)' : 'var(--gray400)' }}
+          >
+            <Bell size={14} fill={bellDone ? 'var(--g700)' : 'none'} />
+          </button>
           <button
             onClick={toggleSave}
             data-testid="save-job-btn"

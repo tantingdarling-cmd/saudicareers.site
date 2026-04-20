@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Search, SlidersHorizontal, X } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Search, SlidersHorizontal, X, Bell } from 'lucide-react'
 
 const CATEGORIES = [
   { key: '', label: 'كل التصنيفات' },
@@ -48,6 +49,17 @@ const inputStyle = {
 
 export default function FilterBar({ filters, onChange }) {
   const [showAdvanced, setShowAdvanced] = useState(false)
+  const [alertSaved, setAlertSaved]     = useState(false)
+  const navigate = useNavigate()
+
+  function saveSearch() {
+    sessionStorage.setItem('alert_prefill', JSON.stringify({
+      q: filters.q || '',
+      location: filters.location || '',
+      category: filters.category || '',
+    }))
+    navigate('/alerts')
+  }
 
   const hasFilters = Object.values(filters).some(v => v !== '' && v != null)
 
@@ -102,14 +114,19 @@ export default function FilterBar({ filters, onChange }) {
         </button>
 
         {hasFilters && (
-          <button onClick={clearAll} style={{
-            display: 'flex', alignItems: 'center', gap: 5,
-            padding: '10px 14px', borderRadius: 10, fontSize: 13, fontWeight: 600,
-            border: '1.5px solid rgba(220,38,38,0.25)', background: 'rgba(220,38,38,0.06)',
-            color: '#DC2626', cursor: 'pointer', fontFamily: 'var(--font-ar)', whiteSpace: 'nowrap',
-          }}>
-            <X size={13} /> مسح
-          </button>
+          <>
+            <button
+              onClick={saveSearch}
+              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', borderRadius: 10, fontSize: 13, fontWeight: 600, border: '1.5px solid rgba(0,102,68,0.3)', background: 'rgba(0,102,68,0.07)', color: 'var(--g700)', cursor: 'pointer', fontFamily: 'var(--font-ar)', whiteSpace: 'nowrap' }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0,102,68,0.13)' }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(0,102,68,0.07)' }}
+            >
+              <Bell size={13} /> حفظ هذا البحث
+            </button>
+            <button onClick={clearAll} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '10px 14px', borderRadius: 10, fontSize: 13, fontWeight: 600, border: '1.5px solid rgba(220,38,38,0.25)', background: 'rgba(220,38,38,0.06)', color: '#DC2626', cursor: 'pointer', fontFamily: 'var(--font-ar)', whiteSpace: 'nowrap' }}>
+              <X size={13} /> مسح
+            </button>
+          </>
         )}
       </div>
 

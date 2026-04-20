@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class JobAlert extends Model
 {
-    protected $fillable = ['user_id', 'keyword', 'location', 'frequency', 'active'];
+    protected $fillable = ['user_id', 'keyword', 'location', 'category', 'frequency', 'active'];
 
     protected $casts = ['active' => 'boolean'];
 
