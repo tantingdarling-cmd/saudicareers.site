@@ -307,17 +307,25 @@ export default function Navbar() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <NotifBell />
           <ProfileMenu />
-          <Link to="/resume-analyzer" className="resume-cta-desktop" style={{ background: 'linear-gradient(135deg,var(--g900) 0%,var(--g700) 100%)', color: 'var(--white)', padding: '9px 20px', borderRadius: 50, fontSize: 14, fontWeight: 700, textDecoration: 'none', transition: 'all 0.25s var(--ease-pop)', boxShadow: '0 4px 14px rgba(0,61,43,0.22)' }}
+          {!localStorage.getItem('auth_token') && (
+            <Link to="/login" style={{ fontSize: 14, fontWeight: 700, color: 'var(--g900)', textDecoration: 'none', padding: '8px 16px', borderRadius: 8, transition: 'all 0.2s' }}
+              onMouseEnter={e => e.currentTarget.style.background = 'var(--g50)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+              تسجيل الدخول
+            </Link>
+          )}
+          <Link to={localStorage.getItem('auth_token') ? "/resume-analyzer" : "/register"} className="resume-cta-desktop" style={{ background: 'linear-gradient(135deg,var(--g900) 0%,var(--g700) 100%)', color: 'var(--white)', padding: '9px 20px', borderRadius: 50, fontSize: 14, fontWeight: 700, textDecoration: 'none', transition: 'all 0.25s var(--ease-pop)', boxShadow: '0 4px 14px rgba(0,61,43,0.22)' }}
             onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,61,43,0.3)' }}
             onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 14px rgba(0,61,43,0.22)' }}
             onMouseDown={e => e.currentTarget.style.transform = 'translateY(0) scale(0.97)'}
             onMouseUp={e => e.currentTarget.style.transform = 'translateY(-1px) scale(1)'}>
-            افحص سيرتك مجاناً ✦
+            {localStorage.getItem('auth_token') ? 'افحص سيرتك مجاناً ✦' : 'سجّل مجاناً'}
           </Link>
           <button onClick={() => setMenuOpen(!menuOpen)} style={{ display: 'none', background: 'none', border: 'none', padding: 8, borderRadius: 'var(--r-sm)', minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }} className="hamburger-btn" aria-label="القائمة">
             {menuOpen ? <X size={22} color="var(--g900)" /> : <Menu size={22} color="var(--g900)" />}
           </button>
         </div>
+
       </nav>
 
       {/* Mobile menu */}

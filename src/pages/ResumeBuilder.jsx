@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Navigate, useLocation } from 'react-router-dom'
 import { api } from '../services/api'
 import { TEMPLATE_LABELS, TEMPLATE_COMPONENTS } from '../components/ResumeTemplates.jsx'
 
@@ -44,7 +44,13 @@ const DEFAULT_DATA = {
 }
 
 export default function ResumeBuilder() {
+  const isAuth = !!localStorage.getItem('auth_token')
+  const loc = useLocation()
+
+  if (!isAuth) return <Navigate to={`/login?next=${loc.pathname}`} replace />
+
   const navigate  = useNavigate()
+
   const [tab,        setTab]        = useState('scratch')
   const [template,   setTemplate]   = useState('classic')
   const [formData,   setFormData]   = useState(DEFAULT_DATA)

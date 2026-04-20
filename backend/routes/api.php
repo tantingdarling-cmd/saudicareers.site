@@ -30,6 +30,9 @@ use App\Http\Controllers\Api\AdminDashboardController;
 // Accessible at /api/sitemap.xml. For static /sitemap.xml run: php artisan sitemap:generate
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
 
+Route::post('/register', [AuthController::class, 'publicRegister']);
+
+
 Route::prefix('v1')->group(function () {
     Route::get('/jobs', [JobController::class, 'index']);
     Route::get('/jobs/featured', [JobController::class, 'index'])->defaults('featured', true);
@@ -56,19 +59,8 @@ Route::prefix('v1')->group(function () {
     Route::get('/settings/public', [SettingsController::class, 'public'])
          ->middleware('throttle:60,1');
 
-    // §2: Resume ATS analyzer — public, throttled (3 req/min per IP)
-    Route::post('/resume/analyze', [ResumeController::class, 'analyze'])
-        ->middleware('throttle:3,1')
-        ->name('resume.analyze');
+    // Resume routes moved to protected group below
 
-    // AI Resume Optimizer — queue-based, 5 req/min per IP
-    Route::post('/resume/optimize', [ResumeOptimizeController::class, 'optimize'])
-        ->middleware('throttle:5,1')
-        ->name('resume.optimize');
-
-    Route::get('/resume/status/{jobId}', [ResumeOptimizeController::class, 'status'])
-        ->middleware('throttle:60,1')
-        ->name('resume.status');
 
     // Rate limited to 5 attempts per minute per IP
     Route::post('/login', [AuthController::class, 'login'])
@@ -81,6 +73,18 @@ Route::prefix('v1')->group(function () {
 });
 
 Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
+    Route::post('/resume/analyze', [ResumeController::class, 'analyze'])
+        ->middleware('throttle:3,1')
+        ->name('resume.analyze');
+
+    Route::post('/resume/optimize', [ResumeOptimizeController::class, 'optimize'])
+        ->middleware('throttle:5,1')
+        ->name('resume.optimize');
+
+    Route::get('/resume/status/{jobId}', [ResumeOptimizeController::class, 'status'])
+        ->middleware('throttle:60,1')
+        ->name('resume.status');
+
     Route::get('/saved-jobs',               [SavedJobController::class,  'index']);
     Route::post('/saved-jobs/{job}',        [SavedJobController::class,  'store']);
     Route::delete('/saved-jobs/{job}',      [SavedJobController::class,  'destroy']);

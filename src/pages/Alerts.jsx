@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Navigate, useLocation } from 'react-router-dom'
 import { Bell, Trash2, ToggleLeft, ToggleRight } from 'lucide-react'
 import { alertsApi } from '../services/api.js'
 
@@ -27,17 +28,22 @@ const inputStyle = {
 }
 
 export default function Alerts() {
+  const isAuth = !!localStorage.getItem('auth_token')
+  const loc = useLocation()
+
+  if (!isAuth) return <Navigate to={`/login?next=${loc.pathname}`} replace />
+
   const [alerts, setAlerts]     = useState([])
   const [loading, setLoading]   = useState(true)
   const [keyword, setKeyword]   = useState('')
   const [location, setLocation] = useState('')
+
   const [category, setCategory] = useState('')
   const [frequency, setFreq]    = useState('instant')
   const [saving, setSaving]     = useState(false)
   const [error, setError]       = useState('')
   const [successMsg, setSuccess] = useState('')
 
-  const isAuth = !!localStorage.getItem('auth_token')
 
   useEffect(() => {
     // Pre-fill from FilterBar "حفظ البحث"
@@ -98,15 +104,9 @@ export default function Alerts() {
         <h1 style={{ fontSize: 26, fontWeight: 800, color: 'var(--g950)' }}>تنبيهات الوظائف</h1>
       </div>
       <p style={{ color: 'var(--gray400)', marginBottom: 36, fontSize: 15 }}>
-        احصل على إشعار فوري عند نشر وظيفة تطابق بحثك
-      </p>
 
-      {!isAuth ? (
-        <div style={{ background: 'var(--g50)', border: '1.5px solid var(--g200)', borderRadius: 16, padding: '32px 24px', textAlign: 'center', color: 'var(--g700)', fontSize: 15 }}>
-          يتطلب تسجيل الدخول لاستخدام التنبيهات
-        </div>
-      ) : (
         <>
+
           {/* Create form */}
           <form onSubmit={handleCreate} style={{ background: 'var(--white)', border: '1.5px solid var(--gray200)', borderRadius: 16, padding: 24, marginBottom: 32, boxShadow: 'var(--shadow-sm)' }}>
             <h2 style={{ fontSize: 15, fontWeight: 700, color: 'var(--g800)', marginBottom: 16 }}>+ إنشاء تنبيه جديد</h2>
@@ -221,7 +221,6 @@ export default function Alerts() {
             </div>
           )}
         </>
-      )}
     </div>
   )
 }

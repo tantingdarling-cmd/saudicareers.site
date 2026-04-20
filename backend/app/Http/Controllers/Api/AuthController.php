@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Cache\RateLimiter;
 
@@ -70,32 +71,28 @@ class AuthController extends Controller
     // POST /api/v1/register — public user registration
     public function publicRegister(Request $request)
     {
-        $request->validate([
-            'name'                  => 'required|string|max:255',
-            'email'                 => 'required|email|unique:users,email',
-            'password'              => 'required|string|min:8|confirmed',
-        ]);
+        try {
+            $request->validate([
+                'name'                  => 'required|string|max:255',
+                'email'                 => 'required|email|unique:users,email',
+                'password'              => 'required|string|min:8|confirmed',
+            ]);
 
-        $user = User::create([
-            'name'     => $request->name,
-            'email'    => $request->email,
-            'password' => Hash::make($request->password),
-            'role'     => 'user',
-        ]);
+            $user = User::create([
+                'name'     => $request->name,
+                'email'    => $request->email,
+                'password' => Hash::make($request->password),
+                'role'     => 'user',
+            ]);
 
-        $token = $user->createToken('web')->plainTextToken;
-
-        return response()->json([
-            'success' => true,
-            'message' => 'تم إنشاء الحساب بنجاح',
-            'user'    => [
-                'id'    => $user->id,
-                'name'  => $user->name,
-                'email' => $user->email,
-                'role'  => $user->role,
-            ],
-            'token' => $token,
-        ], 201);
+            return response()->json([
+                'user' => $user,
+                'token' => $user->createToken('app')->plainTextToken
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Register failed: '.$e->getMessage(), ['request'=>request()->all()]);
+            return response()->json(['error' => 'Registration failed: ' . $e->getMessage()], 500);
+        }
     }
 
     // POST /api/admin/register — admin-only: create admin accounts

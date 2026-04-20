@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, Navigate, useLocation } from 'react-router-dom'
 import { Briefcase, Calendar, ChevronRight } from 'lucide-react'
 import { applicationsApi } from '../services/api.js'
 
@@ -39,10 +39,16 @@ function StatusBadge({ status }) {
 }
 
 export default function MyApplications() {
+  const isAuth = !!localStorage.getItem('auth_token')
+  const loc = useLocation()
+
+  if (!isAuth) return <Navigate to={`/login?next=${loc.pathname}`} replace />
+
   const [apps, setApps]       = useState([])
   const [loading, setLoading] = useState(true)
   const [withdrawing, setWithdrawing] = useState(null)
-  const isAuth = !!localStorage.getItem('auth_token')
+
+
 
   useEffect(() => {
     if (!isAuth) { setLoading(false); return }
@@ -93,17 +99,13 @@ export default function MyApplications() {
         </div>
       )}
 
-      {!isAuth && (
-        <div style={{ background:'var(--g50)', border:'1.5px solid var(--g200)', borderRadius:16, padding:'32px 24px', textAlign:'center', color:'var(--g700)', fontSize:15 }}>
-          يتطلب تسجيل الدخول لعرض طلباتك
-        </div>
-      )}
 
-      {isAuth && loading && (
+      {loading && (
+
         <div style={{ textAlign:'center', color:'var(--gray400)', padding:64, fontSize:14 }}>جارٍ التحميل…</div>
       )}
 
-      {isAuth && !loading && apps.length === 0 && (
+      {!loading && apps.length === 0 && (
         <div style={{ textAlign:'center', padding:'64px 24px', background:'var(--white)', borderRadius:16, border:'1.5px solid var(--gray200)' }}>
           <div style={{ fontSize:52, marginBottom:16 }}>📋</div>
           <h2 style={{ fontSize:18, fontWeight:700, color:'var(--g900)', marginBottom:8 }}>لم تقدّم على أي وظيفة بعد</h2>
@@ -114,7 +116,7 @@ export default function MyApplications() {
         </div>
       )}
 
-      {isAuth && !loading && active.length > 0 && (
+      {!loading && active.length > 0 && (
         <div style={{ display:'flex', flexDirection:'column', gap:12, marginBottom:32 }}>
           {active.map(app => (
             <AppCard key={app.id} app={app} onWithdraw={handleWithdraw} withdrawing={withdrawing} />
@@ -122,7 +124,7 @@ export default function MyApplications() {
         </div>
       )}
 
-      {isAuth && !loading && withdrawn.length > 0 && (
+      {!loading && withdrawn.length > 0 && (
         <>
           <div style={{ fontSize:13, fontWeight:600, color:'var(--gray400)', marginBottom:10, marginTop:8 }}>الطلبات المسحوبة</div>
           <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
