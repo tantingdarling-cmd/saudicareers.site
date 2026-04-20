@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <circle cx="100" cy="100" r="100" fill="#1B5E37"/>
+  <!-- Palm tree silhouette -->
+  <path d="M100 155 L100 95" stroke="#C9A84C" stroke-width="5" stroke-linecap="round"/>
+  <path d="M100 105 Q80 85 60 90 Q75 100 100 110" fill="#C9A84C" opacity="0.9"/>
+  <path d="M100 105 Q120 85 140 90 Q125 100 100 110" fill="#C9A84C" opacity="0.9"/>
+  <path d="M100 98 Q82 75 65 78 Q80 90 100 100" fill="#C9A84C"/>
+  <path d="M100 98 Q118 75 135 78 Q120 90 100 100" fill="#C9A84C"/>
+  <path d="M100 92 Q90 68 78 68 Q88 82 100 95" fill="#C9A84C" opacity="0.8"/>
+  <path d="M100 92 Q110 68 122 68 Q112 82 100 95" fill="#C9A84C" opacity="0.8"/>
+  <!-- Upward arrow / career path -->
+  <path d="M86 155 L86 130 L78 138 M86 130 L94 138" stroke="#C9A84C" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/>
+  <!-- SC letters subtle -->
+  <text x="100" y="185" text-anchor="middle" font-family="Georgia, serif" font-size="18" font-weight="700" fill="#C9A84C" opacity="0.85" letter-spacing="3">SC</text>
+</svg>
