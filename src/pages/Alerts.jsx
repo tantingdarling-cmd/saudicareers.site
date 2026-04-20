@@ -104,8 +104,12 @@ export default function Alerts() {
         <h1 style={{ fontSize: 26, fontWeight: 800, color: 'var(--g950)' }}>تنبيهات الوظائف</h1>
       </div>
       <p style={{ color: 'var(--gray400)', marginBottom: 36, fontSize: 15 }}>
+        احصل على إشعار فوري عند نشر وظيفة تطابق بحثك
+      </p>
 
-        <>
+
+      <>
+
 
           {/* Create form */}
           <form onSubmit={handleCreate} style={{ background: 'var(--white)', border: '1.5px solid var(--gray200)', borderRadius: 16, padding: 24, marginBottom: 32, boxShadow: 'var(--shadow-sm)' }}>
