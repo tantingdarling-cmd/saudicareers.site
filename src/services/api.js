@@ -161,6 +161,14 @@ export const resumeBuilderApi = {
   status:   (jobId)   => api.get(`/v1/resume/status/${jobId}`),
 };
 
+export const resumeSnapshotsApi = {
+  list:    ()              => api.get('/v1/profile/resumes'),
+  get:     (id)            => api.get(`/v1/profile/resumes/${id}`),
+  create:  (payload)       => api.post('/v1/profile/resumes', payload),
+  update:  (id, payload)   => api.put(`/v1/profile/resumes/${id}`, payload),
+  delete:  (id)            => api.delete(`/v1/profile/resumes/${id}`),
+};
+
 export const probationApi = {
   getAll:  (params = {}) => api.get('/admin/probation', params),
   getStatus: (id) => api.get(`/admin/probation/${id}/status`),

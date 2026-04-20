@@ -1,5 +1,7 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { api } from '../services/api'
+import { TEMPLATE_LABELS, TEMPLATE_COMPONENTS } from '../components/ResumeTemplates.jsx'
 
 // ── Style constants ───────────────────────────────────────────
 const S = {
@@ -10,7 +12,6 @@ const S = {
   addBtn:     { background: 'var(--g50)', color: 'var(--g700)', border: '1px dashed var(--g400)', borderRadius: 'var(--r-md)', padding: '8px 16px', fontFamily: 'var(--font-ar)', fontSize: '13px', cursor: 'pointer', width: '100%', marginTop: '4px' },
 }
 
-// ── Helper sub-components ─────────────────────────────────────
 function FormSection({ title, children }) {
   return (
     <div style={{ marginBottom: '20px' }}>
@@ -29,210 +30,11 @@ function FormField({ label, value, onChange, placeholder = '' }) {
   )
 }
 
-// ── Classic Template ──────────────────────────────────────────
-function ClassicTemplate({ data }) {
-  return (
-    <div style={{ fontFamily: 'var(--font-ar)', direction: 'rtl', padding: '32px', background: '#fff', minHeight: '297mm', fontSize: '13px', lineHeight: 1.6, color: '#1E3028' }}>
-      <div style={{ borderBottom: '3px solid var(--g700)', paddingBottom: '16px', marginBottom: '20px' }}>
-        <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--g800)' }}>{data.name || 'اسمك الكامل'}</h1>
-        <p style={{ color: 'var(--g600)', fontSize: '14px' }}>{data.title || 'المسمى الوظيفي'}</p>
-        <div style={{ display: 'flex', gap: '16px', marginTop: '8px', fontSize: '12px', color: 'var(--gray600)', flexWrap: 'wrap' }}>
-          {data.email && <span>📧 {data.email}</span>}
-          {data.phone && <span>📞 {data.phone}</span>}
-          {data.city  && <span>📍 {data.city}</span>}
-        </div>
-      </div>
-      {data.summary && <TplSection title="الملخص"><p>{data.summary}</p></TplSection>}
-      {data.experience?.some(e => e.company) && (
-        <TplSection title="الخبرات">
-          {data.experience.map((e, i) => e.company && (
-            <div key={i} style={{ marginBottom: '12px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <strong>{e.role}</strong>
-                <span style={{ color: 'var(--gray600)' }}>{e.period}</span>
-              </div>
-              <div style={{ color: 'var(--g700)' }}>{e.company}</div>
-              {e.desc && <p style={{ marginTop: '4px' }}>{e.desc}</p>}
-            </div>
-          ))}
-        </TplSection>
-      )}
-      {data.education?.some(e => e.school) && (
-        <TplSection title="التعليم">
-          {data.education.map((e, i) => e.school && (
-            <div key={i} style={{ marginBottom: '8px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <strong>{e.degree}</strong>
-                <span style={{ color: 'var(--gray600)' }}>{e.year}</span>
-              </div>
-              <div style={{ color: 'var(--g700)' }}>{e.school}</div>
-            </div>
-          ))}
-        </TplSection>
-      )}
-      {data.skills && <TplSection title="المهارات"><p>{data.skills}</p></TplSection>}
-    </div>
-  )
-}
-
-function TplSection({ title, children }) {
-  return (
-    <div style={{ marginBottom: '16px' }}>
-      <h2 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--g800)', borderBottom: '1px solid var(--g200)', paddingBottom: '4px', marginBottom: '10px' }}>{title}</h2>
-      {children}
-    </div>
-  )
-}
-
-// ── Modern Template ───────────────────────────────────────────
-function ModernTemplate({ data }) {
-  return (
-    <div style={{ fontFamily: 'var(--font-ar)', direction: 'rtl', display: 'flex', minHeight: '297mm', background: '#fff', fontSize: '13px', lineHeight: 1.6 }}>
-      <div style={{ width: '35%', background: 'var(--g800)', color: '#fff', padding: '32px 20px' }}>
-        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-          <div style={{ width: '70px', height: '70px', background: 'var(--g500)', borderRadius: '50%', margin: '0 auto 12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '28px', fontWeight: 700 }}>
-            {(data.name || 'أ')[0]}
-          </div>
-          <h1 style={{ fontSize: '18px', fontWeight: 700 }}>{data.name || 'اسمك'}</h1>
-          <p style={{ color: 'var(--g200)', fontSize: '12px' }}>{data.title}</p>
-        </div>
-        {(data.email || data.phone || data.city) && (
-          <div style={{ marginBottom: '20px' }}>
-            <h3 style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--g200)', borderBottom: '1px solid var(--g600)', paddingBottom: '6px', marginBottom: '10px' }}>التواصل</h3>
-            {data.email && <p style={{ fontSize: '12px', marginBottom: '6px' }}>📧 {data.email}</p>}
-            {data.phone && <p style={{ fontSize: '12px', marginBottom: '6px' }}>📞 {data.phone}</p>}
-            {data.city  && <p style={{ fontSize: '12px', marginBottom: '6px' }}>📍 {data.city}</p>}
-          </div>
-        )}
-        {data.skills && (
-          <div>
-            <h3 style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', color: 'var(--g200)', borderBottom: '1px solid var(--g600)', paddingBottom: '6px', marginBottom: '10px' }}>المهارات</h3>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-              {data.skills.split(',').map((s, i) => (
-                <span key={i} style={{ background: 'var(--g700)', borderRadius: '4px', padding: '2px 8px', fontSize: '11px' }}>{s.trim()}</span>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-      <div style={{ flex: 1, padding: '32px 24px', color: '#1E3028' }}>
-        {data.summary && (
-          <div style={{ marginBottom: '20px' }}>
-            <h2 style={{ fontSize: '13px', fontWeight: 700, color: 'var(--g600)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '10px' }}>الملخص</h2>
-            <p style={{ color: '#4A6358' }}>{data.summary}</p>
-          </div>
-        )}
-        {data.experience?.some(e => e.company) && (
-          <div style={{ marginBottom: '20px' }}>
-            <h2 style={{ fontSize: '13px', fontWeight: 700, color: 'var(--g600)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '10px' }}>الخبرات</h2>
-            {data.experience.map((e, i) => e.company && (
-              <div key={i} style={{ marginBottom: '14px', paddingRight: '12px', borderRight: '2px solid var(--g400)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <strong style={{ color: 'var(--g800)' }}>{e.role}</strong>
-                  <span style={{ fontSize: '11px', color: '#8FA69A' }}>{e.period}</span>
-                </div>
-                <div style={{ color: 'var(--g600)', fontSize: '12px' }}>{e.company}</div>
-                {e.desc && <p style={{ marginTop: '4px', fontSize: '12px' }}>{e.desc}</p>}
-              </div>
-            ))}
-          </div>
-        )}
-        {data.education?.some(e => e.school) && (
-          <div>
-            <h2 style={{ fontSize: '13px', fontWeight: 700, color: 'var(--g600)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '10px' }}>التعليم</h2>
-            {data.education.map((e, i) => e.school && (
-              <div key={i} style={{ marginBottom: '10px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <strong>{e.degree}</strong>
-                  <span style={{ fontSize: '11px', color: '#8FA69A' }}>{e.year}</span>
-                </div>
-                <div style={{ color: 'var(--g600)', fontSize: '12px' }}>{e.school}</div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
-
-// ── Creative Template ─────────────────────────────────────────
-function CreativeTemplate({ data }) {
-  return (
-    <div style={{ fontFamily: 'var(--font-ar)', direction: 'rtl', background: '#fff', minHeight: '297mm', fontSize: '13px', lineHeight: 1.6 }}>
-      <div style={{ background: 'linear-gradient(135deg, var(--g800) 0%, var(--g600) 100%)', padding: '40px', color: '#fff' }}>
-        <h1 style={{ fontSize: '32px', fontWeight: 700, marginBottom: '4px' }}>{data.name || 'اسمك'}</h1>
-        <p style={{ color: 'var(--g100)', fontSize: '16px', marginBottom: '16px' }}>{data.title}</p>
-        <div style={{ display: 'flex', gap: '24px', fontSize: '12px', color: 'rgba(255,255,255,0.8)', flexWrap: 'wrap' }}>
-          {data.email && <span>📧 {data.email}</span>}
-          {data.phone && <span>📞 {data.phone}</span>}
-          {data.city  && <span>📍 {data.city}</span>}
-        </div>
-      </div>
-      <div style={{ padding: '32px 40px', display: 'grid', gridTemplateColumns: '1fr 260px', gap: '32px' }}>
-        <div>
-          {data.summary && (
-            <div style={{ marginBottom: '24px' }}>
-              <h2 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--g700)', borderRight: '3px solid var(--g500)', paddingRight: '8px', marginBottom: '10px' }}>الملخص</h2>
-              <p style={{ color: '#4A6358' }}>{data.summary}</p>
-            </div>
-          )}
-          {data.experience?.some(e => e.company) && (
-            <div>
-              <h2 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--g700)', borderRight: '3px solid var(--g500)', paddingRight: '8px', marginBottom: '12px' }}>الخبرات</h2>
-              {data.experience.map((e, i) => e.company && (
-                <div key={i} style={{ marginBottom: '16px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div>
-                      <strong style={{ fontSize: '14px' }}>{e.role}</strong>
-                      <div style={{ color: 'var(--g600)', fontSize: '12px' }}>{e.company}</div>
-                    </div>
-                    <span style={{ background: 'var(--g50)', color: 'var(--g700)', padding: '2px 10px', borderRadius: '20px', fontSize: '11px', whiteSpace: 'nowrap' }}>{e.period}</span>
-                  </div>
-                  {e.desc && <p style={{ marginTop: '6px', fontSize: '12px', color: '#4A6358' }}>{e.desc}</p>}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-        <div>
-          {data.education?.some(e => e.school) && (
-            <div style={{ marginBottom: '24px' }}>
-              <h2 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--g700)', borderRight: '3px solid var(--g500)', paddingRight: '8px', marginBottom: '10px' }}>التعليم</h2>
-              {data.education.map((e, i) => e.school && (
-                <div key={i} style={{ marginBottom: '10px' }}>
-                  <strong style={{ fontSize: '13px' }}>{e.degree}</strong>
-                  <div style={{ color: 'var(--g700)', fontSize: '12px' }}>{e.school}</div>
-                  <div style={{ color: '#8FA69A', fontSize: '11px' }}>{e.year}</div>
-                </div>
-              ))}
-            </div>
-          )}
-          {data.skills && (
-            <div>
-              <h2 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--g700)', borderRight: '3px solid var(--g500)', paddingRight: '8px', marginBottom: '10px' }}>المهارات</h2>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                {data.skills.split(',').map((s, i) => (
-                  <span key={i} style={{ background: 'var(--g50)', border: '1px solid var(--g200)', color: 'var(--g800)', padding: '3px 10px', borderRadius: '20px', fontSize: '11px' }}>{s.trim()}</span>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ── Constants ─────────────────────────────────────────────────
 const TABS = [
   { id: 'scratch',  label: 'من الصفر' },
   { id: 'upload',   label: 'رفع ملف' },
   { id: 'enhance',  label: 'تحسين ذكي' },
 ]
-
-const TEMPLATES = { classic: 'كلاسيك', modern: 'عصري', creative: 'إبداعي' }
-const TEMPLATE_COMPONENTS = { classic: ClassicTemplate, modern: ModernTemplate, creative: CreativeTemplate }
 
 const DEFAULT_DATA = {
   name: '', title: '', email: '', phone: '', city: '', summary: '',
@@ -241,20 +43,20 @@ const DEFAULT_DATA = {
   skills: '',
 }
 
-// ── Main Page ─────────────────────────────────────────────────
 export default function ResumeBuilder() {
+  const navigate  = useNavigate()
   const [tab,        setTab]        = useState('scratch')
   const [template,   setTemplate]   = useState('classic')
   const [formData,   setFormData]   = useState(DEFAULT_DATA)
+  const [resumeName, setResumeName] = useState('سيرتي الذاتية')
+  const [editId,     setEditId]     = useState(null)
   const [saving,     setSaving]     = useState(false)
   const [saveMsg,    setSaveMsg]    = useState('')
 
-  // upload tab
   const [uploading,  setUploading]  = useState(false)
   const [uploadMsg,  setUploadMsg]  = useState('')
   const fileRef = useRef()
 
-  // enhance tab
   const [resumeText,    setResumeText]    = useState('')
   const [jobDesc,       setJobDesc]       = useState('')
   const [enhancing,     setEnhancing]     = useState(false)
@@ -263,6 +65,19 @@ export default function ResumeBuilder() {
 
   const previewRef = useRef()
   const TemplateComponent = TEMPLATE_COMPONENTS[template]
+
+  useEffect(() => {
+    const raw = sessionStorage.getItem('resume_edit')
+    if (!raw) return
+    try {
+      const { id, name, template: tpl, data } = JSON.parse(raw)
+      if (id)   setEditId(id)
+      if (name) setResumeName(name)
+      if (tpl)  setTemplate(tpl)
+      if (data) setFormData(data)
+    } catch {}
+    sessionStorage.removeItem('resume_edit')
+  }, [])
 
   function setField(k, v) { setFormData(p => ({ ...p, [k]: v })) }
   function setExp(i, k, v) { setFormData(p => { const a = [...p.experience]; a[i] = { ...a[i], [k]: v }; return { ...p, experience: a } }) }
@@ -273,7 +88,13 @@ export default function ResumeBuilder() {
   async function handleSave() {
     setSaving(true); setSaveMsg('')
     try {
-      await api.post('/v1/profile/resume/save', { resume_data: formData })
+      const payload = { name: resumeName, template, data: formData }
+      if (editId) {
+        await api.put(`/v1/profile/resumes/${editId}`, payload)
+      } else {
+        const res = await api.post('/v1/profile/resumes', payload)
+        setEditId(res.id)
+      }
       setSaveMsg('تم الحفظ بنجاح ✓')
     } catch (e) { setSaveMsg(e.message) }
     finally { setSaving(false); setTimeout(() => setSaveMsg(''), 3000) }
@@ -286,10 +107,9 @@ export default function ResumeBuilder() {
       const { default: jsPDF }       = await import('jspdf')
       const canvas = await html2canvas(previewRef.current, { scale: 2, useCORS: true })
       const pdf    = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
-      const w      = 210
-      const h      = (canvas.height * w) / canvas.width
+      const w = 210; const h = (canvas.height * w) / canvas.width
       pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, w, h)
-      pdf.save(`resume-${Date.now()}.pdf`)
+      pdf.save(`${resumeName || 'resume'}-${Date.now()}.pdf`)
     } catch { alert('فشل تصدير PDF') }
   }
 
@@ -328,9 +148,19 @@ export default function ResumeBuilder() {
       <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
 
         {/* Header */}
-        <div style={{ marginBottom: '32px' }}>
-          <h1 style={{ fontSize: '28px', fontWeight: 700, color: 'var(--g900)', marginBottom: '6px' }}>منشئ السيرة الذاتية</h1>
-          <p style={{ color: 'var(--gray600)', fontSize: '15px' }}>أنشئ سيرتك الذاتية الاحترافية بخطوات بسيطة</p>
+        <div style={{ marginBottom: '32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+          <div>
+            <h1 style={{ fontSize: '28px', fontWeight: 700, color: 'var(--g900)', marginBottom: '6px' }}>
+              {editId ? 'تعديل السيرة الذاتية' : 'منشئ السيرة الذاتية'}
+            </h1>
+            <p style={{ color: 'var(--gray600)', fontSize: '15px' }}>أنشئ سيرتك الذاتية الاحترافية بخطوات بسيطة</p>
+          </div>
+          <button
+            onClick={() => navigate('/dashboard/resumes')}
+            style={{ background: 'rgba(0,61,43,0.07)', color: 'var(--g800)', border: '1.5px solid rgba(0,61,43,0.18)', borderRadius: 'var(--r-md)', padding: '10px 18px', fontFamily: 'var(--font-ar)', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
+          >
+            ← سيري المحفوظة
+          </button>
         </div>
 
         {/* Tabs */}
@@ -344,16 +174,19 @@ export default function ResumeBuilder() {
 
         {/* ── Tab: من الصفر ── */}
         {tab === 'scratch' && (
-          <div style={{ display: 'grid', gridTemplateColumns: '400px 1fr', gap: '24px', alignItems: 'flex-start' }}>
-
-            {/* Form */}
+          <div style={{ display: 'grid', gridTemplateColumns: '420px 1fr', gap: '24px', alignItems: 'flex-start' }}>
             <div style={{ background: '#fff', borderRadius: 'var(--r-xl)', padding: '24px', boxShadow: 'var(--shadow-md)', maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' }}>
+
+              {/* Resume name */}
+              <FormSection title="اسم السيرة الذاتية">
+                <input value={resumeName} onChange={e => setResumeName(e.target.value)} style={S.input} placeholder="مثال: سيرة تقنية — كلاسيك" />
+              </FormSection>
 
               {/* Template picker */}
               <div style={{ marginBottom: '20px' }}>
                 <label style={S.label}>القالب</label>
                 <div style={{ display: 'flex', gap: '8px' }}>
-                  {Object.entries(TEMPLATES).map(([key, lbl]) => (
+                  {Object.entries(TEMPLATE_LABELS).map(([key, lbl]) => (
                     <button key={key} onClick={() => setTemplate(key)} style={{ flex: 1, padding: '8px', borderRadius: 'var(--r-sm)', border: `2px solid ${template === key ? 'var(--g600)' : 'var(--gray200)'}`, background: template === key ? 'var(--g50)' : '#fff', color: template === key ? 'var(--g800)' : 'var(--gray600)', cursor: 'pointer', fontSize: '12px', fontFamily: 'var(--font-ar)', fontWeight: 600 }}>
                       {lbl}
                     </button>
@@ -402,10 +235,9 @@ export default function ResumeBuilder() {
                 <p style={{ fontSize: '11px', color: 'var(--gray400)', marginTop: '4px' }}>افصل بين المهارات بفاصلة</p>
               </FormSection>
 
-              {/* Actions */}
               <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
                 <button onClick={handleSave} disabled={saving} style={{ ...S.primaryBtn, flex: 1, opacity: saving ? 0.7 : 1 }}>
-                  {saving ? 'جارٍ الحفظ...' : 'حفظ'}
+                  {saving ? 'جارٍ الحفظ...' : editId ? 'تحديث' : 'حفظ'}
                 </button>
                 <button onClick={handleExportPDF} style={{ ...S.primaryBtn, flex: 1, background: 'transparent', color: 'var(--g700)', border: '1.5px solid var(--g700)' }}>
                   تصدير PDF
@@ -421,7 +253,7 @@ export default function ResumeBuilder() {
               <div style={{ background: '#fff', borderRadius: 'var(--r-xl)', boxShadow: 'var(--shadow-lg)', overflow: 'hidden' }}>
                 <div style={{ background: 'var(--gray100)', padding: '12px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <span style={{ fontSize: '13px', color: 'var(--gray600)', fontWeight: 600 }}>معاينة مباشرة</span>
-                  <span style={{ fontSize: '11px', background: 'var(--g50)', color: 'var(--g700)', padding: '2px 10px', borderRadius: '20px' }}>{TEMPLATES[template]}</span>
+                  <span style={{ fontSize: '11px', background: 'var(--g50)', color: 'var(--g700)', padding: '2px 10px', borderRadius: '20px' }}>{TEMPLATE_LABELS[template]}</span>
                 </div>
                 <div style={{ overflow: 'hidden', maxHeight: '80vh' }}>
                   <div ref={previewRef} style={{ transform: 'scale(0.72)', transformOrigin: 'top right', width: '138.9%', marginBottom: '-28%' }}>
@@ -438,10 +270,7 @@ export default function ResumeBuilder() {
           <div style={{ maxWidth: '560px', background: '#fff', borderRadius: 'var(--r-xl)', padding: '40px', boxShadow: 'var(--shadow-md)' }}>
             <h2 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '8px', color: 'var(--g900)' }}>رفع السيرة الذاتية</h2>
             <p style={{ color: 'var(--gray600)', marginBottom: '28px', fontSize: '14px' }}>يُدعم PDF و DOCX — الحد الأقصى 5 ميجابايت</p>
-            <div
-              style={{ border: '2px dashed var(--gray200)', borderRadius: 'var(--r-lg)', padding: '48px', textAlign: 'center', cursor: 'pointer', marginBottom: '16px' }}
-              onClick={() => fileRef.current?.click()}
-            >
+            <div style={{ border: '2px dashed var(--gray200)', borderRadius: 'var(--r-lg)', padding: '48px', textAlign: 'center', cursor: 'pointer', marginBottom: '16px' }} onClick={() => fileRef.current?.click()}>
               <div style={{ fontSize: '48px', marginBottom: '12px' }}>📄</div>
               <p style={{ color: 'var(--gray600)', fontSize: '15px', fontWeight: 600 }}>انقر لاختيار ملف</p>
               <p style={{ color: 'var(--gray400)', fontSize: '12px', marginTop: '6px' }}>PDF أو DOCX</p>
@@ -450,9 +279,7 @@ export default function ResumeBuilder() {
             <button onClick={handleUpload} disabled={uploading} style={{ ...S.primaryBtn, width: '100%', opacity: uploading ? 0.7 : 1 }}>
               {uploading ? 'جارٍ الرفع...' : 'رفع الملف'}
             </button>
-            {uploadMsg && (
-              <p style={{ marginTop: '14px', fontSize: '13px', textAlign: 'center', color: uploadMsg.includes('✓') ? 'var(--g700)' : '#c0392b' }}>{uploadMsg}</p>
-            )}
+            {uploadMsg && <p style={{ marginTop: '14px', fontSize: '13px', textAlign: 'center', color: uploadMsg.includes('✓') ? 'var(--g700)' : '#c0392b' }}>{uploadMsg}</p>}
           </div>
         )}
 
@@ -462,35 +289,15 @@ export default function ResumeBuilder() {
             <div style={{ background: '#fff', borderRadius: 'var(--r-xl)', padding: '32px', boxShadow: 'var(--shadow-md)', marginBottom: '24px' }}>
               <h2 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '8px', color: 'var(--g900)' }}>تحسين ذكي بالذكاء الاصطناعي</h2>
               <p style={{ color: 'var(--gray600)', marginBottom: '24px', fontSize: '14px' }}>الصق نص سيرتك الذاتية وسنحسّنها لتتوافق مع معايير ATS</p>
-
               <label style={S.label}>نص السيرة الذاتية *</label>
-              <textarea
-                value={resumeText}
-                onChange={e => setResumeText(e.target.value)}
-                rows={8}
-                style={{ ...S.textarea, marginBottom: '16px' }}
-                placeholder="الصق نص سيرتك الذاتية هنا..."
-              />
-
-              <label style={S.label}>وصف الوظيفة (اختياري — يحسّن الدقة)</label>
-              <textarea
-                value={jobDesc}
-                onChange={e => setJobDesc(e.target.value)}
-                rows={4}
-                style={{ ...S.textarea, marginBottom: '20px' }}
-                placeholder="الصق وصف الوظيفة المستهدفة..."
-              />
-
-              <button
-                onClick={handleEnhance}
-                disabled={enhancing || !resumeText.trim()}
-                style={{ ...S.primaryBtn, width: '100%', opacity: enhancing || !resumeText.trim() ? 0.5 : 1 }}
-              >
+              <textarea value={resumeText} onChange={e => setResumeText(e.target.value)} rows={8} style={{ ...S.textarea, marginBottom: '16px' }} placeholder="الصق نص سيرتك الذاتية هنا..." />
+              <label style={S.label}>وصف الوظيفة (اختياري)</label>
+              <textarea value={jobDesc} onChange={e => setJobDesc(e.target.value)} rows={4} style={{ ...S.textarea, marginBottom: '20px' }} placeholder="الصق وصف الوظيفة المستهدفة..." />
+              <button onClick={handleEnhance} disabled={enhancing || !resumeText.trim()} style={{ ...S.primaryBtn, width: '100%', opacity: enhancing || !resumeText.trim() ? 0.5 : 1 }}>
                 {enhancing ? '⏳ جارٍ التحسين...' : '✨ تحسين السيرة الذاتية'}
               </button>
               {enhanceError && <p style={{ marginTop: '12px', fontSize: '13px', color: '#c0392b', textAlign: 'center' }}>{enhanceError}</p>}
             </div>
-
             {enhancing && (
               <div style={{ background: '#fff', borderRadius: 'var(--r-xl)', padding: '40px', boxShadow: 'var(--shadow-md)', textAlign: 'center' }}>
                 <div style={{ fontSize: '40px', marginBottom: '12px' }}>🤖</div>
@@ -498,51 +305,41 @@ export default function ResumeBuilder() {
                 <p style={{ color: 'var(--gray600)', fontSize: '13px', marginTop: '8px' }}>قد يستغرق ذلك دقيقة أو أكثر</p>
               </div>
             )}
-
             {enhanceResult && (
               <div style={{ background: '#fff', borderRadius: 'var(--r-xl)', padding: '32px', boxShadow: 'var(--shadow-md)' }}>
                 <h3 style={{ fontSize: '18px', fontWeight: 700, color: 'var(--g800)', marginBottom: '20px' }}>✨ النتائج المحسّنة</h3>
-
                 {enhanceResult.result?.summary && (
                   <div style={{ marginBottom: '20px' }}>
                     <h4 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--g700)', marginBottom: '8px' }}>الملخص المحسّن</h4>
-                    <p style={{ background: 'var(--g50)', padding: '16px', borderRadius: 'var(--r-md)', fontSize: '14px', lineHeight: 1.8, color: 'var(--gray800)' }}>{enhanceResult.result.summary}</p>
+                    <p style={{ background: 'var(--g50)', padding: '16px', borderRadius: 'var(--r-md)', fontSize: '14px', lineHeight: 1.8 }}>{enhanceResult.result.summary}</p>
                   </div>
                 )}
-
                 {enhanceResult.result?.bullets?.length > 0 && (
                   <div style={{ marginBottom: '20px' }}>
                     <h4 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--g700)', marginBottom: '8px' }}>نقاط القوة</h4>
                     <ul style={{ paddingRight: '20px' }}>
-                      {enhanceResult.result.bullets.map((b, i) => (
-                        <li key={i} style={{ color: 'var(--gray800)', marginBottom: '8px', fontSize: '14px', lineHeight: 1.6 }}>{b}</li>
-                      ))}
+                      {enhanceResult.result.bullets.map((b, i) => <li key={i} style={{ marginBottom: '8px', fontSize: '14px', lineHeight: 1.6 }}>{b}</li>)}
                     </ul>
                   </div>
                 )}
-
                 {enhanceResult.result?.tips?.length > 0 && (
                   <div>
                     <h4 style={{ fontSize: '14px', fontWeight: 600, color: 'var(--g700)', marginBottom: '8px' }}>التوصيات</h4>
                     {enhanceResult.result.tips.map((tip, i) => (
                       <div key={i} style={{ display: 'flex', gap: '10px', marginBottom: '10px', padding: '12px', background: 'var(--gold100)', borderRadius: 'var(--r-sm)' }}>
                         <span style={{ color: 'var(--gold600)' }}>💡</span>
-                        <span style={{ fontSize: '13px', color: 'var(--gray800)', lineHeight: 1.6 }}>{tip}</span>
+                        <span style={{ fontSize: '13px', lineHeight: 1.6 }}>{tip}</span>
                       </div>
                     ))}
                   </div>
                 )}
-
                 {!enhanceResult.result?.summary && !enhanceResult.result?.bullets && (
-                  <pre style={{ whiteSpace: 'pre-wrap', fontSize: '13px', color: 'var(--gray800)', lineHeight: 1.8 }}>
-                    {JSON.stringify(enhanceResult.result, null, 2)}
-                  </pre>
+                  <pre style={{ whiteSpace: 'pre-wrap', fontSize: '13px', lineHeight: 1.8 }}>{JSON.stringify(enhanceResult.result, null, 2)}</pre>
                 )}
               </div>
             )}
           </div>
         )}
-
       </div>
     </div>
   )

@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\EmployerApplicationController;
 use App\Http\Controllers\Api\CompanyController;
 use App\Http\Controllers\Api\SalaryStatsController;
 use App\Http\Controllers\Api\ResumeBuilderController;
+use App\Http\Controllers\Api\ResumeSnapshotController;
 
 // §6: Sitemap — public, no auth, outside v1 prefix.
 // Accessible at /api/sitemap.xml. For static /sitemap.xml run: php artisan sitemap:generate
@@ -83,6 +84,12 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
 
     Route::post('/profile/resume/save',      [ResumeBuilderController::class, 'save']);
     Route::get('/profile/resume/data',       [ResumeBuilderController::class, 'show']);
+
+    Route::get('/profile/resumes',           [ResumeSnapshotController::class, 'index']);
+    Route::post('/profile/resumes',          [ResumeSnapshotController::class, 'store']);
+    Route::get('/profile/resumes/{id}',      [ResumeSnapshotController::class, 'show']);
+    Route::put('/profile/resumes/{id}',      [ResumeSnapshotController::class, 'update']);
+    Route::delete('/profile/resumes/{id}',   [ResumeSnapshotController::class, 'destroy']);
 
     Route::get('/applications/my',           [ApplicationController::class, 'my']);
     Route::post('/jobs/{job}/apply',         [ApplicationController::class, 'nativeApply']);
