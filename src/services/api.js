@@ -72,8 +72,16 @@ class ApiService {
 export const api = new ApiService();
 
 export const authApi = {
-  login: async (email, password, deviceName = 'admin') => {
+  login: async (email, password, deviceName = 'web') => {
     const data = await api.post('/v1/login', { email, password, device_name: deviceName });
+    setToken(data.token);
+    localStorage.setItem('user', JSON.stringify(data.user));
+    return data;
+  },
+  register: async (name, email, password, passwordConfirmation) => {
+    const data = await api.post('/v1/register', {
+      name, email, password, password_confirmation: passwordConfirmation,
+    });
     setToken(data.token);
     localStorage.setItem('user', JSON.stringify(data.user));
     return data;

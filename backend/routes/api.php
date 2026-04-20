@@ -73,6 +73,10 @@ Route::prefix('v1')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])
         ->middleware('throttle:5,1')
         ->name('login');
+
+    Route::post('/register', [AuthController::class, 'publicRegister'])
+        ->middleware('throttle:5,1')
+        ->name('register.public');
 });
 
 Route::prefix('v1')->middleware('auth:sanctum')->group(function () {

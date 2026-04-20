@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { authApi } from '../services/api.js'
 
 export default function Login() {
@@ -77,6 +77,12 @@ export default function Login() {
           }}>
             {loading ? 'جاري الدخول…' : 'دخول'}
           </button>
+          <p style={{ textAlign: 'center', fontSize: 13, color: 'var(--gray400)', marginTop: 20 }}>
+            ليس لديك حساب؟{' '}
+            <Link to="/register" style={{ color: 'var(--g700)', fontWeight: 600, textDecoration: 'none' }}>
+              إنشاء حساب جديد
+            </Link>
+          </p>
         </form>
       </div>
     </div>

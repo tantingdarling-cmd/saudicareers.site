@@ -24,6 +24,7 @@ const EmployerDashboard   = lazy(() => import('./pages/EmployerDashboard.jsx'))
 const EmployerApplicants  = lazy(() => import('./pages/EmployerApplicants.jsx'))
 const CompanyProfile      = lazy(() => import('./pages/CompanyProfile.jsx'))
 const Login               = lazy(() => import('./pages/Login.jsx'))
+const Register            = lazy(() => import('./pages/Register.jsx'))
 const SalaryInsights      = lazy(() => import('./pages/SalaryInsights.jsx'))
 const ResumeBuilder       = lazy(() => import('./pages/ResumeBuilder.jsx'))
 const ResumeDashboard     = lazy(() => import('./pages/ResumeDashboard.jsx'))
@@ -51,6 +52,7 @@ export default function App() {
             <Route path="/tips/:slug" element={<TipDetail />} />
             <Route path="/admin"                element={<Admin />} />
             <Route path="/login"               element={<Login />} />
+            <Route path="/register"            element={<Register />} />
             <Route path="/resume-analyzer"     element={<ResumeAnalyzer />} />
             <Route path="/resume-results/:id"  element={<ResumeResults />} />
             <Route path="/privacy"             element={<Privacy />} />

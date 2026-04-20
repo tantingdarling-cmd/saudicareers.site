@@ -67,6 +67,38 @@ class AuthController extends Controller
         ]);
     }
 
+    // POST /api/v1/register — public user registration
+    public function publicRegister(Request $request)
+    {
+        $request->validate([
+            'name'                  => 'required|string|max:255',
+            'email'                 => 'required|email|unique:users,email',
+            'password'              => 'required|string|min:8|confirmed',
+        ]);
+
+        $user = User::create([
+            'name'     => $request->name,
+            'email'    => $request->email,
+            'password' => Hash::make($request->password),
+            'role'     => 'user',
+        ]);
+
+        $token = $user->createToken('web')->plainTextToken;
+
+        return response()->json([
+            'success' => true,
+            'message' => 'تم إنشاء الحساب بنجاح',
+            'user'    => [
+                'id'    => $user->id,
+                'name'  => $user->name,
+                'email' => $user->email,
+                'role'  => $user->role,
+            ],
+            'token' => $token,
+        ], 201);
+    }
+
+    // POST /api/admin/register — admin-only: create admin accounts
     public function register(Request $request)
     {
         $request->validate([
