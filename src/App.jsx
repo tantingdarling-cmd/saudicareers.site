@@ -27,6 +27,7 @@ const Login               = lazy(() => import('./pages/Login.jsx'))
 const SalaryInsights      = lazy(() => import('./pages/SalaryInsights.jsx'))
 const ResumeBuilder       = lazy(() => import('./pages/ResumeBuilder.jsx'))
 const ResumeDashboard     = lazy(() => import('./pages/ResumeDashboard.jsx'))
+const Notifications       = lazy(() => import('./pages/Notifications.jsx'))
 
 export default function App() {
   return (
@@ -51,6 +52,7 @@ export default function App() {
             <Route path="/salary-insights"     element={<SalaryInsights />} />
             <Route path="/resume/editor"       element={<ResumeBuilder />} />
             <Route path="/dashboard/resumes"   element={<ProtectedRoute><ResumeDashboard /></ProtectedRoute>} />
+            <Route path="/notifications"       element={<Notifications />} />
             <Route path="/saved"               element={<ProtectedRoute><SavedJobs /></ProtectedRoute>} />
             <Route path="/alerts"              element={<ProtectedRoute><Alerts /></ProtectedRoute>} />
             <Route path="/profile"             element={<ProtectedRoute><Profile /></ProtectedRoute>} />

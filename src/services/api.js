@@ -161,6 +161,13 @@ export const resumeBuilderApi = {
   status:   (jobId)   => api.get(`/v1/resume/status/${jobId}`),
 };
 
+export const notificationsApi = {
+  list:       ()   => api.get('/v1/notifications'),
+  unread:     ()   => api.get('/v1/notifications/unread'),
+  markRead:   (id) => api.patch(`/v1/notifications/${id}/read`, {}),
+  markAllRead:()   => api.patch('/v1/notifications/read-all', {}),
+};
+
 export const resumeSnapshotsApi = {
   list:    ()              => api.get('/v1/profile/resumes'),
   get:     (id)            => api.get(`/v1/profile/resumes/${id}`),
