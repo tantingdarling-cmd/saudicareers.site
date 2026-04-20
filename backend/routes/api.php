@@ -22,6 +22,8 @@ use App\Http\Controllers\Api\SalaryStatsController;
 use App\Http\Controllers\Api\ResumeBuilderController;
 use App\Http\Controllers\Api\ResumeSnapshotController;
 use App\Http\Controllers\Api\NotificationsController;
+use App\Http\Controllers\Api\AnalyticsController;
+use App\Http\Controllers\Api\ReferralController;
 
 // §6: Sitemap — public, no auth, outside v1 prefix.
 // Accessible at /api/sitemap.xml. For static /sitemap.xml run: php artisan sitemap:generate
@@ -34,6 +36,9 @@ Route::prefix('v1')->group(function () {
     Route::get('/jobs/{job}/similar', [JobController::class, 'similar']);
     Route::get('/jobs/{job}', [JobController::class, 'show']);
 
+    Route::post('/analytics/events', [AnalyticsController::class, 'store'])->middleware('throttle:60,1');
+    Route::get('/analytics/conversions', [AnalyticsController::class, 'conversions']);
+    Route::post('/referral/{userId}', [ReferralController::class, 'track'])->middleware('throttle:10,1');
     Route::post('/applications', [ApplicationController::class, 'store']);
     Route::get('/track/{token}', [ApplicationController::class, 'track'])
          ->middleware('throttle:30,1')
@@ -97,8 +102,13 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::patch('/notifications/read-all',  [NotificationsController::class, 'markAllRead']);
     Route::patch('/notifications/{id}/read', [NotificationsController::class, 'markRead']);
 
-    Route::get('/applications/my',           [ApplicationController::class, 'my']);
-    Route::post('/jobs/{job}/apply',         [ApplicationController::class, 'nativeApply']);
+    Route::get('/analytics/week',        [AnalyticsController::class, 'week']);
+    Route::get('/referral/my',           [ReferralController::class,  'my']);
+
+    Route::get('/applications/my',                              [ApplicationController::class, 'my']);
+    Route::get('/profile/applications/{application}/status',    [ApplicationController::class, 'applicationStatus']);
+    Route::patch('/applications/{application}/withdraw',        [ApplicationController::class, 'withdraw']);
+    Route::post('/jobs/{job}/apply',                  [ApplicationController::class, 'nativeApply']);
 
     Route::prefix('employer')->middleware('employer')->group(function () {
         Route::get('/jobs',                                    [EmployerJobController::class,        'index']);
@@ -129,6 +139,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::get('/settings',              [SettingsController::class, 'index']);
         Route::patch('/settings/{key}',      [SettingsController::class, 'update'])
              ->where('key', '.+');           // يسمح بـ dots في الـ key (analytics.ga_id)
+
 
         // Probation Tracker — نظام العمل السعودي المادة 53
         // جميع العمليات محمية بـ Sanctum + admin middleware

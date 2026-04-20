@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { Menu, X, Bell } from 'lucide-react'
+import { Menu, X, Bell, User, Briefcase, Heart, LogOut } from 'lucide-react'
 import { api } from '../services/api.js'
 
 function relTime(iso) {
@@ -136,6 +136,113 @@ function NotifBell() {
   )
 }
 
+function ProfileMenu() {
+  const [open, setOpen] = useState(false)
+  const [referralCount, setReferralCount] = useState(0)
+  const ref = useRef()
+  const navigate = useNavigate()
+  const isAuth = !!localStorage.getItem('auth_token')
+
+  useEffect(() => {
+    const onClick = e => { if (ref.current && !ref.current.contains(e.target)) setOpen(false) }
+    document.addEventListener('mousedown', onClick)
+    return () => document.removeEventListener('mousedown', onClick)
+  }, [])
+
+  useEffect(() => {
+    if (!isAuth) return
+    const token = localStorage.getItem('auth_token')
+    fetch('/api/v1/referral/my', { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.json())
+      .then(d => setReferralCount(d.count || 0))
+      .catch(() => {})
+  }, [isAuth])
+
+  function logout() {
+    localStorage.removeItem('auth_token')
+    localStorage.removeItem('user')
+    setOpen(false)
+    navigate('/')
+  }
+
+  if (!isAuth) return null
+
+  const LINKS = [
+    { to: '/my-applications', icon: <Briefcase size={14}/>, label: 'طلباتي' },
+    { to: '/saved',           icon: <Heart size={14}/>,     label: 'الوظائف المحفوظة' },
+    { to: '/alerts',          icon: <Bell size={14}/>,      label: 'التنبيهات' },
+    { to: '/profile',         icon: <User size={14}/>,      label: 'ملفي الشخصي' },
+  ]
+
+  return (
+    <div ref={ref} style={{ position:'relative' }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        aria-label="ملفي"
+        style={{
+          width:36, height:36, borderRadius:'50%', border:'none',
+          background: open ? 'var(--g100)' : 'var(--g50)',
+          display:'flex', alignItems:'center', justifyContent:'center',
+          cursor:'pointer', transition:'background 0.2s',
+        }}
+        onMouseEnter={e => e.currentTarget.style.background='var(--g100)'}
+        onMouseLeave={e => { if (!open) e.currentTarget.style.background='var(--g50)' }}
+      >
+        <User size={16} color="var(--g700)" />
+      </button>
+
+      {open && (
+        <div style={{
+          position:'absolute', top:44, left:'50%', transform:'translateX(-50%)',
+          width:200, background:'#fff', borderRadius:14,
+          boxShadow:'0 12px 40px rgba(0,61,43,0.15)', border:'1px solid var(--gray200)',
+          zIndex:500, overflow:'hidden', direction:'rtl', fontFamily:'var(--font-ar)',
+        }}>
+          {LINKS.map(({ to, icon, label }) => (
+            <Link
+              key={to}
+              to={to}
+              onClick={() => setOpen(false)}
+              style={{
+                display:'flex', alignItems:'center', gap:10, padding:'11px 16px',
+                textDecoration:'none', color:'var(--g800)', fontSize:13, fontWeight:600,
+                borderBottom:'1px solid var(--gray100)', transition:'background 0.15s',
+              }}
+              onMouseEnter={e => e.currentTarget.style.background='var(--g50)'}
+              onMouseLeave={e => e.currentTarget.style.background='#fff'}
+            >
+              <span style={{ color:'var(--g600)' }}>{icon}</span> {label}
+            </Link>
+          ))}
+          {referralCount > 0 && (
+            <div style={{
+              display:'flex', alignItems:'center', gap:8, padding:'10px 16px',
+              background:'var(--g50)', borderBottom:'1px solid var(--gray100)',
+              fontSize:12, fontWeight:700, color:'var(--g700)',
+            }}>
+              <span style={{ fontSize:15 }}>🎉</span>
+              دعوت {referralCount} {referralCount === 1 ? 'صديق' : 'أصدقاء'}
+            </div>
+          )}
+          <button
+            onClick={logout}
+            style={{
+              width:'100%', display:'flex', alignItems:'center', gap:10,
+              padding:'11px 16px', border:'none', background:'#fff',
+              color:'#B91C1C', fontSize:13, fontWeight:600, cursor:'pointer',
+              textAlign:'right', fontFamily:'var(--font-ar)', transition:'background 0.15s',
+            }}
+            onMouseEnter={e => e.currentTarget.style.background='rgba(220,38,38,0.05)'}
+            onMouseLeave={e => e.currentTarget.style.background='#fff'}
+          >
+            <LogOut size={14}/> تسجيل الخروج
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -202,6 +309,7 @@ export default function Navbar() {
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <NotifBell />
+          <ProfileMenu />
           <Link to="/resume-analyzer" className="resume-cta-desktop" style={{ background: 'linear-gradient(135deg,var(--g900) 0%,var(--g700) 100%)', color: 'var(--white)', padding: '9px 20px', borderRadius: 50, fontSize: 14, fontWeight: 700, textDecoration: 'none', transition: 'all 0.25s var(--ease-pop)', boxShadow: '0 4px 14px rgba(0,61,43,0.22)' }}
             onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,61,43,0.3)' }}
             onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 14px rgba(0,61,43,0.22)' }}
@@ -232,6 +340,12 @@ export default function Navbar() {
           </Link>
           <Link to="/notifications" onClick={() => setMenuOpen(false)} style={{ fontSize: 15, fontWeight: 500, color: 'var(--gray600)', padding: '12px 16px', borderRadius: 'var(--r-md)', textDecoration: 'none', textAlign: 'right', display: 'block' }}>
             🔔 الإشعارات
+          </Link>
+          <Link to="/my-applications" onClick={() => setMenuOpen(false)} style={{ fontSize: 15, fontWeight: 500, color: 'var(--gray600)', padding: '12px 16px', borderRadius: 'var(--r-md)', textDecoration: 'none', textAlign: 'right', display: 'block' }}>
+            📋 طلباتي
+          </Link>
+          <Link to="/profile" onClick={() => setMenuOpen(false)} style={{ fontSize: 15, fontWeight: 500, color: 'var(--gray600)', padding: '12px 16px', borderRadius: 'var(--r-md)', textDecoration: 'none', textAlign: 'right', display: 'block' }}>
+            👤 ملفي الشخصي
           </Link>
           <button onClick={() => scrollTo('signup')} style={{ marginTop: 8, background: 'var(--g900)', color: 'var(--white)', border: 'none', padding: 13, borderRadius: 'var(--r-md)', fontSize: 15, fontWeight: 600, textAlign: 'center' }}>
             حسّن سيرتك مجاناً ←

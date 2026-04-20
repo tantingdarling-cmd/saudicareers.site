@@ -17,6 +17,7 @@ class User extends Authenticatable
         'role',
         'resume_path',
         'resume_data',
+        'referral_count',
     ];
 
     protected $hidden = [

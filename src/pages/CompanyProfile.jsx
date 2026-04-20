@@ -43,7 +43,7 @@ export default function CompanyProfile() {
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: 32, flexShrink: 0, overflow: 'hidden' }}>
           {company.logo
-            ? <img src={company.logo} alt={company.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ? <img src={company.logo} alt={company.name} loading="lazy" width="64" height="64" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             : '🏢'}
         </div>
         <div style={{ flex: 1 }}>

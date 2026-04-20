@@ -47,10 +47,12 @@ export default function JobDetail() {
     setLoading(true)
     jobsApi.getById(id)
       .then(data => {
-        // §4: show() returns { data: Job, similar_jobs: Job[], seo: { title, description, json_ld } }
+        // §4: show() returns { data: Job, seo: { title, description, json_ld } }
         const j = data.data || data
         setJob(j)
-        setSimilar(data.similar_jobs?.data || data.similar_jobs || [])
+        jobsApi.getSimilar(id)
+          .then(r => setSimilar(r?.data || []))
+          .catch(() => setSimilar(data.similar_jobs?.data || data.similar_jobs || []))
         if (data.seo) setSeoMeta(data.seo)
         // fire view_job pixel event if user has consented
         if (localStorage.getItem('consent_analytics') === 'true') {
@@ -351,7 +353,7 @@ export default function JobDetail() {
               <div style={{ marginTop:8 }}>
                 <h2 style={{ fontSize:17, fontWeight:700, color:'var(--g950)', marginBottom:16, display:'flex', alignItems:'center', gap:8 }}>
                   <span style={{ width:4, height:20, background:'var(--g500)', borderRadius:2, display:'block' }}/>
-                  وظائف قد تهمك
+                  قد تعجبك أيضًا
                 </h2>
                 <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(min(100%,240px),1fr))', gap:14 }}>
                   {similar.map(s => (

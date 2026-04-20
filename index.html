@@ -57,6 +57,40 @@
   }
   </script>
 
+  <!-- ═══ Structured Data — JobPosting (base schema; React hydrates per job) ══ -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "JobPosting",
+    "title": "وظائف السعودية — فرص أرامكو ونيوم وPIF",
+    "description": "أحدث الوظائف من كبرى الشركات السعودية — تقنية، هندسة، مالية، صحة وأكثر",
+    "datePosted": "2026-01-01",
+    "employmentType": "FULL_TIME",
+    "hiringOrganization": {
+      "@type": "Organization",
+      "name": "Saudi Careers",
+      "sameAs": "https://saudicareers.site"
+    },
+    "jobLocation": {
+      "@type": "Place",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "الرياض",
+        "addressRegion": "الرياض",
+        "addressCountry": "SA"
+      }
+    },
+    "baseSalary": {
+      "@type": "MonetaryAmount",
+      "currency": "SAR",
+      "value": {
+        "@type": "QuantitativeValue",
+        "unitText": "MONTH"
+      }
+    }
+  }
+  </script>
+
   <!-- ═══ Structured Data — WebSite ════════════════════════════════ -->
   <script type="application/ld+json">
   {
@@ -77,10 +111,21 @@
   }
   </script>
 
+  <!-- ═══ Critical CSS (inline) ═══════════════════════════════════ -->
+  <style>
+    *,*::before,*::after{box-sizing:border-box}
+    html{direction:rtl;font-family:'IBM Plex Sans Arabic',system-ui,sans-serif}
+    body{margin:0;background:#f9fafb;color:#0f172a}
+    #root{min-height:100vh}
+    img{max-width:100%;height:auto}
+    .pre-lcp{position:absolute;opacity:0;pointer-events:none}
+  </style>
+
   <!-- ═══ Fonts ══════════════════════════════════════════════════════ -->
   <!-- preconnect يبدأ DNS+TLS مبكراً -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://sc-static.net" />
 
   <!-- preload للـ CSS بدون blocking — يُبدّل media بعد التحميل -->
   <link rel="preload" as="style"
@@ -138,7 +183,9 @@
   <!-- End Tracking Pixels -->
 </head>
 <body>
-  <div id="root"></div>
+  <div id="root">
+    <img src="/saudi.webp" alt="Saudi Careers" loading="lazy" width="40" height="40" class="pre-lcp" aria-hidden="true" />
+  </div>
   <script type="module" src="./src/main.jsx"></script>
 </body>
 </html>

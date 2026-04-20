@@ -95,6 +95,7 @@ export const jobsApi = {
   getAll: (params = {}) => api.get('/v1/jobs', params),
   getFeatured: () => api.get('/v1/jobs/featured'),
   getById: (id) => api.get(`/v1/jobs/${id}`),
+  getSimilar: (id) => api.get(`/v1/jobs/${id}/similar`),
   create: (data) => api.post('/admin/jobs', data),
   update: (id, data) => api.patch(`/admin/jobs/${id}`, data),
   delete: (id) => api.delete(`/admin/jobs/${id}`),
@@ -105,6 +106,7 @@ export const applicationsApi = {
   track: (token) => api.get(`/v1/track/${token}`),
   my: () => api.get('/v1/applications/my'),
   nativeApply: (jobId, data) => api.post(`/v1/jobs/${jobId}/apply`, data),
+  withdraw: (id) => api.patch(`/v1/applications/${id}/withdraw`, {}),
   getAll: (params = {}) => api.get('/admin/applications', params),
   updateStatus: (id, status, notes = '') => api.patch(`/admin/applications/${id}/status`, { status, notes }),
 };
@@ -174,6 +176,12 @@ export const resumeSnapshotsApi = {
   create:  (payload)       => api.post('/v1/profile/resumes', payload),
   update:  (id, payload)   => api.put(`/v1/profile/resumes/${id}`, payload),
   delete:  (id)            => api.delete(`/v1/profile/resumes/${id}`),
+};
+
+export const analyticsApi = {
+  logEvent:    (data) => api.post('/v1/analytics/events', data),
+  conversions: (params = {}) => api.get('/v1/analytics/conversions', params),
+  week:        () => api.get('/v1/analytics/week'),
 };
 
 export const probationApi = {

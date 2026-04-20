@@ -11,6 +11,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600&family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
 
+<!-- Font Awesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
 <style>
   :root {
     --primary: #1B5E37;
@@ -22,6 +25,7 @@
     --dark: #0f2d1a;
     --text: #1a3024;
     --muted: #4a6b56;
+    --fg-dim: #7a9585;
     --border: #ccddd4;
     --surface: #f4f9f6;
     --white: #ffffff;
@@ -41,6 +45,32 @@
     color: var(--text);
     line-height: 1.7;
     overflow-x: hidden;
+  }
+
+  /* ── 3) NOISE OVERLAY ─────────────────────────────────────────── */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    pointer-events: none;
+    opacity: 0.035;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    background-size: 200px 200px;
+  }
+
+  /* ── 1) READING PROGRESS BAR ──────────────────────────────────── */
+  #read-progress {
+    position: fixed;
+    top: 0; left: 0;
+    height: 3px;
+    width: 0%;
+    background: var(--accent);
+    z-index: 10000;
+    transition: width 0.08s linear;
+    border-radius: 0 2px 2px 0;
+    box-shadow: 0 0 8px rgba(201,168,76,0.5);
   }
 
   /* NAV */
@@ -99,7 +129,7 @@
   }
   .nav-cta:hover { background: var(--primary-light); }
 
-  /* HERO */
+  /* ── HERO ──────────────────────────────────────────────────────── */
   .hero {
     min-height: 100vh;
     padding: 120px 2rem 80px;
@@ -112,6 +142,14 @@
       radial-gradient(ellipse 70% 50% at 50% 0%, rgba(15,76,129,0.07) 0%, transparent 70%),
       var(--white);
     position: relative;
+  }
+
+  /* 4) hero-visual = the hero section itself, hero-card = the waitlist card */
+  .hero-visual {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
   }
 
   .hero-badge {
@@ -179,15 +217,48 @@
     line-height: 1.8;
   }
 
+  /* 5) Hero card wrapper — for SVG rings + parallax */
+  .hero-card-wrap {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+    max-width: 480px;
+  }
+
+  /* SVG rings */
+  .hero-rings {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 0;
+    overflow: visible;
+  }
+
+  @keyframes ring-spin-cw {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
+
+  @keyframes ring-spin-ccw {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(-360deg); }
+  }
+
+  .ring-1 { transform-origin: center; animation: ring-spin-cw  20s linear infinite; }
+  .ring-2 { transform-origin: center; animation: ring-spin-ccw 30s linear infinite; }
+
   /* WAITLIST FORM */
   .waitlist-box {
     background: var(--white);
     border: 1.5px solid var(--border);
     border-radius: var(--radius);
     padding: 28px 32px;
-    max-width: 480px;
     width: 100%;
     box-shadow: 0 8px 40px rgba(15,76,129,0.08);
+    position: relative;
+    z-index: 1;
+    transition: transform 0.15s ease-out;
   }
 
   .waitlist-label {
@@ -288,6 +359,48 @@
 
   .avatar:nth-child(2) { background: #fef3e2; color: var(--accent); }
   .avatar:nth-child(3) { background: #e6f5ef; color: var(--success); }
+
+  /* ── 2) MARQUEE ────────────────────────────────────────────────── */
+  .marquee-section {
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    overflow: hidden;
+    padding: 14px 0;
+    background: var(--white);
+    direction: ltr;
+  }
+
+  .marquee-track {
+    display: flex;
+    width: max-content;
+    animation: marquee-ltr 25s linear infinite;
+  }
+
+  .marquee-inner {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    white-space: nowrap;
+    font-size: 0.85rem;
+    color: var(--fg-dim);
+    font-family: 'IBM Plex Sans Arabic', 'Tajawal', sans-serif;
+    letter-spacing: 0.01em;
+  }
+
+  .marquee-inner span {
+    padding: 0 18px;
+  }
+
+  .marquee-dot {
+    color: var(--accent);
+    font-size: 0.7rem;
+    opacity: 0.6;
+  }
+
+  @keyframes marquee-ltr {
+    from { transform: translateX(-50%); }
+    to   { transform: translateX(0%); }
+  }
 
   /* SECTION */
   section {
@@ -539,6 +652,50 @@
     color: var(--muted);
   }
 
+  /* ── 6) PARTNERS SECTION ───────────────────────────────────────── */
+  .partners-section {
+    padding: 52px 2rem;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  .partners-inner {
+    max-width: 700px;
+    margin: 0 auto;
+    text-align: center;
+  }
+
+  .partners-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--fg-dim);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 28px;
+  }
+
+  .partners-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 60px;
+    flex-wrap: wrap;
+  }
+
+  .partner-icon {
+    font-size: 2.4rem;
+    color: var(--muted);
+    filter: grayscale(1) opacity(0.25);
+    transition: filter 0.3s ease, transform 0.3s ease;
+    cursor: default;
+  }
+
+  .partner-icon:hover {
+    filter: grayscale(0) opacity(1);
+    transform: translateY(-2px);
+  }
+
   /* FOOTER CTA */
   .footer-cta {
     background: var(--dark);
@@ -633,10 +790,15 @@
     .hero { padding: 100px 1.25rem 60px; }
     .waitlist-box { padding: 22px 20px; }
     section { padding: 60px 1.25rem; }
+    .partners-row { gap: 32px; }
+    .partner-icon { font-size: 2rem; }
   }
 </style>
 </head>
 <body>
+
+<!-- 1) READING PROGRESS BAR -->
+<div id="read-progress"></div>
 
 <!-- NAV -->
 <nav>
@@ -651,45 +813,97 @@
 
 <!-- HERO -->
 <section class="hero">
-  <img src="/mnt/user-data/uploads/saudi.png" alt="Saudi Careers" style="width:130px;height:130px;border-radius:50%;object-fit:cover;margin-bottom:24px;box-shadow:0 8px 32px rgba(27,94,55,0.25);" class="fade-up" />
+  <div class="hero-visual">
+    <img src="/mnt/user-data/uploads/saudi.png" alt="Saudi Careers" style="width:130px;height:130px;border-radius:50%;object-fit:cover;margin-bottom:24px;box-shadow:0 8px 32px rgba(27,94,55,0.25);" class="fade-up" />
 
-  <div class="hero-badge">
-    <div class="hero-badge-dot"></div>
-    قريباً — كن من أوائل المنضمين
-  </div>
-
-  <h1 class="fade-up">
-    رفيقك الموثوق في<br>
-    <span class="highlight">رحلة التوظيف السعودية</span>
-  </h1>
-
-  <p class="hero-sub fade-up">
-    منصة واحدة تجمع تحسين سيرتك الذاتية، أفضل فرص العمل الموثّقة،
-    والدورات التي تفتح لك الأبواب — كل ما تحتاجه في مكان واحد.
-  </p>
-
-  <div class="waitlist-box fade-up">
-    <div class="waitlist-label">سجّل الآن واحصل على وصول مبكر مجاني</div>
-    <div class="input-row">
-      <input type="text" id="hero-name" placeholder="اسمك الكريم" />
-      <input type="email" id="hero-email" placeholder="بريدك الإلكتروني" />
-      <button class="btn-join" onclick="joinWaitlist('hero')">انضم للقائمة المبكرة ←</button>
+    <div class="hero-badge">
+      <div class="hero-badge-dot"></div>
+      قريباً — كن من أوائل المنضمين
     </div>
-    <div class="success-msg" id="hero-success">
-      ✓ تم تسجيلك بنجاح! سنتواصل معك عند الإطلاق.
-    </div>
-    <p class="waitlist-note">لا رسائل مزعجة. يمكنك إلغاء الاشتراك في أي وقت.</p>
-  </div>
 
-  <div class="counter">
-    <div class="counter-avatars">
-      <div class="avatar">أح</div>
-      <div class="avatar">سم</div>
-      <div class="avatar">عب</div>
+    <h1 class="fade-up">
+      رفيقك الموثوق في<br>
+      <span class="highlight">رحلة التوظيف السعودية</span>
+    </h1>
+
+    <p class="hero-sub fade-up">
+      منصة واحدة تجمع تحسين سيرتك الذاتية، أفضل فرص العمل الموثّقة،
+      والدورات التي تفتح لك الأبواب — كل ما تحتاجه في مكان واحد.
+    </p>
+
+    <!-- 5) Hero card wrapper with SVG rings -->
+    <div class="hero-card-wrap fade-up">
+
+      <!-- SVG rings — sized dynamically by JS -->
+      <svg class="hero-rings" id="hero-rings-svg" aria-hidden="true">
+        <circle class="ring-1" id="ring-1" cx="0" cy="0" r="0"
+          fill="none" stroke="var(--accent)" stroke-width="1.2"
+          stroke-dasharray="8 12" stroke-opacity="0.15"/>
+        <circle class="ring-2" id="ring-2" cx="0" cy="0" r="0"
+          fill="none" stroke="var(--accent)" stroke-width="1"
+          stroke-dasharray="4 20" stroke-opacity="0.15"/>
+      </svg>
+
+      <!-- 4) .hero-card gets the parallax translate -->
+      <div class="waitlist-box hero-card">
+        <div class="waitlist-label">سجّل الآن واحصل على وصول مبكر مجاني</div>
+        <div class="input-row">
+          <input type="text" id="hero-name" placeholder="اسمك الكريم" />
+          <input type="email" id="hero-email" placeholder="بريدك الإلكتروني" />
+          <button class="btn-join" onclick="joinWaitlist('hero')">انضم للقائمة المبكرة ←</button>
+        </div>
+        <div class="success-msg" id="hero-success">
+          ✓ تم تسجيلك بنجاح! سنتواصل معك عند الإطلاق.
+        </div>
+        <p class="waitlist-note">لا رسائل مزعجة. يمكنك إلغاء الاشتراك في أي وقت.</p>
+      </div>
     </div>
-    <span>انضم <strong>+120</strong> شخص بالفعل لقائمة الانتظار</span>
+
+    <div class="counter">
+      <div class="counter-avatars">
+        <div class="avatar">أح</div>
+        <div class="avatar">سم</div>
+        <div class="avatar">عب</div>
+      </div>
+      <span>انضم <strong>+120</strong> شخص بالفعل لقائمة الانتظار</span>
+    </div>
   </div>
 </section>
+
+<!-- 2) MARQUEE — between hero and services -->
+<div class="marquee-section" aria-hidden="true">
+  <div class="marquee-track">
+    <!-- duplicated twice for seamless loop -->
+    <div class="marquee-inner">
+      <span>تصميم</span><span class="marquee-dot">•</span>
+      <span>تطوير</span><span class="marquee-dot">•</span>
+      <span>استراتيجية</span><span class="marquee-dot">•</span>
+      <span>هوية بصرية</span><span class="marquee-dot">•</span>
+      <span>تجربة مستخدم</span><span class="marquee-dot">•</span>
+      <span>تحسين محركات</span><span class="marquee-dot">•</span>
+      <span>تصميم</span><span class="marquee-dot">•</span>
+      <span>تطوير</span><span class="marquee-dot">•</span>
+      <span>استراتيجية</span><span class="marquee-dot">•</span>
+      <span>هوية بصرية</span><span class="marquee-dot">•</span>
+      <span>تجربة مستخدم</span><span class="marquee-dot">•</span>
+      <span>تحسين محركات</span><span class="marquee-dot">•</span>
+    </div>
+    <div class="marquee-inner" aria-hidden="true">
+      <span>تصميم</span><span class="marquee-dot">•</span>
+      <span>تطوير</span><span class="marquee-dot">•</span>
+      <span>استراتيجية</span><span class="marquee-dot">•</span>
+      <span>هوية بصرية</span><span class="marquee-dot">•</span>
+      <span>تجربة مستخدم</span><span class="marquee-dot">•</span>
+      <span>تحسين محركات</span><span class="marquee-dot">•</span>
+      <span>تصميم</span><span class="marquee-dot">•</span>
+      <span>تطوير</span><span class="marquee-dot">•</span>
+      <span>استراتيجية</span><span class="marquee-dot">•</span>
+      <span>هوية بصرية</span><span class="marquee-dot">•</span>
+      <span>تجربة مستخدم</span><span class="marquee-dot">•</span>
+      <span>تحسين محركات</span><span class="marquee-dot">•</span>
+    </div>
+  </div>
+</div>
 
 <!-- SERVICES -->
 <section>
@@ -800,6 +1014,19 @@
   </div>
 </section>
 
+<!-- 6) PARTNER LOGOS — between stats and blue CTA -->
+<div class="partners-section">
+  <div class="partners-inner">
+    <div class="partners-label">شركاء موثوقون في السوق</div>
+    <div class="partners-row">
+      <i class="fa-brands fa-google partner-icon" title="Google"></i>
+      <i class="fa-brands fa-amazon partner-icon" title="Amazon"></i>
+      <i class="fa-brands fa-spotify partner-icon" title="Spotify"></i>
+      <i class="fa-brands fa-stripe partner-icon" title="Stripe"></i>
+    </div>
+  </div>
+</div>
+
 <!-- BLUE CTA SECTION -->
 <div class="diff-section">
   <div class="diff-inner">
@@ -843,8 +1070,87 @@
 </footer>
 
 <script>
+  /* ── 1) READING PROGRESS BAR ──────────────────────────────────── */
+  const progressBar = document.getElementById('read-progress');
+  function updateProgress() {
+    const scrollTop = window.scrollY;
+    const docH = document.documentElement.scrollHeight - window.innerHeight;
+    const pct  = docH > 0 ? (scrollTop / docH) * 100 : 0;
+    progressBar.style.width = pct + '%';
+  }
+  window.addEventListener('scroll', updateProgress, { passive: true });
+  updateProgress();
+
+  /* ── 4 & 5) PARALLAX + SVG RINGS ─────────────────────────────── */
+  const heroVisual = document.querySelector('.hero-visual');
+  const heroCard   = document.querySelector('.hero-card');
+  const ringsSvg   = document.getElementById('hero-rings-svg');
+  const ring1      = document.getElementById('ring-1');
+  const ring2      = document.getElementById('ring-2');
+
+  // Size the SVG rings relative to the card dimensions
+  function sizeRings() {
+    if (!heroCard || !ringsSvg) return;
+    const rect = heroCard.getBoundingClientRect();
+    const w = rect.width;
+    const h = rect.height;
+    const cx = w / 2;
+    const cy = h / 2;
+    const baseR = Math.max(w, h) / 2;
+
+    // SVG canvas = card + 60px padding on each side
+    const svgW = w + 120;
+    const svgH = h + 120;
+    ringsSvg.setAttribute('width',   svgW);
+    ringsSvg.setAttribute('height',  svgH);
+    ringsSvg.setAttribute('viewBox', `0 0 ${svgW} ${svgH}`);
+    ringsSvg.style.width  = svgW + 'px';
+    ringsSvg.style.height = svgH + 'px';
+
+    const cxS = svgW / 2;
+    const cyS = svgH / 2;
+
+    // ring-1: baseR + 30px
+    ring1.setAttribute('cx', cxS);
+    ring1.setAttribute('cy', cyS);
+    ring1.setAttribute('r',  baseR + 30);
+
+    // ring-2: baseR + 50px
+    ring2.setAttribute('cx', cxS);
+    ring2.setAttribute('cy', cyS);
+    ring2.setAttribute('r',  baseR + 50);
+  }
+
+  window.addEventListener('load',   sizeRings);
+  window.addEventListener('resize', sizeRings);
+  setTimeout(sizeRings, 200);
+
+  // Parallax on mousemove
+  if (heroVisual && heroCard) {
+    heroCard.style.transition = 'transform 0.15s ease-out';
+
+    heroVisual.addEventListener('mousemove', (e) => {
+      const rect   = heroVisual.getBoundingClientRect();
+      const relX   = (e.clientX - rect.left - rect.width  / 2) / (rect.width  / 2);
+      const relY   = (e.clientY - rect.top  - rect.height / 2) / (rect.height / 2);
+      const maxPx  = 15;
+      const tx     = relX * maxPx;
+      const ty     = relY * maxPx;
+      heroCard.style.transform = `translate(${tx}px, ${ty}px)`;
+    });
+
+    heroVisual.addEventListener('mouseleave', () => {
+      heroCard.style.transition = 'transform 0.5s ease-out';
+      heroCard.style.transform  = 'translate(0px, 0px)';
+      setTimeout(() => {
+        heroCard.style.transition = 'transform 0.15s ease-out';
+      }, 500);
+    });
+  }
+
+  /* ── WAITLIST ──────────────────────────────────────────────────── */
   function joinWaitlist(section) {
-    const name = document.getElementById(section + '-name').value.trim();
+    const name  = document.getElementById(section + '-name').value.trim();
     const email = document.getElementById(section + '-email').value.trim();
 
     if (!email || !email.includes('@')) {
@@ -866,17 +1172,18 @@
     console.log('Waitlist signup:', { name, email, section });
   }
 
+  /* ── SCROLL REVEAL ─────────────────────────────────────────────── */
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(e => {
       if (e.isIntersecting) {
-        e.target.style.opacity = '1';
+        e.target.style.opacity   = '1';
         e.target.style.transform = 'translateY(0)';
       }
     });
   }, { threshold: 0.1 });
 
   document.querySelectorAll('.service-card, .step, .trust-card').forEach(el => {
-    el.style.opacity = '0';
+    el.style.opacity   = '0';
     el.style.transform = 'translateY(20px)';
     el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
     observer.observe(el);

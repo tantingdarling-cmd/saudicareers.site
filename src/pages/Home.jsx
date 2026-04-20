@@ -110,6 +110,114 @@ function StatItem({ val, prefix = '', accent, label }) {
   )
 }
 
+/* ── SVG Technical Timeline ─────────────────────────────────────── */
+const TIMELINE_STEPS = [
+  { n:'01', title:'سجّل مجاناً',       desc:'أنشئ حسابك في دقيقة وأخبرنا عن تخصصك وأهدافك المهنية',           icon:'◎' },
+  { n:'02', title:'حسّن سيرتك',        desc:'ارفع ملفك واحصل على تحليل آلي فوري وتوصيات احترافية مخصّصة',    icon:'◈' },
+  { n:'03', title:'اكتشف الفرص',       desc:'تصفّح آلاف الوظائف الموثّقة المناسبة لمجالك ومستوى خبرتك',      icon:'◉' },
+  { n:'04', title:'احصل على وظيفتك',   desc:'قدّم بثقة مع دعم كامل في كل خطوة حتى تحصل على عرض التعيين',   icon:'◆' },
+]
+
+function SvgTimeline() {
+  const [activeStep, setActiveStep] = useState(-1)
+  const [ref, vis] = useReveal()
+
+  useEffect(() => {
+    if (!vis) return
+    let i = 0
+    const t = setInterval(() => { setActiveStep(i); i++; if (i >= TIMELINE_STEPS.length) clearInterval(t) }, 350)
+    return () => clearInterval(t)
+  }, [vis])
+
+  return (
+    <div ref={ref} style={{ position:'relative', padding:'0 0 8px' }}>
+      {/* SVG connector line — desktop */}
+      <svg
+        aria-hidden="true"
+        viewBox="0 0 900 60"
+        preserveAspectRatio="none"
+        style={{ position:'absolute', top:30, left:0, right:0, width:'100%', height:60, pointerEvents:'none', zIndex:0, display:'block' }}
+      >
+        <defs>
+          <linearGradient id="timelineGrad" x1="100%" y1="0" x2="0%" y2="0">
+            <stop offset="0%" stopColor="var(--g200)" />
+            <stop offset="50%" stopColor="var(--gold500)" stopOpacity="0.7" />
+            <stop offset="100%" stopColor="var(--g800)" />
+          </linearGradient>
+        </defs>
+        {/* Base hairline */}
+        <line x1="80" y1="30" x2="820" y2="30" stroke="rgba(0,0,0,0.08)" strokeWidth="0.5" />
+        {/* Animated fill */}
+        <line
+          x1="80" y1="30" x2="820" y2="30"
+          stroke="url(#timelineGrad)" strokeWidth="1"
+          strokeDasharray="740"
+          strokeDashoffset={vis ? 0 : 740}
+          style={{ transition:'stroke-dashoffset 1.4s cubic-bezier(0.32,0.72,0,1) 0.2s' }}
+        />
+        {/* Tick marks at each step */}
+        {[80, 326, 574, 820].map((x, i) => (
+          <g key={i}>
+            <line x1={x} y1="22" x2={x} y2="38" stroke={activeStep >= i ? 'var(--g700)' : 'rgba(0,0,0,0.12)'} strokeWidth="0.5"
+              style={{ transition:'stroke 0.3s ease' }} />
+          </g>
+        ))}
+      </svg>
+
+      {/* Step cards */}
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,200px),1fr))', gap:20, position:'relative', zIndex:1 }}>
+        {TIMELINE_STEPS.map(({ n, title, desc, icon }, i) => {
+          const isActive = activeStep >= i
+          return (
+            <div
+              key={n}
+              onMouseEnter={() => setActiveStep(Math.max(activeStep, i))}
+              style={{
+                opacity: isActive ? 1 : 0.35,
+                transform: isActive ? 'translateY(0)' : 'translateY(10px)',
+                transition:`opacity 0.5s ease ${i * 100}ms, transform 0.5s ease ${i * 100}ms`,
+                background:'var(--white)',
+                border:`0.5px solid ${isActive ? 'rgba(0,61,43,0.18)' : 'rgba(0,0,0,0.06)'}`,
+                borderRadius:16,
+                padding:'28px 24px 24px',
+                boxShadow: isActive
+                  ? '0 4px 24px rgba(0,61,43,0.07), 0 1px 3px rgba(0,0,0,0.04)'
+                  : '0 1px 4px rgba(0,0,0,0.04)',
+                transition:`opacity 0.5s ease ${i * 100}ms, transform 0.5s ease ${i * 100}ms, box-shadow 0.3s ease, border-color 0.3s ease`,
+              }}
+            >
+              {/* Step number + icon */}
+              <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:20 }}>
+                <div style={{
+                  fontFamily:'var(--font-en)', fontSize:10, fontWeight:700, letterSpacing:'2px',
+                  color: isActive ? 'var(--g600)' : 'var(--gray400)',
+                  transition:'color 0.4s ease',
+                }}>{n}</div>
+                <div style={{ flex:1, height:'0.5px', background: isActive ? 'var(--g200)' : 'rgba(0,0,0,0.06)', transition:'background 0.4s ease' }} />
+                <div style={{
+                  fontSize:20, lineHeight:1,
+                  color: isActive ? (i === 3 ? 'var(--gold600)' : 'var(--g700)') : 'var(--gray300)',
+                  transition:'color 0.4s ease',
+                }}>{icon}</div>
+              </div>
+              <div style={{ fontSize:15, fontWeight:700, color: isActive ? 'var(--g950)' : 'var(--gray400)', marginBottom:8, transition:'color 0.4s ease' }}>{title}</div>
+              <div style={{ fontSize:12.5, color:'var(--gray500)', lineHeight:1.8 }}>{desc}</div>
+              {/* Bottom accent */}
+              <div style={{
+                marginTop:20, height:'1px',
+                background: isActive
+                  ? i === 3 ? 'linear-gradient(90deg,var(--gold400),transparent)' : 'linear-gradient(90deg,var(--g300),transparent)'
+                  : 'transparent',
+                transition:'background 0.5s ease',
+              }} />
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 function StepCard({ n, title, desc, numBg, numColor, numBorder }) {
   const [hovered, setHovered] = useState(false)
   return (
@@ -138,6 +246,198 @@ function StepCard({ n, title, desc, numBg, numColor, numBorder }) {
       }}>{n}</div>
       <div style={{ fontSize:15, fontWeight:700, color:'var(--g950)', marginBottom:8 }}>{title}</div>
       <div style={{ fontSize:13, color:'var(--gray600)', lineHeight:1.8 }}>{desc}</div>
+    </div>
+  )
+}
+
+/* ── Resume Progress Bar ────────────────────── */
+const RESUME_STAGES = ['رفع السيرة', 'التحليل الآلي', 'المراجعة', 'التقرير']
+
+function ResumeProgressBar({ visible }) {
+  const [active, setActive] = useState(0)
+  useEffect(() => {
+    if (!visible) { setActive(0); return }
+    const interval = setInterval(() => {
+      setActive(a => (a < RESUME_STAGES.length - 1 ? a + 1 : a))
+    }, 600)
+    return () => clearInterval(interval)
+  }, [visible])
+
+  return (
+    <div style={{ marginTop:20, marginBottom:4 }}>
+      <div style={{ fontSize:11, color:'rgba(255,255,255,0.45)', marginBottom:10, letterSpacing:'0.5px' }}>
+        مراحل مراجعة ملفك
+      </div>
+      {/* Track */}
+      <div style={{ position:'relative', height:4, background:'rgba(255,255,255,0.1)', borderRadius:2, marginBottom:12 }}>
+        <div style={{
+          position:'absolute', top:0, right:0, height:'100%', borderRadius:2,
+          background:'linear-gradient(90deg, var(--gold300), var(--gold500))',
+          width: `${(active / (RESUME_STAGES.length - 1)) * 100}%`,
+          transition:'width 0.5s cubic-bezier(0.32,0.72,0,1)',
+        }} />
+      </div>
+      {/* Stage labels */}
+      <div style={{ display:'flex', justifyContent:'space-between' }}>
+        {RESUME_STAGES.map((s, i) => (
+          <div key={s} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:4 }}>
+            <div style={{
+              width:18, height:18, borderRadius:'50%',
+              background: i <= active ? 'var(--gold500)' : 'rgba(255,255,255,0.15)',
+              border: i <= active ? '2px solid var(--gold300)' : '2px solid rgba(255,255,255,0.1)',
+              display:'flex', alignItems:'center', justifyContent:'center',
+              transition:'all 0.4s ease', fontSize:9, color: i <= active ? 'var(--g950)' : 'transparent',
+              fontWeight:700,
+            }}>{i <= active ? '✓' : ''}</div>
+            <span style={{ fontSize:9.5, color: i <= active ? 'var(--gold300)' : 'rgba(255,255,255,0.3)', fontWeight: i <= active ? 600 : 400, whiteSpace:'nowrap', transition:'color 0.4s' }}>
+              {s}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+/* ── Mini Saudi Arabia Map ──────────────────── */
+const SA_CITIES = [
+  { id:'riyadh',  label:'الرياض',  x:60, y:50, emoji:'🏙️' },
+  { id:'jeddah',  label:'جدة',     x:24, y:60, emoji:'🌊' },
+  { id:'neom',    label:'نيوم',    x:18, y:28, emoji:'🔮' },
+  { id:'dammam',  label:'الدمام',  x:80, y:44, emoji:'⚡' },
+  { id:'makkah',  label:'مكة',     x:26, y:54, emoji:'🕋' },
+]
+
+function CityMap({ activeLocation, onSelect }) {
+  const [open, setOpen] = useState(false)
+  const [mapHovered, setMapHovered] = useState(null)
+
+  return (
+    <div style={{ marginBottom:20 }}>
+      {/* Toggle button */}
+      <button
+        onClick={() => setOpen(o => !o)}
+        style={{
+          display:'inline-flex', alignItems:'center', gap:8,
+          padding:'7px 16px', borderRadius:50, marginBottom:12,
+          border:'1.5px solid var(--gray200)', background:'var(--white)',
+          fontSize:13, fontWeight:600, color:'var(--g700)',
+          cursor:'pointer', transition:'all 0.2s',
+          fontFamily:'var(--font-ar)',
+        }}
+        onMouseEnter={e => { e.currentTarget.style.borderColor='var(--g400)'; e.currentTarget.style.background='var(--g50)' }}
+        onMouseLeave={e => { e.currentTarget.style.borderColor='var(--gray200)'; e.currentTarget.style.background='var(--white)' }}
+      >
+        <span style={{ fontSize:15 }}>🗺️</span>
+        استكشف الوظائف حسب المدينة
+        <span style={{ fontSize:10, transition:'transform 0.25s', display:'inline-block', transform: open ? 'rotate(180deg)' : 'rotate(0deg)' }}>▼</span>
+      </button>
+
+      {/* Collapsible panel */}
+      <div style={{
+        overflow:'hidden',
+        maxHeight: open ? 340 : 0,
+        opacity: open ? 1 : 0,
+        transition:'max-height 0.45s cubic-bezier(0.32,0.72,0,1), opacity 0.3s ease',
+      }}>
+        <div style={{
+          background:'var(--white)', border:'1px solid rgba(0,0,0,0.07)',
+          borderRadius:16, padding:'20px 24px',
+          display:'flex', gap:24, flexWrap:'wrap', alignItems:'flex-start',
+          boxShadow:'0 4px 24px rgba(0,61,43,0.06)',
+        }}>
+          {/* SVG Map */}
+          <div style={{ flex:'0 0 auto', width:200, position:'relative' }}>
+            <svg viewBox="0 0 100 90" style={{ width:'100%', overflow:'visible' }} aria-hidden="true">
+              {/* Simplified Saudi Arabia polygon */}
+              <polygon
+                points="28,8 50,5 68,8 80,14 88,22 90,35 86,50 80,62 70,74 58,82 44,80 32,72 22,62 18,50 16,36 18,22"
+                fill="rgba(0,102,68,0.05)" stroke="rgba(0,102,68,0.2)" strokeWidth="1" strokeLinejoin="round"
+              />
+              {/* Red Sea rough line on the left */}
+              <path d="M18,22 Q12,40 16,62" fill="none" stroke="rgba(59,130,246,0.3)" strokeWidth="2.5" strokeLinecap="round"/>
+
+              {SA_CITIES.map(c => {
+                const isActive = activeLocation === c.label
+                const isHovered = mapHovered === c.id
+                return (
+                  <g key={c.id} onClick={() => onSelect(isActive ? '' : c.label)} style={{ cursor:'pointer' }}>
+                    <circle cx={c.x} cy={c.y} r={isActive || isHovered ? 5 : 3.5}
+                      fill={isActive ? 'var(--g700)' : isHovered ? 'var(--g500)' : 'var(--g300)'}
+                      stroke={isActive ? 'var(--g900)' : 'var(--white)'}
+                      strokeWidth={isActive ? 1.5 : 1}
+                      style={{ transition:'all 0.2s', filter: isActive ? 'drop-shadow(0 0 4px rgba(0,102,68,0.5))' : 'none' }}
+                      onMouseEnter={() => setMapHovered(c.id)}
+                      onMouseLeave={() => setMapHovered(null)}
+                    />
+                    <text x={c.x} y={c.y - 7} textAnchor="middle" fontSize="5" fontWeight={isActive ? '700' : '500'}
+                      fill={isActive ? 'var(--g900)' : 'var(--gray600)'} fontFamily="Noto Sans Arabic"
+                      style={{ pointerEvents:'none' }}>
+                      {c.label}
+                    </text>
+                    {isActive && (
+                      <circle cx={c.x} cy={c.y} r={8} fill="none" stroke="var(--g400)" strokeWidth="1"
+                        style={{ animation:'mapPulse 1.5s ease-out infinite' }} />
+                    )}
+                  </g>
+                )
+              })}
+            </svg>
+          </div>
+
+          {/* City chips */}
+          <div style={{ flex:1, minWidth:180 }}>
+            <div style={{ fontSize:12, fontWeight:700, color:'var(--gray400)', marginBottom:12, letterSpacing:'0.5px' }}>
+              اختر مدينة للتصفية
+            </div>
+            <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
+              {SA_CITIES.map(c => {
+                const isActive = activeLocation === c.label
+                return (
+                  <button
+                    key={c.id}
+                    onClick={() => onSelect(isActive ? '' : c.label)}
+                    style={{
+                      display:'inline-flex', alignItems:'center', gap:6,
+                      padding:'7px 14px', borderRadius:50, fontSize:13, fontWeight:600,
+                      border:`1.5px solid ${isActive ? 'var(--g700)' : 'var(--gray200)'}`,
+                      background: isActive ? 'var(--g900)' : 'var(--white)',
+                      color: isActive ? 'var(--white)' : 'var(--gray600)',
+                      cursor:'pointer', transition:'all 0.2s',
+                      fontFamily:'var(--font-ar)',
+                      boxShadow: isActive ? '0 2px 10px rgba(0,61,43,0.2)' : 'none',
+                    }}
+                    onMouseEnter={e => { if (!isActive) { e.currentTarget.style.borderColor='var(--g400)'; e.currentTarget.style.background='var(--g50)' }}}
+                    onMouseLeave={e => { if (!isActive) { e.currentTarget.style.borderColor='var(--gray200)'; e.currentTarget.style.background='var(--white)' }}}
+                  >
+                    {c.emoji} {c.label}
+                  </button>
+                )
+              })}
+              {activeLocation && (
+                <button
+                  onClick={() => onSelect('')}
+                  style={{
+                    padding:'7px 14px', borderRadius:50, fontSize:12, fontWeight:600,
+                    border:'1.5px dashed var(--gray300)', background:'transparent',
+                    color:'var(--gray400)', cursor:'pointer', fontFamily:'var(--font-ar)',
+                    transition:'all 0.2s',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.color='var(--gray600)'; e.currentTarget.style.borderColor='var(--gray400)' }}
+                  onMouseLeave={e => { e.currentTarget.style.color='var(--gray400)'; e.currentTarget.style.borderColor='var(--gray300)' }}
+                >
+                  × مسح الفلتر
+                </button>
+              )}
+            </div>
+            {activeLocation && (
+              <div style={{ marginTop:12, fontSize:12, color:'var(--g700)', fontWeight:600 }}>
+                ✓ تعرض الوظائف في: {activeLocation}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
@@ -283,42 +583,55 @@ function ConsentBanner() {
   const [visible, setVisible] = useState(() => !localStorage.getItem('consent_analytics'))
   const [mounted, setMounted] = useState(false)
   useEffect(() => { if (visible) setTimeout(() => setMounted(true), 100) }, [visible])
+
+  const dismiss = (accepted) => {
+    localStorage.setItem('consent_analytics', accepted ? 'true' : 'false')
+    if (accepted) document.dispatchEvent(new Event('consent:granted'))
+    setMounted(false)
+    setTimeout(() => setVisible(false), 400)
+  }
+
   if (!visible) return null
   return (
     <div style={{
-      position:'fixed', bottom:20, left:'50%', transform:'translateX(-50%)',
-      zIndex:9999, width:'calc(100% - 32px)', maxWidth:460,
+      position:'fixed', bottom:20, left:'50%',
+      zIndex:9999, width:'calc(100% - 32px)', maxWidth:480,
       background:'linear-gradient(135deg,var(--g950) 0%,var(--g900) 100%)',
       color:'#fff', borderRadius:16,
-      padding:'14px 18px',
+      padding:'16px 20px',
       boxShadow:'0 8px 32px rgba(0,0,0,0.25), 0 2px 8px rgba(0,61,43,0.3)',
       border:'1px solid rgba(197,160,89,0.18)',
-      display:'flex', alignItems:'center', justifyContent:'space-between', gap:12,
+      direction:'rtl', fontFamily:'var(--font-ar)',
       opacity: mounted ? 1 : 0,
       transform: mounted ? 'translateX(-50%) translateY(0)' : 'translateX(-50%) translateY(20px)',
       transition:'opacity 0.4s var(--ease-expo), transform 0.4s var(--ease-expo)',
     }}>
-      <span style={{ fontSize:13, lineHeight:1.6, color:'rgba(255,255,255,0.85)' }}>
-        نستخدم ملفات تعريف الارتباط لتحسين تجربتك.
-      </span>
-      <button onClick={() => {
-        localStorage.setItem('consent_analytics', 'true')
-        document.dispatchEvent(new Event('consent:granted'))
-        setMounted(false)
-        setTimeout(() => setVisible(false), 400)
-      }} style={{
-        background:'linear-gradient(135deg,var(--gold500),var(--gold400))',
-        color:'var(--g950)', border:'none',
-        padding:'8px 18px', borderRadius:50, flexShrink:0,
-        fontWeight:700, fontSize:13, cursor:'pointer',
-        transition:'all 0.2s var(--ease-pop)',
-        minHeight:36,
-        boxShadow:'var(--shadow-gold)',
-      }}
-      onMouseEnter={e=>e.currentTarget.style.transform='scale(1.04)'}
-      onMouseLeave={e=>e.currentTarget.style.transform='scale(1)'}>
-        موافق
-      </button>
+      <p style={{ fontSize:13, lineHeight:1.7, color:'rgba(255,255,255,0.85)', margin:'0 0 12px' }}>
+        نستخدم ملفات تعريف الارتباط لتحسين تجربتك وتحليل الزيارات.{' '}
+        <Link to="/privacy" style={{ color:'var(--gold300)', textDecoration:'underline', fontSize:12 }}>
+          سياسة الخصوصية
+        </Link>
+      </p>
+      <div style={{ display:'flex', gap:8 }}>
+        <button onClick={() => dismiss(true)} style={{
+          flex:1, background:'linear-gradient(135deg,var(--gold500),var(--gold400))',
+          color:'var(--g950)', border:'none', padding:'9px 0', borderRadius:50,
+          fontWeight:700, fontSize:13, cursor:'pointer', fontFamily:'var(--font-ar)',
+        }}
+        onMouseEnter={e=>e.currentTarget.style.opacity='0.9'}
+        onMouseLeave={e=>e.currentTarget.style.opacity='1'}>
+          قبول
+        </button>
+        <button onClick={() => dismiss(false)} style={{
+          flex:1, background:'transparent', color:'rgba(255,255,255,0.6)',
+          border:'1px solid rgba(255,255,255,0.2)', padding:'9px 0', borderRadius:50,
+          fontWeight:600, fontSize:13, cursor:'pointer', fontFamily:'var(--font-ar)',
+        }}
+        onMouseEnter={e=>e.currentTarget.style.color='rgba(255,255,255,0.9)'}
+        onMouseLeave={e=>e.currentTarget.style.color='rgba(255,255,255,0.6)'}>
+          رفض
+        </button>
+      </div>
     </div>
   )
 }
@@ -341,6 +654,10 @@ export default function Home() {
   const [govJobs, setGovJobs] = useState([])
   const [tips, setTips] = useState(FALLBACK_TIPS)
   const [loadingJobs, setLoadingJobs] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [hasMore, setHasMore] = useState(true)
+  const pageRef = useRef(1)
+  const sentinelRef = useRef(null)
   const location = useLocation()
   const [searchParams, setSearchParams] = useSearchParams()
 
@@ -402,20 +719,46 @@ export default function Home() {
     return () => { document.getElementById(id)?.remove() }
   }, [])
 
-  useEffect(() => {
-    setLoadingJobs(true)
-    const params = { per_page: 50 }
+  const loadPage = useCallback(async (pageNum, reset) => {
+    if (reset) setLoadingJobs(true)
+    else setLoadingMore(true)
+    const params = { per_page: 12, page: pageNum }
     Object.entries(debouncedFilters).forEach(([k, v]) => { if (v) params[k] = v })
-    jobsApi.getAll(params)
-      .then(res => {
-        const apiJobs = res?.data
-        if (Array.isArray(apiJobs)) {
-          setJobs(apiJobs.length > 0 ? apiJobs.map(normalizeJob) : [])
-        }
-      })
-      .catch(() => {/* keep fallback */})
-      .finally(() => setLoadingJobs(false))
+    try {
+      const res = await jobsApi.getAll(params)
+      const apiJobs = res?.data
+      if (Array.isArray(apiJobs)) {
+        const mapped = apiJobs.map(normalizeJob)
+        if (reset) setJobs(mapped.length > 0 ? mapped : [])
+        else setJobs(p => [...p, ...mapped])
+        const lastPage = res?.meta?.last_page ?? (apiJobs.length < 12 ? pageNum : pageNum + 1)
+        setHasMore(pageNum < lastPage)
+      }
+    } catch { /* keep fallback */ }
+    finally { reset ? setLoadingJobs(false) : setLoadingMore(false) }
   }, [debouncedFilters])
+
+  // Reset on filter change
+  useEffect(() => {
+    pageRef.current = 1
+    setHasMore(true)
+    loadPage(1, true)
+  }, [loadPage])
+
+  // Intersection Observer sentinel
+  useEffect(() => {
+    if (!hasMore || loadingMore) return
+    const el = sentinelRef.current
+    if (!el) return
+    const obs = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        pageRef.current += 1
+        loadPage(pageRef.current, false)
+      }
+    }, { rootMargin: '0px 0px 300px 0px', threshold: 0 })
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [hasMore, loadingMore, loadPage])
 
   useEffect(() => {
     jobsApi.getAll({ gov_partner: 1 })
@@ -442,7 +785,7 @@ export default function Home() {
   const heroHeadingRef = useFadeIn()
   const heroDescRef = useFadeIn()
 
-  const sectionTitle = { fontSize:'clamp(1.6rem,3.5vw,2.4rem)', fontWeight:700, color:'var(--g950)', lineHeight:1.25, marginBottom:14 }
+  const sectionTitle = { fontSize:'clamp(1.6rem,3.5vw,2.4rem)', fontWeight:700, color:'var(--g950)', lineHeight:1.25, marginBottom:14, letterSpacing:'-0.4px' }
   const sectionSub = { fontSize:'1rem', color:'var(--gray600)', maxWidth:540, lineHeight:1.85, marginBottom:48 }
   const eyebrow = { display:'inline-flex', alignItems:'center', gap:8, fontSize:12, fontWeight:700, letterSpacing:'1.5px', textTransform:'uppercase', color:'var(--gold600)', marginBottom:14 }
 
@@ -472,10 +815,10 @@ export default function Home() {
             <div style={{
               display:'inline-flex', alignItems:'center', gap:8,
               background:'var(--white)', color:'var(--g800)',
-              border:'1px solid var(--gray200)',
+              border:'0.5px solid rgba(0,61,43,0.15)',
               padding:'5px 16px 5px 12px', borderRadius:50,
               fontSize:13, fontWeight:500, marginBottom:28,
-              boxShadow:'0 1px 4px rgba(0,61,43,0.06)',
+              boxShadow:'0 1px 8px rgba(0,61,43,0.06), 0 0.5px 2px rgba(0,0,0,0.04)',
             }}>
               <span style={{ width:7, height:7, background:'var(--g600)', borderRadius:'50%', animation:'pulse 2s infinite', display:'block' }} />
               وصول مبكر مجاني — سجّل الآن
@@ -483,8 +826,8 @@ export default function Home() {
 
             {/* Heading */}
             <h1 ref={heroHeadingRef} className="fade-in-section" style={{
-              fontSize:'clamp(1.9rem,5.5vw,3.4rem)', fontWeight:700, lineHeight:1.25,
-              color:'var(--g950)', marginBottom:20, letterSpacing:'-0.3px',
+              fontSize:'clamp(1.9rem,5.5vw,3.4rem)', fontWeight:700, lineHeight:1.22,
+              color:'var(--g950)', marginBottom:20, letterSpacing:'-0.6px',
               fontFamily:'var(--font-ar)',
             }}>
               ارفع مستواك في{' '}
@@ -516,7 +859,7 @@ export default function Home() {
               onMouseLeave={e=>{e.currentTarget.style.transform='translateY(0)';e.currentTarget.style.boxShadow='0 6px 24px rgba(0,61,43,0.28), 0 2px 6px rgba(197,160,89,0.18)'}}
               onMouseDown={e=>e.currentTarget.style.transform='translateY(0) scale(0.97)'}
               onMouseUp={e=>e.currentTarget.style.transform='translateY(-2px) scale(1)'}>
-                افحص سيرتك مجاناً ✦
+                افحص سيرتك الذاتية مجاناً ✦
               </Link>
               <button onClick={() => document.getElementById('jobs')?.scrollIntoView({ behavior:'smooth' })} style={{
                 background:'transparent', color:'var(--g900)',
@@ -530,7 +873,7 @@ export default function Home() {
               onMouseLeave={e=>{e.currentTarget.style.background='transparent';e.currentTarget.style.color='var(--g900)'}}
               onMouseDown={e=>e.currentTarget.style.transform='scale(0.97)'}
               onMouseUp={e=>e.currentTarget.style.transform='scale(1)'}>
-                تصفّح الوظائف
+                استكشف مسارك المهني
               </button>
             </div>
 
@@ -673,7 +1016,13 @@ export default function Home() {
       </div>
 
       {/* ── JOBS ── */}
-      <section style={{ padding:'clamp(60px,8vw,100px) clamp(1rem,4vw,3rem)', background:'var(--gray50)' }} id="jobs">
+      <section style={{
+        padding:'clamp(60px,8vw,100px) clamp(1rem,4vw,3rem)',
+        background:'var(--gray50)',
+        position:'relative',
+        backgroundImage:'radial-gradient(circle, rgba(0,61,43,0.055) 1px, transparent 1px)',
+        backgroundSize:'28px 28px',
+      }} id="jobs">
         <div style={{ maxWidth:1160, margin:'0 auto' }}>
           <Reveal>
             <div style={eyebrow}><span style={{ width:28, height:2, background:'var(--gold500)', borderRadius:2, display:'block' }}/> فرص موثوقة</div>
@@ -721,6 +1070,10 @@ export default function Home() {
           )}
 
           <Reveal delay={100}>
+            <CityMap
+              activeLocation={filters.location}
+              onSelect={city => handleFilterChange({ ...filters, location: city })}
+            />
             <FilterBar filters={filters} onChange={handleFilterChange} />
           </Reveal>
 
@@ -728,9 +1081,21 @@ export default function Home() {
             {loadingJobs
               ? Array.from({ length: 6 }).map((_, i) => <JobSkeleton key={i} />)
               : jobs.length === 0
-                ? <div style={{ gridColumn:'1/-1', textAlign:'center', color:'var(--gray400)', padding:'48px 0', fontSize:15 }}>لا توجد وظائف تطابق البحث</div>
+                ? <div style={{ gridColumn:'1/-1', textAlign:'center', padding:'48px 0' }}>
+                    <div style={{ fontSize:15, color:'var(--gray400)', marginBottom:12 }}>لا توجد وظائف تطابق البحث</div>
+                    {debouncedFilters.q && (() => {
+                      const q = debouncedFilters.q
+                      const suggestion = q.replace(/ة/g,'ه').replace(/ه$/,'ة').replace(/أ/g,'ا').replace(/ى$/,'ي')
+                      return suggestion !== q ? (
+                        <button onClick={() => handleFilterChange({...filters, q: suggestion})}
+                          style={{ background:'none', border:'none', color:'var(--g600)', fontSize:14, cursor:'pointer', textDecoration:'underline' }}>
+                          هل تقصد: {suggestion}؟
+                        </button>
+                      ) : null
+                    })()}
+                  </div>
                 : jobs.map((job, i) => (
-                    <Reveal key={job.id} delay={i * 60}>
+                    <Reveal key={job.id} delay={Math.min(i, 5) * 60}>
                       {job.is_government_partner ? (
                         <GovJobCard
                           job={job}
@@ -762,6 +1127,23 @@ export default function Home() {
                   ))
             }
           </div>
+
+          {/* Infinite scroll sentinel */}
+          <div ref={sentinelRef} style={{ height:1 }} aria-hidden="true" />
+
+          {/* Loading more indicator */}
+          {loadingMore && (
+            <div style={{ textAlign:'center', padding:'32px 0', display:'flex', alignItems:'center', justifyContent:'center', gap:10 }}>
+              <div style={{ width:20, height:20, borderRadius:'50%', border:'2.5px solid var(--g200)', borderTopColor:'var(--g700)', animation:'spin 0.7s linear infinite' }} />
+              <span style={{ fontSize:13, color:'var(--gray400)' }}>جارٍ تحميل المزيد…</span>
+            </div>
+          )}
+
+          {!loadingJobs && !loadingMore && !hasMore && jobs.length > 0 && (
+            <div style={{ textAlign:'center', padding:'24px 0', fontSize:13, color:'var(--gray400)' }}>
+              ✓ تم عرض جميع الوظائف المتاحة
+            </div>
+          )}
         </div>
       </section>
 
@@ -775,7 +1157,7 @@ export default function Home() {
           </Reveal>
           <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,300px),1fr))', gap:24 }}>
             {[
-              { emoji:'📄', title:'تحسين السيرة الذاتية', desc:'مراجعة احترافية تضمن أن سيرتك تتجاوز أنظمة الفحص الآلي وتصل للمسؤولين الفعليين — مجاناً.', features:['توافق مع معايير ATS','صياغة بالعربية والإنجليزية','مراجعة خلال 48 ساعة'], tag:'مجاني عند التسجيل', tagGold:false, accent:'var(--gold400)', featured:true, delay:0, ctaLink:'/resume-analyzer', ctaText:'افحص سيرتك الآن ✦' },
+              { emoji:'📄', title:'تحسين السيرة الذاتية', desc:'مراجعة احترافية تضمن أن سيرتك تتجاوز أنظمة الفحص الآلي وتصل للمسؤولين الفعليين — مجاناً.', features:['توافق مع معايير ATS','صياغة بالعربية والإنجليزية','مراجعة خلال 48 ساعة'], tag:'مجاني عند التسجيل', tagGold:false, accent:'var(--gold400)', featured:true, delay:0, ctaLink:'/resume-analyzer', ctaText:'افحص سيرتك الذاتية مجاناً ✦' },
               { emoji:'💼', title:'وظائف ودورات موثّقة', desc:'نجمع الفرص من كبرى الشركات السعودية ونتحقق من مصداقيتها قبل نشرها.', features:['وظائف من نيوم وأرامكو وPIF','دورات معتمدة ومموّلة','تحديث يومي للفرص'], tag:'مصادر رسمية موثوقة', tagGold:true, accent:'var(--gold500)', featured:false, delay:100 },
               { emoji:'🎯', title:'نصائح مهنية موثوقة', desc:'محتوى مبني على أبحاث الموارد البشرية لبناء حضور مهني قوي في السوق السعودي.', features:['نصائح مقابلات الوظائف','تطوير ملف LinkedIn','مخصصة للسوق السعودي'], tag:'محتوى حصري', tagGold:false, accent:'var(--g400)', featured:false, delay:200 },
             ].map(({ emoji, title, desc, features, tag, tagGold, accent, featured, delay, ctaLink, ctaText }) => (
@@ -797,31 +1179,10 @@ export default function Home() {
                 كيف يعمل
                 <span style={{ width:28, height:2, background:'var(--gold500)', borderRadius:2, display:'block' }}/>
               </div>
-              <h2 style={{ ...sectionTitle, marginBottom:0 }}>أربع خطوات للوظيفة المناسبة</h2>
+              <h2 style={{ ...sectionTitle, marginBottom:0 }}>كيف تعمل المنصة؟</h2>
             </div>
           </Reveal>
-          <div style={{ position:'relative' }}>
-            {/* Connecting line — desktop only, hidden on mobile via opacity trick */}
-            <div aria-hidden="true" style={{
-              position:'absolute', top:30, right:'12.5%', left:'12.5%', height:2,
-              background:'linear-gradient(to left, var(--g900) 0%, var(--gold400) 50%, var(--g200) 100%)',
-              borderRadius:2, zIndex:0,
-              display:'block',
-            }} className="steps-connector" />
-
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(min(100%,220px),1fr))', gap:24, position:'relative', zIndex:1 }}>
-              {[
-                { n:'1', title:'سجّل مجاناً', desc:'أنشئ حسابك وأخبرنا عن تخصصك وأهدافك المهنية', numBg:'var(--g50)', numColor:'var(--g800)', numBorder:'var(--g200)' },
-                { n:'2', title:'حسّن سيرتك', desc:'ارفع سيرتك الذاتية واحصل على مراجعة احترافية خلال 48 ساعة', numBg:'var(--gold100)', numColor:'var(--gold700)', numBorder:'var(--gold300)' },
-                { n:'3', title:'اكتشف الفرص', desc:'تصفّح الوظائف والدورات الموثّقة المناسبة لمجالك وخبرتك', numBg:'var(--g50)', numColor:'var(--g800)', numBorder:'var(--g200)' },
-                { n:'4', title:'احصل على وظيفتك', desc:'قدّم بثقة مع الإرشادات التي تدعمك في كل خطوة حتى التعيين', numBg:'var(--g900)', numColor:'var(--white)', numBorder:'var(--g700)' },
-              ].map(({ n, title, desc, numBg, numColor, numBorder }, i) => (
-                <Reveal key={title} delay={i * 80}>
-                  <StepCard n={n} title={title} desc={desc} numBg={numBg} numColor={numColor} numBorder={numBorder} />
-                </Reveal>
-              ))}
-            </div>
-          </div>
+          <SvgTimeline />
         </div>
       </section>
 
@@ -870,6 +1231,8 @@ export default function Home() {
       <JobStructuredData jobs={jobs} />
 
       <style>{`
+        @keyframes spin { to { transform: rotate(360deg) } }
+        @keyframes mapPulse { 0%{opacity:1;r:8} 100%{opacity:0;r:16} }
         @keyframes heroFloat  { 0%,100%{transform:rotate(-1.5deg) translateY(0px)} 50%{transform:rotate(-1.5deg) translateY(-10px)} }
         @keyframes heroBadge1 { 0%,100%{transform:translateY(0px) scale(1)} 50%{transform:translateY(-8px) scale(1.02)} }
         @keyframes heroBadge2 { 0%,100%{transform:translateY(0px)} 50%{transform:translateY(-12px)} }
@@ -1079,6 +1442,10 @@ function ServiceCard({ emoji, title, desc, features, tag, tagGold, accent, featu
             {f}
           </div>
         ))}
+
+        {/* شريط تقدم مراحل مراجعة السيرة الذاتية */}
+        <ResumeProgressBar visible={hovered} />
+
         <div style={{ marginTop:'auto', paddingTop:24, display:'flex', alignItems:'center', gap:12, flexWrap:'wrap' }}>
           {ctaLink && (
             <Link to={ctaLink} style={{

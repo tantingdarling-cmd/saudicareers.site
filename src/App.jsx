@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import Navbar from './components/Navbar.jsx'
 import Footer from './components/Footer.jsx'
@@ -30,6 +30,14 @@ const ResumeDashboard     = lazy(() => import('./pages/ResumeDashboard.jsx'))
 const Notifications       = lazy(() => import('./pages/Notifications.jsx'))
 
 export default function App() {
+  useEffect(() => {
+    const ref = new URLSearchParams(window.location.search).get('ref')
+    if (ref && !localStorage.getItem(`ref_${ref}`)) {
+      localStorage.setItem(`ref_${ref}`, '1')
+      fetch(`/api/v1/referral/${ref}`, { method: 'POST' }).catch(() => {})
+    }
+  }, [])
+
   return (
     <BrowserRouter>
       <AnalyticsHead />

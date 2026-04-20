@@ -30,7 +30,8 @@ class JobController extends Controller
             $request->only(['category', 'location', 'experience_level', 'job_type', 'salary_min', 'salary_max', 'q', 'search', 'is_featured', 'featured', 'featured_partners', 'gov_partner', 'page'])
         ));
 
-        $jobs = Cache::remember($cacheKey, 3600, fn () => $this->buildQuery($request));
+        $ttl  = $request->filled('q') || $request->filled('search') ? 300 : 3600;
+        $jobs = Cache::remember($cacheKey, $ttl, fn () => $this->buildQuery($request));
 
         return new JobCollection($jobs);
     }
@@ -55,11 +56,14 @@ class JobController extends Controller
 
         $search = $request->filled('q') ? $request->q : $request->search;
         if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('title',    'LIKE', "%{$search}%")
-                  ->orWhere('company', 'LIKE', "%{$search}%")
-                  ->orWhere('location','LIKE', "%{$search}%")
-                  ->orWhere('description', 'LIKE', "%{$search}%");
+            $variants = $this->arabicVariants($search);
+            $query->where(function ($q) use ($variants) {
+                foreach ($variants as $v) {
+                    $q->orWhere('title',       'LIKE', "%{$v}%")
+                      ->orWhere('company',     'LIKE', "%{$v}%")
+                      ->orWhere('location',    'LIKE', "%{$v}%")
+                      ->orWhere('description', 'LIKE', "%{$v}%");
+                }
             });
         }
 
@@ -121,28 +125,48 @@ class JobController extends Controller
         ]);
     }
 
-    // GET /api/v1/jobs/{id}/similar — same category & location, limit 3
+    // Returns the original term + 3 Arabic typo variants (ة↔ه, أ↔ا, ي↔ى)
+    private function arabicVariants(string $term): array
+    {
+        $variants = [$term];
+        $maps = [['ة','ه'], ['ه','ة'], ['أ','ا'], ['ا','أ'], ['ي','ى'], ['ى','ي']];
+        foreach ($maps as [$from, $to]) {
+            $v = str_replace($from, $to, $term);
+            if ($v !== $term && !in_array($v, $variants)) {
+                $variants[] = $v;
+            }
+        }
+        return array_unique($variants);
+    }
+
+    // GET /api/v1/jobs/{id}/similar — same category & location, limit 4, 1h cache
     public function similar(Job $job)
     {
-        $query = Job::where('id', '!=', $job->id)
-            ->where('category', $job->category)
-            ->active();
+        $cacheKey = 'similar:' . $job->id;
 
-        if ($job->location) {
-            $query->where('location', 'LIKE', '%' . $job->location . '%');
-        }
-
-        $similar = $query->inRandomOrder()->limit(3)->get();
-
-        // fallback: drop location filter if no results
-        if ($similar->isEmpty()) {
-            $similar = Job::where('id', '!=', $job->id)
+        $similar = Cache::remember($cacheKey, 3600, function () use ($job) {
+            $query = Job::where('id', '!=', $job->id)
                 ->where('category', $job->category)
-                ->active()
-                ->inRandomOrder()
-                ->limit(3)
-                ->get();
-        }
+                ->active();
+
+            if ($job->location) {
+                $query->where('location', 'LIKE', '%' . $job->location . '%');
+            }
+
+            $result = $query->inRandomOrder()->limit(4)->get();
+
+            // fallback: drop location filter if no results
+            if ($result->isEmpty()) {
+                $result = Job::where('id', '!=', $job->id)
+                    ->where('category', $job->category)
+                    ->active()
+                    ->inRandomOrder()
+                    ->limit(4)
+                    ->get();
+            }
+
+            return $result;
+        });
 
         return response()->json(['data' => JobResource::collection($similar)]);
     }

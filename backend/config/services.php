@@ -13,4 +13,8 @@ return [
         'chat_id'   => env('TELEGRAM_CHAT_ID'),
     ],
 
+    'resend' => [
+        'key' => env('RESEND_API_KEY'),
+    ],
+
 ];

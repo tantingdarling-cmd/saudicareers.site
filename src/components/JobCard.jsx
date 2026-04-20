@@ -1,15 +1,17 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { MapPin, Briefcase, Coins, ArrowLeft, Heart, Building2, Bell } from 'lucide-react'
+import { MapPin, Briefcase, Coins, ArrowLeft, Heart, Building2, Bell, Share2 } from 'lucide-react'
 import { savedJobsApi, alertsApi } from '../services/api.js'
 
 /* توحيد أسلوب الأزرار — يُدمج مع أي خصائص إضافية */
+const CARD_EASE = 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+
 function createButtonStyle(overrides = {}) {
   return {
     border: 'none',
     cursor: 'pointer',
     fontFamily: 'var(--font-ar)',
-    transition: 'all 0.3s cubic-bezier(0.32,0.72,0,1)',
+    transition: `all 0.4s ${CARD_EASE}`,
     ...overrides,
   }
 }
@@ -27,6 +29,21 @@ export default function JobCard({ job, onApply, onDetails, onTagClick, delay = 0
   const [saved, setSaved]     = useState(isSavedInit)
   const [toast, setToast]     = useState('')
   const [bellDone, setBellDone] = useState(false)
+  const [shareDone, setShareDone] = useState(false)
+
+  function shareJob(e) {
+    e.preventDefault(); e.stopPropagation()
+    const user = (() => { try { return JSON.parse(localStorage.getItem('user') || 'null') } catch { return null } })()
+    const url = `${window.location.origin}/jobs/${job.id}${user?.id ? `?ref=${user.id}` : ''}`
+    navigator.clipboard.writeText(url).then(() => {
+      setShareDone(true)
+      setToast('تم نسخ الرابط ✓')
+      setTimeout(() => { setShareDone(false); setToast('') }, 2500)
+    }).catch(() => {
+      setToast('فشل النسخ')
+      setTimeout(() => setToast(''), 2000)
+    })
+  }
 
   async function quickAlert(e) {
     e.preventDefault(); e.stopPropagation()
@@ -82,16 +99,20 @@ export default function JobCard({ job, onApply, onDetails, onTagClick, delay = 0
           ? 'linear-gradient(var(--white), var(--white)) padding-box, linear-gradient(135deg, #006644, #C5A059) border-box'
           : 'var(--white)',
         border: isGov
-          ? '1.5px solid transparent'
-          : hovered ? '1.5px solid var(--g400)' : '1.5px solid var(--gray200)',
+          ? '1px solid transparent'
+          : hovered ? '0.5px solid var(--g500)' : '0.5px solid rgba(0,0,0,0.10)',
         borderRadius:20,
         padding:24,
         display:'flex', flexDirection:'column',
-        transition:'all 0.45s cubic-bezier(0.32,0.72,0,1)',
-        transform: pressed ? 'scale(0.97)' : hovered ? 'translateY(-4px)' : 'translateY(0)',
+        transition:`all 0.4s ${CARD_EASE}`,
+        transform: pressed ? 'scale(0.97)' : hovered ? 'translateY(-6px)' : 'translateY(0)',
         boxShadow: isGov
-          ? hovered ? '0 8px 32px rgba(0,102,68,0.18)' : '0 4px 20px rgba(0,102,68,0.10)'
-          : hovered ? 'var(--shadow-lg)' : '0 8px 32px rgba(0,0,0,0.08)',
+          ? hovered
+            ? '0 20px 60px rgba(0,102,68,0.14), 0 8px 24px rgba(0,102,68,0.08), 0 2px 6px rgba(0,0,0,0.05)'
+            : '0 2px 8px rgba(0,102,68,0.07), 0 1px 2px rgba(0,0,0,0.03)'
+          : hovered
+            ? '0 24px 64px rgba(0,61,43,0.11), 0 8px 24px rgba(0,0,0,0.07), 0 2px 6px rgba(0,0,0,0.04), 0 0.5px 1px rgba(197,160,89,0.12)'
+            : '0 2px 8px rgba(0,0,0,0.05), 0 1px 3px rgba(0,0,0,0.03), 0 0.5px 1px rgba(0,0,0,0.02)',
         animationDelay: `${delay}ms`,
         position: 'relative',
         cursor: 'default',
@@ -158,6 +179,21 @@ export default function JobCard({ job, onApply, onDetails, onTagClick, delay = 0
             }}>{job.badgeText}</span>
           )}
           <button
+            onClick={shareJob}
+            aria-label="مشاركة الوظيفة"
+            title="مشاركة الوظيفة"
+            style={createButtonStyle({
+              width:32, height:32, borderRadius:'50%', padding:0,
+              display:'flex', alignItems:'center', justifyContent:'center',
+              background: shareDone ? 'rgba(0,102,68,0.1)' : 'var(--gray100)',
+              color: shareDone ? 'var(--g700)' : 'var(--gray400)',
+            })}
+            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0,102,68,0.08)'; e.currentTarget.style.color = 'var(--g700)' }}
+            onMouseLeave={e => { e.currentTarget.style.background = shareDone ? 'rgba(0,102,68,0.1)' : 'var(--gray100)'; e.currentTarget.style.color = shareDone ? 'var(--g700)' : 'var(--gray400)' }}
+          >
+            <Share2 size={14} />
+          </button>
+          <button
             onClick={quickAlert}
             aria-label="تنبيه فوري"
             title={bellDone ? 'تنبيه مفعّل' : 'تنبيه عند نشر وظائف مشابهة'}
@@ -206,14 +242,30 @@ export default function JobCard({ job, onApply, onDetails, onTagClick, delay = 0
       {/* Meta */}
       <div style={{ display:'flex', flexWrap:'wrap', gap:10, marginBottom:16 }}>
         {[
-          { Icon: MapPin, text: job.location },
-          { Icon: Briefcase, text: job.type },
-        ].map(({ Icon, text }) => (
+          { Icon: MapPin, text: job.location, gold: false },
+          { Icon: Briefcase, text: job.type, gold: true },
+        ].map(({ Icon, text, gold }) => (
           <span key={text} style={{ display:'flex', alignItems:'center', gap:5, fontSize:12, color:'var(--gray600)' }}>
-            <Icon size={13} style={{ opacity:0.65 }} />{text}
+            <Icon size={13} style={{ color: gold ? 'var(--gold600)' : 'var(--gray400)', flexShrink:0 }} />{text}
           </span>
         ))}
       </div>
+
+      {/* Description reveal on hover */}
+      {job.description && (
+        <div style={{
+          overflow:'hidden',
+          maxHeight: hovered ? 72 : 0,
+          opacity: hovered ? 1 : 0,
+          transition:'max-height 0.42s cubic-bezier(0.32,0.72,0,1), opacity 0.3s ease',
+          marginBottom: hovered ? 12 : 0,
+        }}>
+          <p style={{ fontSize:12.5, color:'var(--gray500)', lineHeight:1.75, margin:0,
+            display:'-webkit-box', WebkitLineClamp:3, WebkitBoxOrient:'vertical', overflow:'hidden' }}>
+            {String(job.description).replace(/<[^>]+>/g, '')}
+          </p>
+        </div>
+      )}
 
       {/* Skill Tags — قابلة للنقر للتصفية */}
       <div style={{ display:'flex', flexWrap:'wrap', gap:6, marginBottom:16 }}>
@@ -237,68 +289,105 @@ export default function JobCard({ job, onApply, onDetails, onTagClick, delay = 0
       </div>
 
       {/* Salary */}
-      <div style={{ marginBottom:20, display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:8 }}>
-        <div style={{ fontSize:15, fontWeight:700, color:'var(--g800)', display:'flex', alignItems:'center', gap:6 }}>
-          <Coins size={15} style={{ color:'var(--gold500)' }} />
-          {job.salary} <span style={{ fontSize:12, fontWeight:400, color:'var(--gray400)' }}>ر.س / شهرياً</span>
-        </div>
-        {job.salary_min && job.salary_max && (
-          <span style={{ fontSize:11, fontWeight:600, padding:'3px 10px', borderRadius:50,
-            background:'rgba(22,163,74,0.08)', color:'#15803D', border:'1px solid rgba(22,163,74,0.2)' }}>
-            متوسط: {Math.round((job.salary_min + job.salary_max) / 2).toLocaleString('en')} ر.س
-          </span>
+      <div style={{ marginBottom:20, display:'flex', alignItems:'center', gap:6 }}>
+        <Coins size={14} style={{ color:'var(--gold600)', flexShrink:0, filter:'drop-shadow(0 1px 2px rgba(197,160,89,0.35))' }} />
+        <span style={{ fontSize:15, fontWeight:700, color:'var(--g800)', fontFamily:'var(--font-en)', letterSpacing:'0.2px' }}>
+          {job.salary}
+        </span>
+        {job.salary === 'يُحدد عند التواصل' && (
+          <span style={{ fontSize:11, color:'var(--gray400)', fontFamily:'var(--font-ar)' }}>/ شهرياً</span>
         )}
       </div>
 
-      {/* Actions */}
-      <div style={{ display:'flex', gap:8, marginTop:'auto' }}>
-        <button
-          onClick={() => onApply(job)}
-          onPointerDown={e => e.currentTarget.style.transform='scale(0.98)'}
-          onPointerUp={e => e.currentTarget.style.transform='scale(1)'}
-          onPointerLeave={e => e.currentTarget.style.transform='scale(1)'}
-          style={createButtonStyle({
-            flex:1, padding:'11px 0',
-            background:'linear-gradient(135deg, var(--g900) 0%, var(--g950) 100%)',
-            color:'var(--white)', borderRadius:'var(--r-md)',
-            fontSize:14, fontWeight:600,
-          })}
-          onMouseEnter={e => e.currentTarget.style.background='var(--g700)'}
-          onMouseLeave={e => e.currentTarget.style.background='linear-gradient(135deg, var(--g900) 0%, var(--g950) 100%)'}
-        >
-          {(job.is_government_partner || !job.apply_url) ? 'قدّم عبر المنصة' : 'التقديم ←'}
-        </button>
-        {onDetails ? (
+      {/* Actions — hover-reveal Quick Apply */}
+      <div style={{ marginTop:'auto', position:'relative' }}>
+        {/* Default state: details link */}
+        <div style={{
+          display:'flex', gap:8,
+          opacity: hovered ? 0 : 1,
+          transform: hovered ? 'translateY(6px)' : 'translateY(0)',
+          transition:`opacity 0.4s ${CARD_EASE}, transform 0.4s ${CARD_EASE}`,
+          pointerEvents: hovered ? 'none' : 'auto',
+        }}>
+          {onDetails ? (
+            <button
+              onClick={() => onDetails(job)}
+              style={createButtonStyle({
+                flex:1, padding:'10px 0',
+                background:'transparent', color:'var(--g700)',
+                border:'0.5px solid var(--g300)', borderRadius:'var(--r-md)',
+                fontSize:13, fontWeight:600,
+              })}
+              onMouseEnter={e => { e.currentTarget.style.background='var(--g50)' }}
+              onMouseLeave={e => { e.currentTarget.style.background='transparent' }}
+            >
+              <ArrowLeft size={13} style={{ display:'inline', marginLeft:4 }} /> عرض التفاصيل
+            </button>
+          ) : (
+            <Link
+              to={`/jobs/${job.id}`}
+              style={{
+                flex:1, padding:'10px 0', textAlign:'center',
+                background:'transparent', color:'var(--g700)',
+                border:'0.5px solid var(--g300)', borderRadius:'var(--r-md)',
+                fontSize:13, fontWeight:600, textDecoration:'none', display:'block',
+              }}
+            >
+              عرض التفاصيل
+            </Link>
+          )}
+        </div>
+        {/* Hover state: consolidated Quick Apply */}
+        <div style={{
+          position:'absolute', inset:0,
+          display:'flex', gap:8,
+          opacity: hovered ? 1 : 0,
+          transform: hovered ? 'translateY(0)' : 'translateY(8px)',
+          transition:`opacity 0.4s ${CARD_EASE} 0.06s, transform 0.4s ${CARD_EASE} 0.06s`,
+          pointerEvents: hovered ? 'auto' : 'none',
+        }}>
           <button
-            onClick={() => onDetails(job)}
-            style={{
-              display:'flex', alignItems:'center', justifyContent:'center', gap:5,
-              padding:'11px 14px', background:'var(--g50)', color:'var(--g800)',
-              border:'1.5px solid var(--g200)', borderRadius:'var(--r-md)',
-              fontSize:13, fontWeight:600, whiteSpace:'nowrap', cursor:'pointer',
-              transition:'all 0.3s cubic-bezier(0.32,0.72,0,1)',
-            }}
-            onMouseEnter={e => { e.currentTarget.style.background='var(--g100)'; e.currentTarget.style.borderColor='var(--g400)' }}
-            onMouseLeave={e => { e.currentTarget.style.background='var(--g50)'; e.currentTarget.style.borderColor='var(--g200)' }}
+            onClick={() => onApply(job)}
+            onPointerDown={e => e.currentTarget.style.transform='scale(0.97)'}
+            onPointerUp={e => e.currentTarget.style.transform='scale(1)'}
+            onPointerLeave={e => e.currentTarget.style.transform='scale(1)'}
+            style={createButtonStyle({
+              flex:1, padding:'11px 0',
+              background:'linear-gradient(135deg, var(--g800) 0%, var(--g950) 100%)',
+              color:'var(--white)', borderRadius:'var(--r-md)',
+              fontSize:14, fontWeight:700,
+              boxShadow:'0 4px 16px rgba(0,61,43,0.28)',
+              letterSpacing:'0.2px',
+            })}
           >
-            <ArrowLeft size={13} /> التفاصيل
+            ⚡ تقديم سريع
           </button>
-        ) : (
-          <Link
-            to={`/jobs/${job.id}`}
-            style={{
-              display:'flex', alignItems:'center', justifyContent:'center', gap:5,
-              padding:'11px 14px', background:'var(--g50)', color:'var(--g800)',
-              border:'1.5px solid var(--g200)', borderRadius:'var(--r-md)',
-              fontSize:13, fontWeight:600, textDecoration:'none', whiteSpace:'nowrap',
-              transition:'all 0.3s cubic-bezier(0.32,0.72,0,1)',
-            }}
-            onMouseEnter={e => { e.currentTarget.style.background='var(--g100)'; e.currentTarget.style.borderColor='var(--g400)' }}
-            onMouseLeave={e => { e.currentTarget.style.background='var(--g50)'; e.currentTarget.style.borderColor='var(--g200)' }}
-          >
-            <ArrowLeft size={13} /> التفاصيل
-          </Link>
-        )}
+          {onDetails ? (
+            <button
+              onClick={() => onDetails(job)}
+              style={createButtonStyle({
+                padding:'11px 14px',
+                background:'transparent', color:'var(--g700)',
+                border:'0.5px solid var(--g300)', borderRadius:'var(--r-md)',
+                fontSize:13, fontWeight:600,
+              })}
+            >
+              <ArrowLeft size={13} />
+            </button>
+          ) : (
+            <Link
+              to={`/jobs/${job.id}`}
+              style={{
+                padding:'11px 14px', display:'flex', alignItems:'center',
+                background:'transparent', color:'var(--g700)',
+                border:'0.5px solid var(--g300)', borderRadius:'var(--r-md)',
+                fontSize:13, fontWeight:600, textDecoration:'none',
+              }}
+            >
+              <ArrowLeft size={13} />
+            </Link>
+          )}
+        </div>
       </div>
     </div>
   )

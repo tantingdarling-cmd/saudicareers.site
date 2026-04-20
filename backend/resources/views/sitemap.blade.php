@@ -29,4 +29,19 @@
     </url>
     @endforeach
 
+    {{-- Static tool & landing pages --}}
+    @foreach ([
+        ['tips',             '0.7', 'weekly'],
+        ['resume-analyzer',  '0.8', 'weekly'],
+        ['salary-insights',  '0.7', 'weekly'],
+        ['resume/editor',    '0.6', 'monthly'],
+    ] as [$path, $priority, $freq])
+    <url>
+        <loc>https://saudicareers.site/{{ $path }}</loc>
+        <changefreq>{{ $freq }}</changefreq>
+        <priority>{{ $priority }}</priority>
+        <lastmod>{{ now()->toDateString() }}</lastmod>
+    </url>
+    @endforeach
+
 </urlset>

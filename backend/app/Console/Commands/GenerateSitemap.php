@@ -29,6 +29,12 @@ class GenerateSitemap extends Command
 
         file_put_contents($dest, $xml);
 
+        // Also write to the React app root (served directly by nginx)
+        $rootDest = dirname(base_path()) . '/sitemap.xml';
+        if (is_writable(dirname($rootDest))) {
+            file_put_contents($rootDest, $xml);
+        }
+
         $this->info("Sitemap written → {$dest}");
         $this->info("  Jobs: {$jobs->count()} | Tips: {$tips->count()}");
 

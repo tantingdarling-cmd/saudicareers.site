@@ -215,17 +215,72 @@ class ApplicationController extends Controller
             ->where('email', $email)
             ->latest('applied_at')
             ->get()
-            ->map(fn ($app) => [
-                'id'           => $app->id,
-                'tracking_token' => $app->tracking_token,
-                'job_title'    => $app->job?->title,
-                'company'      => $app->job?->company,
-                'status'       => $app->status,
-                'status_label' => $app->status_label,
-                'applied_at'   => $app->applied_at?->toDateString(),
-            ]);
+            ->map(function ($app) {
+                $status = $app->status;
+                if ($status === 'pending' && $app->viewed_at) {
+                    $status = 'viewed';
+                } elseif ($status === 'pending') {
+                    $status = 'sent';
+                }
+
+                $labels = [
+                    'sent'        => 'تم الإرسال',
+                    'viewed'      => 'تم الاطلاع',
+                    'shortlisted' => 'في القائمة المختصرة',
+                    'reviewed'    => 'قيد المراجعة',
+                    'interview'   => 'مقابلة',
+                    'accepted'    => 'مقبول',
+                    'rejected'    => 'مرفوض',
+                    'withdrawn'   => 'منسحب',
+                ];
+
+                return [
+                    'id'             => $app->id,
+                    'job_id'         => $app->job_id,
+                    'tracking_token' => $app->tracking_token,
+                    'job_title'      => $app->job?->title,
+                    'company'        => $app->job?->company,
+                    'status'         => $status,
+                    'status_label'   => $labels[$status] ?? $status,
+                    'viewed_at'      => $app->viewed_at?->toIso8601String(),
+                    'applied_at'     => $app->applied_at?->toDateString(),
+                ];
+            });
 
         return response()->json(['data' => $applications]);
+    }
+
+    // GET /api/v1/profile/applications/{id}/status — applicant polls their own application
+    public function applicationStatus(Request $request, JobApplication $application)
+    {
+        if ($application->email !== $request->user()->email) {
+            return response()->json(['message' => 'غير مصرح'], 403);
+        }
+
+        $status = $application->status;
+        if ($status === 'pending' && $application->viewed_at) {
+            $status = 'viewed';
+        } elseif ($status === 'pending') {
+            $status = 'sent';
+        }
+
+        return response()->json([
+            'status'     => $status,
+            'viewed_at'  => $application->viewed_at?->toIso8601String(),
+            'updated_at' => $application->updated_at?->toIso8601String(),
+        ]);
+    }
+
+    public function withdraw(Request $request, JobApplication $application)
+    {
+        if ($application->email !== $request->user()->email) {
+            return response()->json(['message' => 'غير مصرح'], 403);
+        }
+        if ($application->status === 'withdrawn') {
+            return response()->json(['message' => 'تم السحب مسبقاً'], 422);
+        }
+        $application->update(['status' => 'withdrawn']);
+        return response()->json(['message' => 'تم سحب الطلب']);
     }
 
     public function updateStatus(Request $request, JobApplication $application)

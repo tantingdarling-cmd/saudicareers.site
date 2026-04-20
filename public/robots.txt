@@ -1,8 +1,18 @@
 User-agent: *
-Allow: /
-
-# Block admin panel and API from indexing
+Allow: /jobs/
+Allow: /tips/
+Allow: /resume/
+Allow: /resume-analyzer
+Allow: /salary-insights
+Disallow: /user/
 Disallow: /admin
 Disallow: /api/
+Disallow: /profile
+Disallow: /saved
+Disallow: /alerts
+Disallow: /my-applications
+Disallow: /notifications
+Disallow: /employer/
+Disallow: /dashboard/
 
 Sitemap: https://saudicareers.site/sitemap.xml

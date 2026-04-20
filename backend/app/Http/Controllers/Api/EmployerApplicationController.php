@@ -30,6 +30,12 @@ class EmployerApplicationController extends Controller
 
         $applications = $query->paginate(20);
 
+        // Stamp viewed_at on unviewed applications when employer lists them
+        JobApplication::where('job_id', $job->id)
+            ->whereNull('viewed_at')
+            ->where('status', 'pending')
+            ->update(['viewed_at' => now()]);
+
         return ApplicationResource::collection($applications)->additional([
             'job' => ['id' => $job->id, 'title' => $job->title],
         ]);

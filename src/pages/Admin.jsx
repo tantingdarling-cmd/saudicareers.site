@@ -60,6 +60,10 @@ export default function Admin() {
   const [extendingId, setExtendingId]       = useState(null)
   const [extendFile, setExtendFile]         = useState(null)
 
+  // ── Analytics state ──────────────────────────────────────────────
+  const [funnel, setFunnel] = useState(null)
+  const [loadingFunnel, setLoadingFunnel] = useState(false)
+
   // ── Settings state ───────────────────────────────────────────────
   const [settingsGroups, setSettingsGroups] = useState({})
   const [loadingSettings, setLoadingSettings] = useState(false)
@@ -88,7 +92,18 @@ export default function Admin() {
     if (activeTab === 'subscribers') fetchSubscribers()
     if (activeTab === 'probation') fetchProbation()
     if (activeTab === 'settings') fetchSettings()
+    if (activeTab === 'analytics') fetchFunnel()
   }, [activeTab])
+
+  const fetchFunnel = async () => {
+    setLoadingFunnel(true)
+    try {
+      const res = await fetch('/api/v1/analytics/week', {
+        headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` }
+      })
+      setFunnel(await res.json())
+    } catch { } finally { setLoadingFunnel(false) }
+  }
 
   const fetchProbation = async () => {
     setLoadingProbation(true)
@@ -475,6 +490,12 @@ export default function Admin() {
             color: activeTab === 'settings' ? 'var(--g900)' : 'var(--gray500)',
             boxShadow: activeTab === 'settings' ? 'var(--shadow-sm)' : 'none',
           }}>⚙️ الإعدادات</button>
+          <button onClick={() => setActiveTab('analytics')} style={{
+            padding:'10px 24px', borderRadius:'var(--r-sm)', border:'none', fontSize:14, fontWeight:600, cursor:'pointer',
+            background: activeTab === 'analytics' ? 'var(--white)' : 'transparent',
+            color: activeTab === 'analytics' ? 'var(--g900)' : 'var(--gray500)',
+            boxShadow: activeTab === 'analytics' ? 'var(--shadow-sm)' : 'none',
+          }}>📊 التحويلات</button>
           <button onClick={() => setActiveTab('probation')} style={{
             padding:'10px 24px', borderRadius:'var(--r-sm)', border:'none', fontSize:14, fontWeight:600, cursor:'pointer',
             background: activeTab === 'probation' ? 'var(--white)' : 'transparent',
@@ -1260,6 +1281,63 @@ export default function Admin() {
             </button>
           </div>
         </div>
+      )}
+
+      {/* ── Analytics: Conversion Funnel ────────────────────────────── */}
+      {activeTab === 'analytics' && (
+        loadingFunnel ? (
+          <div style={{ display:'flex', justifyContent:'center', padding:60 }}>
+            <Loader size={32} color="var(--g600)" style={{ animation:'spin 1s linear infinite' }}/>
+          </div>
+        ) : funnel ? (() => {
+          const max = Math.max(funnel.alert_sent, funnel.alert_clicked, funnel.application_submitted, 1)
+          const steps = [
+            { label: 'تنبيهات أُرسلت', value: funnel.alert_sent, color: '#3b82f6' },
+            { label: 'نقرات على التنبيه', value: funnel.alert_clicked, color: '#8b5cf6' },
+            { label: 'تقديمات مكتملة', value: funnel.application_submitted, color: '#10b981' },
+          ]
+          return (
+            <div style={{ background:'var(--white)', border:'1.5px solid var(--gray200)', borderRadius:'var(--r-lg)', padding:32 }}>
+              <h2 style={{ fontSize:18, fontWeight:700, color:'var(--g950)', marginBottom:6 }}>قمع التحويل — هذا الأسبوع</h2>
+              <p style={{ fontSize:13, color:'var(--gray400)', marginBottom:28 }}>من {funnel.week_start} إلى اليوم</p>
+              <div style={{ display:'flex', flexDirection:'column', gap:20 }}>
+                {steps.map(({ label, value, color }) => (
+                  <div key={label}>
+                    <div style={{ display:'flex', justifyContent:'space-between', marginBottom:6 }}>
+                      <span style={{ fontSize:14, fontWeight:600, color:'var(--g900)' }}>{label}</span>
+                      <span style={{ fontSize:14, fontWeight:700, color }}>{value.toLocaleString('ar-SA')}</span>
+                    </div>
+                    <div style={{ height:12, background:'var(--gray100)', borderRadius:999, overflow:'hidden' }}>
+                      <div style={{
+                        height:'100%', borderRadius:999, background:color,
+                        width: `${Math.round((value / max) * 100)}%`,
+                        transition:'width 0.6s cubic-bezier(0.34,1.56,0.64,1)',
+                      }}/>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ marginTop:28, paddingTop:20, borderTop:'1px solid var(--gray200)', display:'flex', gap:32 }}>
+                <div>
+                  <div style={{ fontSize:12, color:'var(--gray400)', marginBottom:2 }}>معدل النقر</div>
+                  <div style={{ fontSize:20, fontWeight:700, color:'var(--g900)' }}>
+                    {funnel.alert_sent > 0 ? `${Math.round((funnel.alert_clicked / funnel.alert_sent) * 100)}%` : '—'}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize:12, color:'var(--gray400)', marginBottom:2 }}>معدل التحويل</div>
+                  <div style={{ fontSize:20, fontWeight:700, color:'var(--g900)' }}>
+                    {funnel.alert_clicked > 0 ? `${Math.round((funnel.application_submitted / funnel.alert_clicked) * 100)}%` : '—'}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )
+        })() : (
+          <div style={{ padding:60, textAlign:'center', color:'var(--gray400)', background:'var(--white)', borderRadius:'var(--r-lg)', border:'1.5px solid var(--gray200)' }}>
+            لا توجد بيانات تحليلية بعد.
+          </div>
+        )
       )}
     </div>
   )
