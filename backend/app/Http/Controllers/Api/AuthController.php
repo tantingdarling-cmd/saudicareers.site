@@ -92,11 +92,9 @@ class AuthController extends Controller
                 'email_verification_expires_at' => $expiresAt,
             ]);
 
-            // Send OTP via email (Using Mail::raw for simplicity in this task)
+            // Send OTP via email using Markdown template
             try {
-                Mail::raw("كود تفعيل حسابك في Saudi Careers هو: $otp\nهذا الكود صالح لمدة 15 دقيقة.", function($message) use ($user) {
-                    $message->to($user->email)->subject('تفعيل حسابك - Saudi Careers');
-                });
+                Mail::to($user->email)->send(new \App\Mail\OtpVerificationMail($otp));
             } catch (\Exception $e) {
                 Log::warning('Failed to send verification email to '.$user->email.': '.$e->getMessage());
             }
@@ -215,9 +213,7 @@ class AuthController extends Controller
         ]);
 
         try {
-            Mail::raw("كود تفعيل حسابك الجديد في Saudi Careers هو: $otp\nهذا الكود صالح لمدة 15 دقيقة.", function($message) use ($user) {
-                $message->to($user->email)->subject('إعادة إرسال كود التفعيل - Saudi Careers');
-            });
+            Mail::to($user->email)->send(new \App\Mail\OtpVerificationMail($otp));
         } catch (\Exception $e) {
             return response()->json(['error' => 'فشل إرسال البريد'], 500);
         }
