@@ -60,7 +60,9 @@ Route::prefix('v1')->group(function () {
          ->middleware('throttle:60,1');
 
     // Resume routes moved to protected group below
-
+    Route::post('/resume/tailor', [ResumeController::class, 'tailor'])
+        ->middleware('throttle:3,1')
+        ->name('resume.tailor');
 
     // Rate limited to 5 attempts per minute per IP
     Route::post('/login', [AuthController::class, 'login'])
@@ -76,11 +78,6 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'verified'])->group(function ()
     Route::post('/resume/analyze', [ResumeController::class, 'analyze'])
         ->middleware('throttle:3,1')
         ->name('resume.analyze');
-
-    // NEW
-    Route::post('/resume/tailor', [ResumeController::class, 'tailor'])
-        ->middleware('throttle:3,1')
-        ->name('resume.tailor');
 
     Route::post('/resume/optimize', [ResumeOptimizeController::class, 'optimize'])
         ->middleware('throttle:5,1')
