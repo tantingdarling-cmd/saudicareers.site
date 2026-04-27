@@ -280,15 +280,15 @@ export default function Navbar() {
         position: 'fixed', top: 0, insetInline: 0, zIndex: 200,
         height: 92, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '0 clamp(1rem,4vw,3rem)',
-        background: scrolled ? 'rgba(255,255,255,0.88)' : 'rgba(255,255,255,0.75)',
+        background: scrolled ? 'var(--white)' : 'transparent',
         backdropFilter: 'blur(18px) saturate(200%)',
-        borderBottom: scrolled ? '1px solid var(--gray200)' : '1px solid rgba(217,226,220,0.5)',
+        borderBottom: scrolled ? '1px solid var(--gray200)' : '1px solid rgba(217,226,220,0.2)',
         boxShadow: scrolled ? 'var(--shadow-md)' : 'none',
         transition: 'all 0.35s var(--ease-expo)',
       }}>
         <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <img src="/logo.png" alt="Saudi Careers" fetchPriority="high" decoding="async"
-            style={{ width: 80, height: 80, borderRadius: 8, objectFit: 'contain' }}
+            style={{ width: 80, height: 80, borderRadius: 8, objectFit: 'contain', filter: theme === 'dark' ? 'drop-shadow(0 0 8px rgba(255,255,255,0.2))' : 'none' }}
           />
           <span style={{ fontFamily: 'var(--font-en)', fontWeight: 700, fontSize: 17, color: 'var(--g900)' }}>
             Saudi<span style={{ color: 'var(--gold500)' }}>Careers</span>

@@ -14,6 +14,7 @@ import { normalizeJob } from '../utils/normalizeJob.js'
 import { useFadeIn } from '../hooks/useFadeIn'
 import AnimatedNumber from '../components/AnimatedNumber.jsx'
 import { useLanguage } from '../context/LanguageContext'
+import { useTheme } from '../context/ThemeContext'
 import { translations } from '../data/translations'
 
 
@@ -650,6 +651,7 @@ function useDebounce(value, delay) {
 
 export default function Home() {
   const { lang } = useLanguage()
+  const { theme } = useTheme()
   const t = translations[lang].hero
   const [selectedJob, setSelectedJob] = useState(null)
   const [bottomSheetJob, setBottomSheetJob] = useState(null)
@@ -800,7 +802,7 @@ export default function Home() {
         minHeight: '100vh',
         padding: '120px clamp(1rem,4vw,3rem) 80px',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: 'radial-gradient(ellipse 80% 50% at 50% -5%, rgba(0,61,43,0.06) 0%, transparent 65%), radial-gradient(ellipse 50% 40% at 5% 60%, rgba(197,160,89,0.05) 0%, transparent 55%), #F5F5F7',
+        background: `radial-gradient(ellipse 80% 50% at 50% -5%, ${theme === 'dark' ? 'rgba(212,237,224,0.03)' : 'rgba(0,61,43,0.06)'} 0%, transparent 65%), var(--page-bg)`,
         position: 'relative', overflow: 'hidden',
       }}>
         {/* Top accent bar */}
