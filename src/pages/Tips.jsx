@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
+import { Helmet } from 'react-helmet-async'
 import { Search, Clock, Share2, BookOpen, ArrowLeft } from 'lucide-react'
 import { tipsApi, subscribersApi } from '../services/api'
 
@@ -220,8 +221,23 @@ export default function Tips() {
     meta.content = 'نصائح صادقة وعملية لسوق العمل السعودي: سيرة ذاتية، رواتب، مقابلات، مهارات التوطين'
   }, [])
 
+  const faqSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: [
+      { '@type': 'Question', name: 'كيف أحصل على وظيفة في السعودية بسرعة؟', acceptedAnswer: { '@type': 'Answer', text: 'ركّز على تحسين سيرتك الذاتية لتتوافق مع كل وظيفة، استخدم كلمات مفتاحية من وصف الوظيفة، وتواصل مباشرة مع مسؤولي التوظيف عبر لينكد إن.' } },
+      { '@type': 'Question', name: 'ما أهم مهارات سوق العمل السعودي 2025؟', acceptedAnswer: { '@type': 'Answer', text: 'المهارات التقنية كالبيانات والبرمجة، واللغة الإنجليزية، ومهارات التواصل والقيادة. رؤية 2030 تُركّز على التحول الرقمي والكفاءات المحلية.' } },
+      { '@type': 'Question', name: 'كيف أكتب سيرة ذاتية احترافية؟', acceptedAnswer: { '@type': 'Answer', text: 'ابدأ بملخص مهني واضح، رتّب الخبرات من الأحدث للأقدم، أضف إنجازات بأرقام حقيقية، وطابق الكلمات المفتاحية مع وصف الوظيفة.' } },
+    ],
+  }
+
   return (
     <div style={{ minHeight: '100vh', background: 'var(--gray50)', paddingTop: 68 }}>
+      <Helmet>
+        <title>نصائح سوق العمل السعودي — سير ذاتية ومقابلات ورواتب | سعودي كارييرز</title>
+        <meta name="description" content="نصائح عملية لسوق العمل في السعودية: كيف تكتب سيرة ذاتية احترافية، تجتاز المقابلات، وتحصل على راتب أعلى. مبنية على بيانات السوق السعودي." />
+        <script type="application/ld+json">{JSON.stringify(faqSchema)}</script>
+      </Helmet>
 
       {/* Hero */}
       <section style={{
@@ -309,6 +325,22 @@ export default function Tips() {
         </div>
 
         <NewsletterBox />
+
+        {/* FAQ Section — AI & SEO readable */}
+        <section aria-labelledby="faq-heading" style={{ maxWidth: 720, margin: '48px auto 0', padding: '0 clamp(1rem,4vw,2rem)' }}>
+          <h2 id="faq-heading" style={{ fontSize: 20, fontWeight: 700, color: 'var(--g900)', marginBottom: 20 }}>أسئلة شائعة عن سوق العمل السعودي</h2>
+          {faqSchema.mainEntity.map((q, i) => (
+            <details key={i} style={{ marginBottom: 12, background: 'var(--white)', borderRadius: 'var(--r-lg)', border: '1px solid var(--gray200)', padding: '14px 18px' }}>
+              <summary style={{ fontSize: 14, fontWeight: 600, color: 'var(--g900)', cursor: 'pointer', listStyle: 'none', display: 'flex', justifyContent: 'space-between' }}>
+                {q.name} <span style={{ color: 'var(--gray400)' }}>+</span>
+              </summary>
+              <p style={{ fontSize: 13, color: 'var(--gray600)', lineHeight: 1.8, marginTop: 10, marginBottom: 0 }}>{q.acceptedAnswer.text}</p>
+            </details>
+          ))}
+          <p style={{ fontSize: 13, color: 'var(--gray400)', textAlign: 'center', marginTop: 16 }}>
+            هل سيرتك جاهزة؟ <Link to="/resume-analyzer" style={{ color: 'var(--g700)', fontWeight: 600, textDecoration: 'none' }}>حسّنها الآن →</Link>
+          </p>
+        </section>
       </div>
 
       <style>{`

@@ -99,6 +99,29 @@ function ArticleStructuredData({ tip, url }) {
   return null
 }
 
+/* ── FAQ Schema for TipDetail ─────────────── */
+function TipFAQSchema({ tip }) {
+  useEffect(() => {
+    if (!tip) return
+    const existing = document.getElementById('faq-structured-data')
+    if (existing) existing.remove()
+    const script = document.createElement('script')
+    script.id = 'faq-structured-data'
+    script.type = 'application/ld+json'
+    script.textContent = JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: [
+        { '@type': 'Question', name: `ما هي أهم نقاط "${tip.title}"؟`, acceptedAnswer: { '@type': 'Answer', text: tip.excerpt || tip.title } },
+        { '@type': 'Question', name: 'كيف أطبّق هذه النصيحة في سوق العمل السعودي؟', acceptedAnswer: { '@type': 'Answer', text: 'اقرأ المقال كاملاً وطبّق الخطوات على سيرتك الذاتية، ثم استخدم أداة تحسين السيرة للتحقق من مدى التوافق مع الوظيفة.' } },
+      ],
+    })
+    document.head.appendChild(script)
+    return () => { const el = document.getElementById('faq-structured-data'); if (el) el.remove() }
+  }, [tip])
+  return null
+}
+
 /* ── Content renderer ─────────────────────── */
 function renderContent(content) {
   if (!content) return null
@@ -187,6 +210,7 @@ export default function TipDetail() {
   return (
     <>
       <ArticleStructuredData tip={tip} url={url} />
+      <TipFAQSchema tip={tip} />
 
       {/* ── Breadcrumb ── */}
       <div style={{ paddingTop:88, background:'var(--gray50)', borderBottom:'1px solid var(--gray200)' }}>
@@ -273,6 +297,22 @@ export default function TipDetail() {
             تصفّح الوظائف ←
           </Link>
         </div>
+
+        {/* ── Internal CTA — resume analyzer ── */}
+        <aside style={{
+          background: 'var(--g50)', border: '1px solid var(--g200)',
+          borderRadius: 'var(--r-lg)', padding: '18px 20px', marginBottom: 32,
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap',
+        }}>
+          <div>
+            <p style={{ fontSize: 14, fontWeight: 700, color: 'var(--g900)', margin: '0 0 4px' }}>جهّز سيرتك للتقديم الآن</p>
+            <p style={{ fontSize: 12, color: 'var(--gray500)', margin: 0 }}>طبّق ما تعلمته وحسّن سيرتك خلال ثوانٍ</p>
+          </div>
+          <Link to="/resume-analyzer" style={{
+            fontSize: 13, fontWeight: 700, padding: '9px 20px', borderRadius: 50,
+            background: 'var(--g700)', color: 'var(--white)', textDecoration: 'none',
+          }}>تحسين السيرة الذاتية →</Link>
+        </aside>
 
         {/* ── Related Tips ── */}
         {relatedTips.length > 0 && (

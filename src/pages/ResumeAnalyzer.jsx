@@ -784,8 +784,18 @@ export default function ResumeAnalyzer() {
   return (
     <>
       <Helmet>
-        <title>افحص سيرتك ضد ATS مجاناً | سعودي كارييرز</title>
-        <meta name="description" content="ارفع سيرتك الذاتية واحصل على تقرير فوري عن مدى توافقها مع أنظمة الفرز الآلي ATS المستخدمة في كبرى الشركات السعودية." />
+        <title>تحسين السيرة الذاتية لسوق العمل السعودي | سعودي كارييرز</title>
+        <meta name="description" content="حسّن سيرتك الذاتية وطابقها مع الوظيفة المستهدفة خلال ثوانٍ. تحليل ATS فوري، مقارنة المهارات، وتوصيات مخصصة للسوق السعودي." />
+        <script type="application/ld+json">{JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'FAQPage',
+          mainEntity: [
+            { '@type': 'Question', name: 'كيف أحسّن سيرتي الذاتية للسوق السعودي؟', acceptedAnswer: { '@type': 'Answer', text: 'ارفع سيرتك بصيغة PDF وأضف وصف الوظيفة المستهدفة. سيقوم النظام بتحليل المهارات ومقارنتها وإعادة صياغة السيرة لتتوافق مع متطلبات الوظيفة.' } },
+            { '@type': 'Question', name: 'ما هي أنظمة ATS وكيف تؤثر على قبول سيرتي؟', acceptedAnswer: { '@type': 'Answer', text: 'أنظمة ATS هي برامج تصفية آلية تستخدمها الشركات. 75٪ من السير الذاتية تُرفض قبل أن يقرأها بشر. المطابقة الصحيحة للكلمات المفتاحية تزيد فرص القبول.' } },
+            { '@type': 'Question', name: 'هل بياناتي محفوظة؟', acceptedAnswer: { '@type': 'Answer', text: 'لا. يُحذف الملف فور اكتمال التحليل ولا يُحفظ على خوادمنا وفقاً لنظام حماية البيانات الشخصية PDPL.' } },
+            { '@type': 'Question', name: 'ما المهارات التي يبحث عنها أصحاب العمل في السعودية؟', acceptedAnswer: { '@type': 'Answer', text: 'المهارات التقنية كـ Excel وSQL والبرمجة، ومهارات التواصل والقيادة وحل المشكلات، إضافة إلى الكلمات المفتاحية المطابقة لوصف الوظيفة.' } },
+          ],
+        })}</script>
       </Helmet>
 
       <div style={{
@@ -1131,6 +1141,29 @@ export default function ResumeAnalyzer() {
               before={tailorResult.text_preview || originalText}
               after={tailorResult.optimized_resume?.summary}
             />
+
+            {/* Why This Result */}
+            <section aria-labelledby="why-result-heading" style={{
+              background: 'var(--gray50)', border: '1px solid var(--gray200)',
+              borderRadius: 'var(--r-lg)', padding: '18px 20px', marginBottom: 20,
+            }}>
+              <h2 id="why-result-heading" style={{ fontSize: 14, fontWeight: 700, color: 'var(--g900)', marginBottom: 12, marginTop: 0 }}>
+                🔍 لماذا هذه النتيجة؟
+              </h2>
+              <ul style={{ margin: 0, paddingRight: 20, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <li style={{ fontSize: 13, color: 'var(--gray600)', lineHeight: 1.75 }}>
+                  تم تحليل مهاراتك ومقارنتها بمتطلبات الوظيفة — النتيجة تعكس نسبة التوافق الحالية
+                </li>
+                {(tailorResult.missing?.length ?? 0) > 0 && (
+                  <li style={{ fontSize: 13, color: 'var(--gray600)', lineHeight: 1.75 }}>
+                    المهارات الناقصة ({tailorResult.missing.join('، ')}) تؤثر على النتيجة النهائية
+                  </li>
+                )}
+                <li style={{ fontSize: 13, color: 'var(--gray600)', lineHeight: 1.75 }}>
+                  كلما أضفت مهارات وخبرات أكثر، ارتفعت فرصك في اجتياز فلتر ATS
+                </li>
+              </ul>
+            </section>
 
             {/* Strength Meter */}
             <StrengthMeter resume={tailorResult.optimized_resume} />
