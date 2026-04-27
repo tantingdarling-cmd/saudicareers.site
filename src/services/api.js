@@ -131,6 +131,13 @@ export const subscribersApi = {
   getAll: () => api.get('/admin/subscribers'),
 };
 
+export const sectionsApi = {
+  getAll:  ()           => api.get('/v1/sections'),
+  create:  (data)       => api.post('/admin/sections', data),
+  update:  (id, data)   => api.put(`/admin/sections/${id}`, data),
+  destroy: (id)         => api.delete(`/admin/sections/${id}`),
+};
+
 export const settingsApi = {
   getAll:  ()           => api.get('/admin/settings'),
   update:  (key, value) => api.patch(`/admin/settings/${encodeURIComponent(key)}`, { value }),

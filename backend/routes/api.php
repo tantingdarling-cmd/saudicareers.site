@@ -25,6 +25,7 @@ use App\Http\Controllers\Api\NotificationsController;
 use App\Http\Controllers\Api\AnalyticsController;
 use App\Http\Controllers\Api\ReferralController;
 use App\Http\Controllers\Api\AdminDashboardController;
+use App\Http\Controllers\Api\SiteSectionController;
 
 // §6: Sitemap — public, no auth, outside v1 prefix.
 // Accessible at /api/sitemap.xml. For static /sitemap.xml run: php artisan sitemap:generate
@@ -63,6 +64,8 @@ Route::prefix('v1')->group(function () {
     Route::post('/resume/tailor', [ResumeController::class, 'tailor'])
         ->middleware('throttle:3,1')
         ->name('resume.tailor');
+
+    Route::get('/sections', [SiteSectionController::class, 'index']);
 
     // Rate limited to 5 attempts per minute per IP
     Route::post('/login', [AuthController::class, 'login'])
@@ -156,6 +159,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::patch('/settings/{key}',      [SettingsController::class, 'update'])
              ->where('key', '.+');           // يسمح بـ dots في الـ key (analytics.ga_id)
 
+
+        // Site Sections
+        Route::post('/sections',        [SiteSectionController::class, 'store']);
+        Route::put('/sections/{section}',    [SiteSectionController::class, 'update']);
+        Route::delete('/sections/{section}', [SiteSectionController::class, 'destroy']);
 
         // Probation Tracker — نظام العمل السعودي المادة 53
         // جميع العمليات محمية بـ Sanctum + admin middleware

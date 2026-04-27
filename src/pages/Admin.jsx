@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Plus, Pencil, Trash2, X, Save, Lock, LogOut, Loader, FileText, Clock, CheckCircle, XCircle, Users, Download, Copy, Mail, UserCheck, AlertTriangle } from 'lucide-react'
-import { authApi, jobsApi, applicationsApi, subscribersApi, probationApi, settingsApi } from '../services/api'
+import { authApi, jobsApi, applicationsApi, subscribersApi, probationApi, settingsApi, sectionsApi } from '../services/api'
 
 const CATEGORIES = [
   { key:'tech', label:'تقنية' },
@@ -48,6 +48,12 @@ export default function Admin() {
   const [loadingSubs, setLoadingSubs] = useState(false)
   const [subsCopied, setSubsCopied] = useState(false)
   const [peek, setPeek]             = useState(null)   // { type:'job'|'app', item }
+
+  // ── Sections state ───────────────────────────────────────────────
+  const [sections, setSections]             = useState([])
+  const [sectionForm, setSectionForm]       = useState({ key:'', title:'', content:'{}', is_active:true, order:0 })
+  const [editingSection, setEditingSection] = useState(null)
+  const [savingSection, setSavingSection]   = useState(false)
 
   // ── Probation state ──────────────────────────────────────────────
   const [probation, setProbation]           = useState([])
@@ -98,6 +104,7 @@ export default function Admin() {
     if (activeTab === 'subscribers') fetchSubscribers()
     if (activeTab === 'probation') fetchProbation()
     if (activeTab === 'settings') fetchSettings()
+    if (activeTab === 'sections') sectionsApi.getAll().then(setSections).catch(console.error)
     if (activeTab === 'analytics') fetchFunnel()
   }, [activeTab])
 
@@ -537,6 +544,12 @@ export default function Admin() {
               </span>
             )}
           </button>
+          <button onClick={() => setActiveTab('sections')} style={{
+            padding:'10px 24px', borderRadius:'var(--r-sm)', border:'none', fontSize:14, fontWeight:600, cursor:'pointer',
+            background: activeTab === 'sections' ? 'var(--white)' : 'transparent',
+            color: activeTab === 'sections' ? 'var(--g900)' : 'var(--gray500)',
+            boxShadow: activeTab === 'sections' ? 'var(--shadow-sm)' : 'none',
+          }}>🗂 الأقسام</button>
         </div>
 
         {/* ── DASHBOARD TAB ──────────────────────────────────────────── */}
@@ -1515,6 +1528,85 @@ export default function Admin() {
             لا توجد بيانات تحليلية بعد.
           </div>
         )
+      )}
+      {activeTab === 'sections' && (
+        <div style={{ background:'var(--white)', borderRadius:'var(--r-lg)', border:'1.5px solid var(--gray200)', padding:24 }}>
+          <div style={{ fontSize:16, fontWeight:700, color:'var(--g900)', marginBottom:20 }}>🗂 إدارة الأقسام</div>
+
+          {/* Form */}
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginBottom:20 }}>
+            {[['key','المفتاح (key)'],['title','العنوان'],['order','الترتيب']].map(([field, label]) => (
+              <div key={field}>
+                <div style={{ fontSize:12, color:'var(--gray500)', marginBottom:4 }}>{label}</div>
+                <input value={editingSection ? editingSection[field] ?? '' : sectionForm[field]}
+                  onChange={e => editingSection
+                    ? setEditingSection({ ...editingSection, [field]: e.target.value })
+                    : setSectionForm({ ...sectionForm, [field]: e.target.value })
+                  }
+                  style={{ width:'100%', boxSizing:'border-box', padding:'8px 10px', fontSize:13, border:'1.5px solid var(--gray200)', borderRadius:'var(--r-md)', outline:'none' }}
+                />
+              </div>
+            ))}
+            <div style={{ gridColumn:'1/-1' }}>
+              <div style={{ fontSize:12, color:'var(--gray500)', marginBottom:4 }}>المحتوى (JSON)</div>
+              <textarea rows={3} value={editingSection ? JSON.stringify(editingSection.content ?? {}) : sectionForm.content}
+                onChange={e => editingSection
+                  ? setEditingSection({ ...editingSection, content: e.target.value })
+                  : setSectionForm({ ...sectionForm, content: e.target.value })
+                }
+                style={{ width:'100%', boxSizing:'border-box', padding:'8px 10px', fontSize:13, border:'1.5px solid var(--gray200)', borderRadius:'var(--r-md)', outline:'none', fontFamily:'monospace', resize:'vertical' }}
+              />
+            </div>
+          </div>
+
+          <div style={{ display:'flex', gap:8, marginBottom:24 }}>
+            <button disabled={savingSection} onClick={async () => {
+              setSavingSection(true)
+              try {
+                if (editingSection) {
+                  const content = typeof editingSection.content === 'string' ? JSON.parse(editingSection.content) : editingSection.content
+                  const updated = await sectionsApi.update(editingSection.id, { ...editingSection, content })
+                  setSections(sections.map(s => s.id === updated.id ? updated : s))
+                  setEditingSection(null)
+                } else {
+                  const payload = { ...sectionForm, content: JSON.parse(sectionForm.content || '{}') }
+                  const created = await sectionsApi.create(payload)
+                  setSections([...sections, created])
+                  setSectionForm({ key:'', title:'', content:'{}', is_active:true, order:0 })
+                }
+              } catch (e) { alert(e.message || 'خطأ في الحفظ') } finally { setSavingSection(false) }
+            }} style={{ padding:'9px 20px', background:'var(--g700)', color:'var(--white)', border:'none', borderRadius:50, fontSize:13, fontWeight:600, cursor:'pointer' }}>
+              {savingSection ? '...' : editingSection ? 'حفظ التعديل' : '+ إضافة قسم'}
+            </button>
+            {editingSection && (
+              <button onClick={() => setEditingSection(null)} style={{ padding:'9px 20px', background:'var(--gray100)', color:'var(--gray700)', border:'none', borderRadius:50, fontSize:13, fontWeight:600, cursor:'pointer' }}>إلغاء</button>
+            )}
+          </div>
+
+          {/* List */}
+          {sections.map(s => (
+            <div key={s.id} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'12px 14px', border:'1px solid var(--gray200)', borderRadius:'var(--r-md)', marginBottom:8, gap:10, flexWrap:'wrap' }}>
+              <div>
+                <span style={{ fontSize:13, fontWeight:600, color:'var(--g900)' }}>{s.title}</span>
+                <span style={{ fontSize:11, color:'var(--gray400)', marginRight:8 }}>({s.key})</span>
+                <span style={{ fontSize:11, padding:'2px 8px', borderRadius:50, background: s.is_active ? 'var(--g50)' : 'var(--gray100)', color: s.is_active ? 'var(--g700)' : 'var(--gray500)' }}>
+                  {s.is_active ? 'مفعّل' : 'معطّل'}
+                </span>
+              </div>
+              <div style={{ display:'flex', gap:6 }}>
+                <button onClick={() => sectionsApi.update(s.id, { is_active: !s.is_active }).then(u => setSections(sections.map(x => x.id === u.id ? u : x)))}
+                  style={{ fontSize:12, padding:'5px 12px', borderRadius:50, border:'1px solid var(--gray300)', background:'var(--white)', cursor:'pointer' }}>
+                  {s.is_active ? 'تعطيل' : 'تفعيل'}
+                </button>
+                <button onClick={() => setEditingSection({ ...s })}
+                  style={{ fontSize:12, padding:'5px 12px', borderRadius:50, border:'1px solid var(--gray300)', background:'var(--white)', cursor:'pointer' }}>تعديل</button>
+                <button onClick={async () => { if (!confirm('حذف؟')) return; await sectionsApi.destroy(s.id); setSections(sections.filter(x => x.id !== s.id)) }}
+                  style={{ fontSize:12, padding:'5px 12px', borderRadius:50, border:'1px solid #fecaca', background:'#fef2f2', color:'#dc2626', cursor:'pointer' }}>حذف</button>
+              </div>
+            </div>
+          ))}
+          {sections.length === 0 && <div style={{ textAlign:'center', color:'var(--gray400)', fontSize:13, padding:32 }}>لا توجد أقسام بعد</div>}
+        </div>
       )}
     </div>
   )
