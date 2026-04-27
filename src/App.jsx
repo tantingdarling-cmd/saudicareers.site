@@ -31,6 +31,10 @@ const ResumeBuilder       = lazy(() => import('./pages/ResumeBuilder.jsx'))
 const ResumeDashboard     = lazy(() => import('./pages/ResumeDashboard.jsx'))
 const Notifications       = lazy(() => import('./pages/Notifications.jsx'))
 const VerifyEmail         = lazy(() => import('./pages/VerifyEmail.jsx'))
+const CvKeywords          = lazy(() => import('./pages/CvKeywords.jsx'))
+const ResumeMistakes      = lazy(() => import('./pages/ResumeMistakes.jsx'))
+const AtsGuide            = lazy(() => import('./pages/AtsGuide.jsx'))
+const ResumeRejection     = lazy(() => import('./pages/ResumeRejection.jsx'))
 
 export default function App() {
   useEffect(() => {
@@ -56,7 +60,11 @@ export default function App() {
             <Route path="/login"               element={<Login />} />
             <Route path="/register"            element={<Register />} />
             <Route path="/verify-email"        element={<VerifyEmail />} />
-            <Route path="/resume-analyzer"     element={<ResumeAnalyzer />} />
+            <Route path="/resume-analyzer"     element={<ProtectedRoute><ResumeAnalyzer /></ProtectedRoute>} />
+            <Route path="/cv-keywords"         element={<CvKeywords />} />
+            <Route path="/resume-mistakes"     element={<ResumeMistakes />} />
+            <Route path="/ats-guide"           element={<AtsGuide />} />
+            <Route path="/resume-rejection"    element={<ResumeRejection />} />
             <Route path="/resume-results/:id"  element={<ResumeResults />} />
             <Route path="/privacy"             element={<Privacy />} />
             <Route path="/terms"               element={<Terms />} />

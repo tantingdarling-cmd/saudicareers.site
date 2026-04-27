@@ -32,7 +32,8 @@ class ApiService {
       if (!response.ok) {
         if (response.status === 401) {
           removeToken();
-          window.location.href = '/admin';
+          const currentPath = window.location.pathname;
+          window.location.href = `/login?next=${encodeURIComponent(currentPath)}`;
         }
         throw new Error(data.message || data.error || 'حدث خطأ غير متوقع');
       }

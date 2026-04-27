@@ -138,12 +138,6 @@ function ProgressTracker({ currentScore }) {
   const prev    = scores.length >= 2 ? scores[scores.length - 2]?.score : null
   const diff    = prev != null ? last - prev : null
 
-  const diffMsg = diff == null
-    ? 'هذه أول نتيجة لك'
-    : diff > 0 ? `تحسنت بنسبة +${diff}% 🔥`
-    : diff < 0 ? `انخفضت النتيجة ${diff}%`
-    : 'النتيجة ثابتة'
-
   const motivation = last > 80
     ? '🔥 ممتاز! جاهز للتقديم'
     : last >= 60
@@ -155,7 +149,34 @@ function ProgressTracker({ currentScore }) {
       background: 'var(--white)', border: '1px solid var(--gray200)',
       borderRadius: 'var(--r-lg)', padding: '18px 20px', marginBottom: 20,
     }}>
-      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--g900)', marginBottom: 14 }}>📈 تطورك</div>
+      {/* Progress headline */}
+      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--g900)', marginBottom: 4 }}>
+        📈 تقدمك:{' '}
+        {prev != null
+          ? <span>{prev}% → <span style={{ color: 'var(--g700)' }}>{last}%</span> <span style={{ color: diff > 0 ? 'var(--g600)' : diff < 0 ? '#dc2626' : 'var(--gray400)', fontSize: 12 }}>({diff > 0 ? '+' : ''}{diff}%)</span></span>
+          : <span style={{ color: 'var(--g700)' }}>{last}%</span>
+        }
+      </div>
+
+      {/* Improvement feedback */}
+      {diff > 0 && (
+        <div style={{ fontSize: 12, color: 'var(--g600)', fontWeight: 700, marginBottom: 10 }}>
+          🔥 تحسّن واضح — استمر!
+        </div>
+      )}
+
+      {/* Unlock badge on meaningful improvement */}
+      {diff > 0 && last >= 70 && (
+        <div style={{
+          display: 'inline-flex', alignItems: 'center', gap: 6,
+          background: 'var(--g50)', border: '1px solid var(--g300)',
+          borderRadius: 50, padding: '4px 14px', fontSize: 12,
+          color: 'var(--g700)', fontWeight: 700, marginBottom: 10,
+        }}>
+          🔓 تم فتح: سيرة جاهزة للتقديم
+        </div>
+      )}
+
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 12 }}>
         <div style={{ flex: 1, minWidth: 100, background: 'var(--gray50)', borderRadius: 'var(--r-lg)', padding: '10px 14px', textAlign: 'center' }}>
           <div style={{ fontSize: 11, color: 'var(--gray400)', marginBottom: 3 }}>آخر نتيجة</div>
@@ -163,14 +184,10 @@ function ProgressTracker({ currentScore }) {
         </div>
         {prev != null && (
           <div style={{ flex: 1, minWidth: 100, background: 'var(--gray50)', borderRadius: 'var(--r-lg)', padding: '10px 14px', textAlign: 'center' }}>
-            <div style={{ fontSize: 11, color: 'var(--gray400)', marginBottom: 3 }}>النتيجة السابقة</div>
+            <div style={{ fontSize: 11, color: 'var(--gray400)', marginBottom: 3 }}>السابقة</div>
             <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--gray500)' }}>{prev}%</div>
           </div>
         )}
-        <div style={{ flex: 1, minWidth: 100, background: diff > 0 ? 'var(--g50)' : diff < 0 ? '#fef2f2' : 'var(--gray50)', borderRadius: 'var(--r-lg)', padding: '10px 14px', textAlign: 'center' }}>
-          <div style={{ fontSize: 11, color: 'var(--gray400)', marginBottom: 3 }}>التغيير</div>
-          <div style={{ fontSize: 13, fontWeight: 600, color: diff > 0 ? 'var(--g700)' : diff < 0 ? '#dc2626' : 'var(--gray500)' }}>{diffMsg}</div>
-        </div>
       </div>
       <div style={{ fontSize: 13, color: 'var(--gray600)', textAlign: 'center' }}>{motivation}</div>
     </div>
@@ -254,11 +271,20 @@ function AddictionLoop({ result }) {
       {/* Daily Mission */}
       <div style={{
         background: '#fffbeb', border: '1px solid #fde68a',
-        borderRadius: 'var(--r-md)', padding: '10px 14px',
+        borderRadius: 'var(--r-md)', padding: '10px 14px', marginBottom: 10,
         fontSize: 12, color: '#78350f',
       }}>
         <span style={{ fontWeight: 700 }}>🏆 مهمة اليوم: </span>{mission}
       </div>
+      <a href="#upload-section" style={{
+        display: 'block', textAlign: 'center', fontSize: 12, fontWeight: 700,
+        color: 'var(--g700)', textDecoration: 'none', padding: '8px 0',
+        background: 'var(--g50)', borderRadius: 'var(--r-md)',
+        border: '1px solid var(--g200)', transition: 'background 0.15s',
+      }}
+        onMouseEnter={e => { e.currentTarget.style.background = 'var(--g100)' }}
+        onMouseLeave={e => { e.currentTarget.style.background = 'var(--g50)' }}
+      >✔ أنجزت؟ حسّن نتيجتك الآن</a>
     </div>
   )
 }
@@ -393,6 +419,52 @@ function DailyTip() {
   )
 }
 
+/* ── Streak System ─────────────────────────── */
+const STREAK_KEY = 'resume_streak'
+
+function getStreak() {
+  try { return JSON.parse(localStorage.getItem(STREAK_KEY) || 'null') } catch (_) { return null }
+}
+
+function recordStreak() {
+  const today = Math.floor(Date.now() / 86400000)
+  const s = getStreak()
+  if (s?.lastDay === today) return s
+  const count = s?.lastDay === today - 1 ? (s.count ?? 1) + 1 : 1
+  const next = { count, lastDay: today }
+  try { localStorage.setItem(STREAK_KEY, JSON.stringify(next)) } catch (_) {}
+  return next
+}
+
+function StreakBanner() {
+  const streak = getStreak()
+  if (!streak) return null
+  const today = Math.floor(Date.now() / 86400000)
+  const isActive = streak.lastDay >= today - 1
+
+  return (
+    <div style={{
+      maxWidth: 460, margin: '0 auto 16px',
+      background: isActive ? 'var(--g50)' : '#fffbeb',
+      border: `1px solid ${isActive ? 'var(--g200)' : '#fde68a'}`,
+      borderRadius: 'var(--r-lg)', padding: '10px 16px',
+      display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
+    }}>
+      <span style={{ fontSize: 13, fontWeight: 700, color: isActive ? 'var(--g800)' : '#92400e' }}>
+        {isActive
+          ? `🔥 سلسلة تطويرك: ${streak.count} ${streak.count === 1 ? 'يوم' : 'أيام'}`
+          : '⚠ لا تكسر السلسلة — عد الآن!'}
+      </span>
+      {!isActive && (
+        <a href="#upload-section" style={{
+          fontSize: 12, fontWeight: 700, padding: '5px 14px', borderRadius: 50,
+          background: '#d97706', color: '#fff', textDecoration: 'none',
+        }}>عد الآن</a>
+      )}
+    </div>
+  )
+}
+
 /* ── Saved Session ─────────────────────────── */
 const SESSION_KEY = 'last_resume_session'
 
@@ -411,6 +483,8 @@ function SessionBanner({ onRestore }) {
   const hoursAgo = Math.round((Date.now() - session.date) / 3600000)
   const timeLabel = hoursAgo < 1 ? 'منذ أقل من ساعة' : `منذ ${hoursAgo} ساعة`
 
+  const lastScore = session.result?.score ?? null
+
   return (
     <div style={{
       maxWidth: 640, margin: '0 auto 24px',
@@ -419,8 +493,12 @@ function SessionBanner({ onRestore }) {
       display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap',
     }}>
       <div>
-        <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--g900)' }}>👋 رجعنا لك! </span>
-        <span style={{ fontSize: 12, color: 'var(--gray500)' }}>{timeLabel}</span>
+        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--g900)', marginBottom: 2 }}>
+          👋 رجعت!{lastScore != null ? ` آخر نتيجة لك كانت ${lastScore}%` : ''}
+        </div>
+        <div style={{ fontSize: 12, color: 'var(--gray500)' }}>
+          {lastScore != null && lastScore < 80 ? 'جاهز توصل 80%؟' : timeLabel}
+        </div>
       </div>
       <button onClick={() => { onRestore(session.result); setSession(null) }} style={{
         fontSize: 13, fontWeight: 600, padding: '7px 18px', borderRadius: 50,
@@ -670,6 +748,7 @@ export default function ResumeAnalyzer() {
   const [jobDesc, setJobDesc]     = useState('')
   const [originalText, setOriginalText] = useState('')
   const [sections, setSections] = useState({})
+  const [shareToast, setShareToast] = useState(false)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -696,6 +775,8 @@ export default function ResumeAnalyzer() {
   useEffect(() => {
     if (!tailorResult) return
     try { localStorage.setItem(SESSION_KEY, JSON.stringify({ result: tailorResult, date: Date.now() })) } catch (_) {}
+    recordStreak()
+    if (tailorResult.score != null) saveScore(tailorResult.score)
   }, [tailorResult])
 
   const handleFile = file => {
@@ -712,6 +793,8 @@ export default function ResumeAnalyzer() {
     const xhr = new XMLHttpRequest()
     xhr.open('POST', `${API_BASE}/v1/resume/analyze`)
     xhr.setRequestHeader('Accept', 'application/json')
+    const token = localStorage.getItem('auth_token')
+    if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`)
 
     xhr.upload.onprogress = e => {
       if (e.lengthComputable) setProgress(Math.round((e.loaded / e.total) * 100))
@@ -739,6 +822,12 @@ export default function ResumeAnalyzer() {
           } catch (_) {}
 
           navigate(`/resume-results/${id}`)
+        } else if (xhr.status === 401) {
+          setErrorMsg('يرجى تسجيل الدخول أولاً لاستخدام محلل السيرة الذاتية')
+          setPhase('error')
+          setTimeout(() => {
+            window.location.href = `/login?next=${encodeURIComponent(window.location.pathname)}`
+          }, 2000)
         } else if (xhr.status === 422) {
           setInlineError('يرجى رفع السيرة الذاتية وإضافة وصف الوظيفة')
           setPhase('idle')
@@ -804,6 +893,7 @@ export default function ResumeAnalyzer() {
         background:'linear-gradient(180deg, var(--g50) 0%, var(--white) 50%)',
       }}>
         <SessionBanner onRestore={setTailorResult} />
+        <StreakBanner />
 
         {/* Header */}
         <div style={{ maxWidth:640, margin:'0 auto 48px', textAlign:'center' }}>
@@ -829,8 +919,11 @@ export default function ResumeAnalyzer() {
             <span style={{ color:'var(--g600)', borderBottom:'2px solid var(--g400)' }}>احترافية</span>
             {' '}خلال دقائق
           </h1>
-          <p style={{ fontSize:15, color:'var(--gray600)', lineHeight:1.85, maxWidth:480, margin:'0 auto 16px' }}>
+          <p style={{ fontSize:15, color:'var(--gray600)', lineHeight:1.85, maxWidth:480, margin:'0 auto 8px' }}>
             نحلل سيرتك، نطابقها مع الوظيفة، ونجهزها بشكل جاهز للتقديم
+          </p>
+          <p style={{ fontSize:13, color:'var(--gray500)', lineHeight:1.7, maxWidth:520, margin:'0 auto 16px', fontStyle:'italic' }}>
+            تستخدم منصة SaudiCareers تقنيات تحليل متقدمة لمواءمة سيرتك مع متطلبات سوق العمل السعودي.
           </p>
           <div style={{ fontSize:13, color:'#d97706', fontWeight:600, marginBottom:20 }}>
             🔥 جهّز سيرتك قبل ما يفوتك التقديم &nbsp;·&nbsp; <span style={{ color:'var(--gray500)', fontWeight:400 }}>⚡ كثير يستخدمون الأداة حالياً</span>
@@ -845,7 +938,7 @@ export default function ResumeAnalyzer() {
             onMouseLeave={e => { e.currentTarget.style.background='var(--g700)'; e.currentTarget.style.boxShadow='0 4px 16px rgba(0,0,0,0.10)' }}
             onMouseDown={e => e.currentTarget.style.transform='scale(0.97)'}
             onMouseUp={e => e.currentTarget.style.transform='scale(1)'}
-          >عدّل سيرتك الآن</a>
+          >🔥 ابدأ تحليل سيرتي الآن</a>
 
           <div style={{ fontSize:12, color:'var(--gray400)', marginTop:10 }}>
             ابدأ الآن — خلال أقل من 30 ثانية
@@ -919,11 +1012,57 @@ export default function ResumeAnalyzer() {
 
         {/* Content */}
         <div id="upload-section" />
-        <p style={{ textAlign:'center', fontSize:12, color:'var(--gray400)', marginBottom:20 }}>
-          🔒 بياناتك آمنة — لا نحفظ سيرتك بدون إذنك
-        </p>
+
         {phase === 'idle' && (
           <>
+            {/* ── Pre-Upload Conversion Layer ── */}
+            <div className="fade-in-section" style={{ maxWidth: 460, margin: '0 auto 24px', textAlign: 'center' }}>
+              {/* Fear Hook */}
+              <div style={{
+                background: '#fef2f2', border: '1px solid #fecaca',
+                borderRadius: 'var(--r-lg)', padding: '12px 18px', marginBottom: 16,
+              }}>
+                <p style={{ margin: 0, fontSize: 13, color: '#dc2626', fontWeight: 700, lineHeight: 1.7 }}>
+                  ❗ 73% من السير الذاتية يتم رفضها قبل أن يقرأها أي مسؤول توظيف
+                </p>
+              </div>
+
+              {/* Promise Block */}
+              <div style={{
+                background: 'var(--g50)', border: '1px solid var(--g200)',
+                borderRadius: 'var(--r-lg)', padding: '14px 18px', marginBottom: 16, textAlign: 'right',
+              }}>
+                <p style={{ margin: '0 0 8px', fontSize: 13, fontWeight: 700, color: 'var(--g800)' }}>
+                  🎯 خلال 30 ثانية، تعرف:
+                </p>
+                <ul style={{ margin: 0, paddingRight: 18 }}>
+                  <li style={{ fontSize: 13, color: 'var(--gray600)', lineHeight: 1.8 }}>هل سيرتك قابلة للقبول؟</li>
+                  <li style={{ fontSize: 13, color: 'var(--gray600)', lineHeight: 1.8 }}>ما الذي يمنعك من التوظيف</li>
+                </ul>
+              </div>
+
+              {/* Ghost Result Preview */}
+              <div style={{
+                background: 'var(--gray50)', border: '1.5px dashed var(--gray300)',
+                borderRadius: 'var(--r-lg)', padding: '14px 18px', marginBottom: 16, textAlign: 'right',
+                opacity: 0.82,
+              }}>
+                <p style={{ margin: '0 0 8px', fontSize: 12, fontWeight: 700, color: 'var(--gray500)', textTransform: 'uppercase', letterSpacing: 1 }}>
+                  🚀 مثال على النتيجة
+                </p>
+                <div style={{ fontSize: 22, fontWeight: 700, color: '#d97706', marginBottom: 6 }}>58%</div>
+                <ul style={{ margin: 0, paddingRight: 18 }}>
+                  <li style={{ fontSize: 12, color: '#dc2626', lineHeight: 1.8 }}>❌ لا يوجد Keywords كافية</li>
+                  <li style={{ fontSize: 12, color: '#dc2626', lineHeight: 1.8 }}>❌ العناوين غير متوافقة مع ATS</li>
+                </ul>
+              </div>
+
+              {/* Trust Line */}
+              <p style={{ margin: 0, fontSize: 12, color: 'var(--gray400)' }}>
+                🔒 بياناتك آمنة — لا يتم حفظ السيرة الذاتية
+              </p>
+            </div>
+
             {/* ── PDPL Consent Block ── */}
             <div style={{ maxWidth:460, margin:'0 auto 20px' }}>
               <label style={{
@@ -1054,53 +1193,110 @@ export default function ResumeAnalyzer() {
           <div style={{ maxWidth: 720, margin: '48px auto 0' }}>
 
             {/* Header */}
-            <div style={{ textAlign: 'center', marginBottom: 28 }}>
-              <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--g950)', marginBottom: 4 }}>
-                📄 هذه السيرة مُحسَّنة لوظيفتك المستهدفة
-              </div>
-              {tailorResult.score >= 80
-                ? <div style={{ fontSize: 14, color: 'var(--g600)', fontWeight: 700 }}>🔥 سيرتك جاهزة للتقديم!</div>
-                : <div style={{ fontSize: 13, color: 'var(--g600)', fontWeight: 600 }}>✅ سيرتك جاهزة للتقديم</div>
+            {/* ── Viral Distribution Layer ── */}
+            {(() => {
+              const score = tailorResult.score ?? 0
+              const level = score < 40
+                ? { label: 'مبتدئ',  icon: '🔴', color: '#dc2626' }
+                : score < 70
+                ? { label: 'متقدم',  icon: '🟡', color: '#d97706' }
+                : { label: 'محترف',  icon: '🟢', color: 'var(--g600)' }
+
+              const shareText = `🚀 سيرتي أصبحت احترافية بنسبة ${score}%\n✔ جاهز للتقديم\n📈 تم تحسينها حسب متطلبات السوق السعودي\n\nجرّب بنفسك:\nsaudicareers.site`
+              const shareEncoded = encodeURIComponent(shareText)
+
+              const handleCopy = () => {
+                navigator.clipboard?.writeText(shareText).then(() => {
+                  setShareToast(true)
+                  setTimeout(() => setShareToast(false), 2800)
+                }).catch(() => {})
               }
 
-              {/* Improvement Banner */}
-              <div style={{ fontSize: 14, color: '#d97706', fontWeight: 700, marginTop: 8 }}>
-                🔥 تم تحسين سيرتك بنسبة +{tailorResult.score ?? 0}%
-              </div>
+              return (
+                <div style={{ textAlign: 'center', marginBottom: 28 }}>
+                  {/* Result headline */}
+                  <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--g950)', marginBottom: 8 }}>
+                    📄 هذه السيرة مُحسَّنة لوظيفتك المستهدفة
+                  </div>
 
-              {/* Goal Indicator */}
-              <div style={{ fontSize: 12, color: 'var(--gray500)', marginTop: 4 }}>
-                🎯 هدفك: 80%+
-                {(tailorResult.score ?? 0) >= 80 && <span style={{ color: 'var(--g600)', fontWeight: 700 }}> — وصلت! 🎉</span>}
-              </div>
+                  {/* Level badge */}
+                  <div style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 6,
+                    background: 'var(--gray50)', border: `1px solid ${level.color}`,
+                    borderRadius: 50, padding: '5px 16px', marginBottom: 10,
+                  }}>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: level.color }}>
+                      🎯 مستواك: {level.icon} {level.label}
+                    </span>
+                  </div>
 
-              {/* Social Proof */}
-              <div style={{ fontSize: 12, color: 'var(--gray400)', marginTop: 6 }}>
-                ⭐ أكثر من 120 شخص حسّنوا سيرتهم اليوم
-              </div>
+                  {/* Social comparison — elite only */}
+                  {score >= 70 && (
+                    <div style={{ fontSize: 13, color: 'var(--g600)', fontWeight: 600, marginBottom: 8 }}>
+                      💡 أغلب المستخدمين لا يصلون لهذا المستوى
+                    </div>
+                  )}
 
-              {/* Viral Banner — score ≥ 70 only */}
-              {(tailorResult.score ?? 0) >= 70 && (
-                <div style={{ fontSize: 13, color: '#d97706', fontWeight: 700, marginTop: 10 }}>
-                  🔥 سيرتك الآن جاهزة… لا تخليها لنفسك 😉
+                  {/* Social proof */}
+                  <div style={{ fontSize: 12, color: 'var(--gray400)', marginBottom: 14 }}>
+                    ⭐ أكثر من 120 شخص حسّنوا سيرتهم اليوم
+                  </div>
+
+                  {/* Share buttons row */}
+                  <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 10 }}>
+                    {/* Copy */}
+                    <button onClick={handleCopy} style={{
+                      padding: '9px 20px', borderRadius: 50, fontSize: 13, fontWeight: 700,
+                      background: 'var(--g700)', color: 'var(--white)', border: 'none', cursor: 'pointer',
+                      transition: 'all 0.2s', boxShadow: '0 4px 14px rgba(34,197,94,0.2)',
+                    }}
+                      onMouseEnter={e => { e.currentTarget.style.background = 'var(--g900)' }}
+                      onMouseLeave={e => { e.currentTarget.style.background = 'var(--g700)' }}
+                    >🔥 انسخ واستعرض</button>
+
+                    {/* WhatsApp */}
+                    <a href={`https://wa.me/?text=${shareEncoded}`} target="_blank" rel="noopener noreferrer" style={{
+                      padding: '9px 20px', borderRadius: 50, fontSize: 13, fontWeight: 700,
+                      background: '#25d366', color: '#fff', textDecoration: 'none', display: 'inline-block',
+                      transition: 'opacity 0.2s',
+                    }}
+                      onMouseEnter={e => { e.currentTarget.style.opacity = '0.85' }}
+                      onMouseLeave={e => { e.currentTarget.style.opacity = '1' }}
+                    >💬 واتساب</a>
+
+                    {/* X (Twitter) */}
+                    <a href={`https://x.com/intent/tweet?text=${shareEncoded}`} target="_blank" rel="noopener noreferrer" style={{
+                      padding: '9px 20px', borderRadius: 50, fontSize: 13, fontWeight: 700,
+                      background: '#000', color: '#fff', textDecoration: 'none', display: 'inline-block',
+                      transition: 'opacity 0.2s',
+                    }}
+                      onMouseEnter={e => { e.currentTarget.style.opacity = '0.75' }}
+                      onMouseLeave={e => { e.currentTarget.style.opacity = '1' }}
+                    >𝕏 تغريد</a>
+                  </div>
+
+                  {/* Toast */}
+                  {shareToast && (
+                    <div style={{
+                      display: 'inline-block', marginTop: 6, padding: '6px 18px',
+                      background: 'var(--g50)', border: '1px solid var(--g300)',
+                      borderRadius: 50, fontSize: 12, color: 'var(--g700)', fontWeight: 600,
+                      animation: 'fadeIn 0.2s ease',
+                    }}>✅ تم النسخ — شاركه الآن!</div>
+                  )}
+
+                  {/* Loop trigger */}
+                  {score < 90 && (
+                    <div style={{
+                      marginTop: 14, fontSize: 13, color: '#d97706', fontWeight: 700,
+                      padding: '8px 0', borderTop: '1px dashed var(--gray200)',
+                    }}>
+                      🔥 ارفع نتيجتك إلى 90% وكن من النخبة
+                    </div>
+                  )}
                 </div>
-              )}
-
-              {/* Share Button */}
-              <button onClick={() => {
-                const score = tailorResult.score ?? 0
-                const text = `🚀 سيرتي أصبحت احترافية بنسبة ${score}%\n✔ جاهز للتقديم\nsaudicareers.site`
-                navigator.clipboard?.writeText(text).catch(() => {})
-                alert('✅ تم نسخ النص — استعرض قوتك الآن!')
-              }} style={{
-                marginTop: 14, padding: '9px 24px', borderRadius: 50, fontSize: 13, fontWeight: 700,
-                background: 'var(--g700)', color: 'var(--white)', border: 'none', cursor: 'pointer',
-                transition: 'all 0.2s', boxShadow: '0 4px 14px rgba(34,197,94,0.2)',
-              }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'var(--g900)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(34,197,94,0.35)' }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'var(--g700)'; e.currentTarget.style.boxShadow = '0 4px 14px rgba(34,197,94,0.2)' }}
-              >🔥 استعرض قوتك المهنية</button>
-            </div>
+              )
+            })()}
 
             {/* Score + Missing */}
             <div style={{ display: 'flex', gap: 16, marginBottom: 28, flexWrap: 'wrap' }}>
@@ -1150,17 +1346,23 @@ export default function ResumeAnalyzer() {
               <h2 id="why-result-heading" style={{ fontSize: 14, fontWeight: 700, color: 'var(--g900)', marginBottom: 12, marginTop: 0 }}>
                 🔍 لماذا هذه النتيجة؟
               </h2>
+              <p style={{ fontSize: 13, color: 'var(--g700)', fontWeight: 600, margin: '0 0 10px' }}>
+                تحليل SaudiCareers يوضح أن سيرتك الحالية تحتاج إلى:
+              </p>
               <ul style={{ margin: 0, paddingRight: 20, display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <li style={{ fontSize: 13, color: 'var(--gray600)', lineHeight: 1.75 }}>
-                  تم تحليل مهاراتك ومقارنتها بمتطلبات الوظيفة — النتيجة تعكس نسبة التوافق الحالية
+                  مطابقة كلمات مفتاحية من وصف الوظيفة لاجتياز فلتر ATS
                 </li>
                 {(tailorResult.missing?.length ?? 0) > 0 && (
                   <li style={{ fontSize: 13, color: 'var(--gray600)', lineHeight: 1.75 }}>
-                    المهارات الناقصة ({tailorResult.missing.join('، ')}) تؤثر على النتيجة النهائية
+                    إضافة المهارات الناقصة: {tailorResult.missing.join('، ')}
                   </li>
                 )}
                 <li style={{ fontSize: 13, color: 'var(--gray600)', lineHeight: 1.75 }}>
-                  كلما أضفت مهارات وخبرات أكثر، ارتفعت فرصك في اجتياز فلتر ATS
+                  تعزيز الإنجازات بأرقام قابلة للقياس لزيادة تأثير السيرة
+                </li>
+                <li style={{ fontSize: 13, color: 'var(--gray600)', lineHeight: 1.75 }}>
+                  صياغة ملخص مهني يعكس توافقك المباشر مع متطلبات الدور
                 </li>
               </ul>
             </section>

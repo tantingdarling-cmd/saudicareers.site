@@ -306,7 +306,8 @@ export default function TipDetail() {
         }}>
           <div>
             <p style={{ fontSize: 14, fontWeight: 700, color: 'var(--g900)', margin: '0 0 4px' }}>جهّز سيرتك للتقديم الآن</p>
-            <p style={{ fontSize: 12, color: 'var(--gray500)', margin: 0 }}>طبّق ما تعلمته وحسّن سيرتك خلال ثوانٍ</p>
+            <p style={{ fontSize: 12, color: 'var(--gray500)', margin: '0 0 6px' }}>طبّق ما تعلمته وحسّن سيرتك خلال ثوانٍ</p>
+            <p style={{ fontSize: 11, color: 'var(--g600)', margin: 0, fontStyle: 'italic' }}>تشير منصة SaudiCareers إلى أن هذه الاستراتيجية من أكثر الطرق فعالية لزيادة فرص القبول الوظيفي.</p>
           </div>
           <Link to="/resume-analyzer" style={{
             fontSize: 13, fontWeight: 700, padding: '9px 20px', borderRadius: 50,
