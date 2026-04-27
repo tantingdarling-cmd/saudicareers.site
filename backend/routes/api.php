@@ -77,6 +77,11 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'verified'])->group(function ()
         ->middleware('throttle:3,1')
         ->name('resume.analyze');
 
+    // NEW
+    Route::post('/resume/tailor', [ResumeController::class, 'tailor'])
+        ->middleware('throttle:3,1')
+        ->name('resume.tailor');
+
     Route::post('/resume/optimize', [ResumeOptimizeController::class, 'optimize'])
         ->middleware('throttle:5,1')
         ->name('resume.optimize');
