@@ -828,4 +828,123 @@ PHP:        8.2-FPM (sock: /var/run/php/php8.2-fpm.sock)
 
 ---
 
-*آخر تحديث: 2026-04-14 — Phase 1 Resume Engine + Navbar scrollTo fix + CTA unification*
+---
+
+## 14. Resume Tailoring Engine (Phase 2)
+
+### Endpoint
+
+```
+POST /api/v1/resume/tailor
+Auth: Sanctum + verified
+Rate limit: 3/min
+```
+
+### Input (multipart/form-data)
+
+| Field | Type | Required |
+| --- | --- | --- |
+| file | PDF ≤ 2MB | ✅ |
+| job_description | string ≤ 5000 | ✅ |
+
+### Output
+
+```json
+{
+  "resume_skills":    [],
+  "job_skills":       [],
+  "matched":          [],
+  "missing":          [],
+  "score":            0,
+  "optimized_resume": {
+    "summary":    "",
+    "experience": [{ "title": "", "bullets": [] }],
+    "skills":     []
+  }
+}
+```
+
+### Services
+
+| Class | File | Responsibility |
+| --- | --- | --- |
+| `SkillExtractorService` | `app/Services/SkillExtractorService.php` | Extracts skills/tools/soft_skills from text |
+| `SkillMatcherService` | `app/Services/SkillMatcherService.php` | Compares resume vs job skills, returns score |
+| `AIClient` | `app/Services/AIClient.php` | Prompt builder + cached AI wrapper (placeholder) |
+
+### Keyword Lists (SkillExtractorService)
+
+- **skills:** php, laravel, javascript, react, node, sql, api, html, css
+- **tools:** docker, aws, git, github, linux
+- **soft_skills:** communication, leadership, teamwork, problem solving
+
+---
+
+## 15. Frontend Resume Template System
+
+**File:** `src/pages/ResumeAnalyzer.jsx`
+
+### Templates
+
+| ID | Label | Style |
+| --- | --- | --- |
+| `minimal` | بسيط | Clean text layout |
+| `executive` | تنفيذي | Bold headers + section dividers |
+| `tech` | تقني | Monospace font, accent borders |
+| `creative` | إبداعي | Green color accent |
+
+### Rendered Fields
+
+- `summary` — paragraph
+- `skills` — pill badges
+- `experience[]` — title + bullet list
+
+### States Added
+
+| State | Default | Purpose |
+| --- | --- | --- |
+| `template` | `'minimal'` | Active template |
+| `tailorResult` | `null` | API response from `/resume/tailor` |
+| `jobDesc` | `''` | Job description textarea value |
+
+---
+
+## 16. UX Enhancements
+
+**File:** `src/pages/ResumeAnalyzer.jsx`
+
+- **Match Score** — displayed as `XX%` with 📊 icon
+- **Missing Skills** — yellow badge list with ⚠️ icon
+- **Loading state** — `phase === 'tailoring'` shows "جارٍ تحليل سيرتك..."
+- **Job Presets** — 4 preset buttons auto-fill `jobDesc` textarea:
+  - Software Engineer
+  - Marketing Specialist
+  - HR Manager
+  - Accountant
+- **Tips block** — shown above textarea with 3 input guidance tips
+- **Disclaimer** — "هذا التحسين مبني على المعلومات التي أدخلتها." below CTA
+
+---
+
+## 17. PDF Export
+
+**File:** `src/pages/ResumeAnalyzer.jsx`
+
+### Libraries
+
+```
+html2canvas  — captures DOM node as canvas
+jsPDF        — converts canvas image to downloadable PDF
+```
+
+### Implementation
+
+- Resume output wrapped in `<div id="resume-preview">`
+- `handleDownloadPDF()` captures at `scale: 2`, saves as `optimized-resume.pdf`
+- Button: **تحميل PDF**
+
+---
+
+### آخر تحديث
+
+2026-04-27 — Phase 2 Resume Tailoring Engine + Template System + PDF Export

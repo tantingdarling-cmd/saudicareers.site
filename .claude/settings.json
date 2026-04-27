@@ -45,10 +45,13 @@
       "Bash(apt list *)",
       "Bash(pip3 install *)",
       "mcp__cloudways__server_settings_get",
-      "Bash(export SSHPASS=\"QAZqaz@12\")"
+      "Bash(export SSHPASS=\"QAZqaz@12\")",
+      "Bash(rsync -a --delete dist/assets/ /home/omar/Documents/projects/SaudiCareers.site/public/assets/)",
+      "Bash(npx vite *)"
     ],
     "additionalDirectories": [
-      "/home/omar/.ssh"
+      "/home/omar/.ssh",
+      "/home/omar/Documents/projects/SaudiCareers.site"
     ]
   }
 }

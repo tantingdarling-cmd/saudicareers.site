@@ -1,0 +1,1 @@
+import{r as s}from"./vendor-C46FoH-I.js";function i(t=.1){const e=s.useRef(null);return s.useEffect(()=>{const r=new IntersectionObserver(([n])=>{n.isIntersecting&&(n.target.classList.add("is-visible"),r.disconnect())},{threshold:t,rootMargin:"0px 0px -50px 0px"});return e.current&&r.observe(e.current),()=>r.disconnect()},[t]),e}export{i as u};
