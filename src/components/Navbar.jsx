@@ -271,7 +271,7 @@ export default function Navbar() {
     <>
       <nav style={{
         position: 'fixed', top: 0, insetInline: 0, zIndex: 200,
-        height: 68, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        height: 92, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '0 clamp(1rem,4vw,3rem)',
         background: scrolled ? 'rgba(255,255,255,0.88)' : 'rgba(255,255,255,0.75)',
         backdropFilter: 'blur(18px) saturate(200%)',
@@ -281,7 +281,7 @@ export default function Navbar() {
       }}>
         <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <img src="/logo.png" alt="Saudi Careers" fetchPriority="high" decoding="async"
-            style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'contain' }}
+            style={{ width: 80, height: 80, borderRadius: 8, objectFit: 'contain' }}
           />
           <span style={{ fontFamily: 'var(--font-en)', fontWeight: 700, fontSize: 17, color: 'var(--g900)' }}>
             Saudi<span style={{ color: 'var(--gold500)' }}>Careers</span>
@@ -330,7 +330,7 @@ export default function Navbar() {
 
       {/* Mobile menu */}
       {menuOpen && (
-        <div style={{ position: 'fixed', top: 68, insetInline: 0, zIndex: 199, background: 'rgba(255,255,255,0.88)', backdropFilter: 'blur(20px) saturate(180%)', borderBottom: '1px solid var(--gray200)', padding: '1.5rem clamp(1rem,4vw,3rem)', display: 'flex', flexDirection: 'column', gap: 6, boxShadow: 'var(--shadow-lg)' }}>
+        <div style={{ position: 'fixed', top: 92, insetInline: 0, zIndex: 199, background: 'rgba(255,255,255,0.88)', backdropFilter: 'blur(20px) saturate(180%)', borderBottom: '1px solid var(--gray200)', padding: '1.5rem clamp(1rem,4vw,3rem)', display: 'flex', flexDirection: 'column', gap: 6, boxShadow: 'var(--shadow-lg)' }}>
           {[['jobs', 'الوظائف'], ['services', 'خدماتنا'], ['how', 'كيف يعمل']].map(([id, label]) => (
             <button key={id} onClick={() => scrollTo(id)} style={{ fontSize: 15, fontWeight: 500, color: 'var(--gray600)', padding: '12px 16px', borderRadius: 'var(--r-md)', border: 'none', background: 'transparent', textAlign: 'right', transition: 'all 0.2s', width: '100%' }}
               onMouseEnter={e => { e.target.style.background = 'var(--g50)'; e.target.style.color = 'var(--g800)' }}
