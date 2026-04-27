@@ -175,7 +175,7 @@ function SvgTimeline() {
               style={{
                 opacity: isActive ? 1 : 0.35,
                 transform: isActive ? 'translateY(0)' : 'translateY(10px)',
-                transition:`opacity 0.5s ease ${i * 100}ms, transform 0.5s ease ${i * 100}ms`,
+                transition:`opacity 0.5s ease ${i * 100}ms, transform 0.5s ease ${i * 100}ms, box-shadow 0.3s ease, border-color 0.3s ease`,
                 background:'var(--white)',
                 border:`0.5px solid ${isActive ? 'rgba(0,61,43,0.18)' : 'rgba(0,0,0,0.06)'}`,
                 borderRadius:16,
@@ -183,7 +183,6 @@ function SvgTimeline() {
                 boxShadow: isActive
                   ? '0 4px 24px rgba(0,61,43,0.07), 0 1px 3px rgba(0,0,0,0.04)'
                   : '0 1px 4px rgba(0,0,0,0.04)',
-                transition:`opacity 0.5s ease ${i * 100}ms, transform 0.5s ease ${i * 100}ms, box-shadow 0.3s ease, border-color 0.3s ease`,
               }}
             >
               {/* Step number + icon */}
