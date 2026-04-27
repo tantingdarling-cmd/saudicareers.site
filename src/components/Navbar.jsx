@@ -286,13 +286,25 @@ export default function Navbar() {
         boxShadow: scrolled ? 'var(--shadow-md)' : 'none',
         transition: 'all 0.35s var(--ease-expo)',
       }}>
-        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
           <img src="/logo.png" alt="Saudi Careers" fetchPriority="high" decoding="async"
             style={{ width: 80, height: 80, borderRadius: 8, objectFit: 'contain', filter: theme === 'dark' ? 'drop-shadow(0 0 8px rgba(255,255,255,0.2))' : 'none' }}
           />
-          <span style={{ fontFamily: 'var(--font-en)', fontWeight: 700, fontSize: 17, color: 'var(--g900)' }}>
-            Saudi<span style={{ color: 'var(--gold500)' }}>Careers</span>
-          </span>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 0 }}>
+            {/* Mobile-only Toggles */}
+            <div className="mobile-toggles" style={{ display: 'none', alignItems: 'center', gap: 4, marginBottom: 2 }}>
+              <button onClick={(e) => { e.preventDefault(); toggleTheme(); }} aria-label="Toggle Theme" style={{ width: 28, height: 28, borderRadius: '50%', border: 'none', background: 'var(--g50)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                {theme === 'light' ? <Moon size={14} color="var(--g700)" /> : <Sun size={14} color="var(--g700)" />}
+              </button>
+              <button onClick={(e) => { e.preventDefault(); toggleLang(); }} aria-label="Toggle Language" style={{ width: 28, height: 28, borderRadius: '50%', border: 'none', background: 'var(--g50)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                <Globe size={14} color="var(--g700)" />
+                <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--g800)', fontFamily: 'var(--font-en)', marginLeft: 2 }}>{lang === 'ar' ? 'EN' : 'AR'}</span>
+              </button>
+            </div>
+            <span style={{ fontFamily: 'var(--font-en)', fontWeight: 700, fontSize: 17, color: 'var(--g900)', lineHeight: 1 }}>
+              Saudi<span style={{ color: 'var(--gold500)' }}>Careers</span>
+            </span>
+          </div>
         </Link>
 
         {/* Desktop links */}
@@ -312,8 +324,8 @@ export default function Navbar() {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          {/* Theme & Language Toggles */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginRight: 8, marginLeft: 8 }}>
+          {/* Theme & Language Toggles (Desktop) */}
+          <div className="desktop-toggles" style={{ display: 'flex', alignItems: 'center', gap: 4, marginRight: 8, marginLeft: 8 }}>
             <button onClick={toggleTheme} aria-label="Toggle Theme" style={{ width: 36, height: 36, borderRadius: '50%', border: 'none', background: 'var(--g50)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--g100)'} onMouseLeave={e => e.currentTarget.style.background = 'var(--g50)'}>
               {theme === 'light' ? <Moon size={18} color="var(--g700)" /> : <Sun size={18} color="var(--g700)" />}
             </button>
@@ -381,6 +393,8 @@ export default function Navbar() {
       <style>{`
         @media (max-width: 860px) {
           .desktop-nav { display: none !important; }
+          .desktop-toggles { display: none !important; }
+          .mobile-toggles { display: flex !important; }
           .hamburger-btn { display: flex !important; }
           .resume-cta-desktop { display: none !important; }
           .navbar-logo-center { justify-content: center !important; position: absolute !important; left: 50% !important; transform: translateX(-50%) !important; }
