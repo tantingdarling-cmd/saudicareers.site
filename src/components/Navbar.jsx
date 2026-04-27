@@ -1,7 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { Menu, X, Bell, User, Briefcase, Heart, LogOut } from 'lucide-react'
+import { Menu, X, Bell, User, Briefcase, Heart, LogOut, Sun, Moon, Globe } from 'lucide-react'
 import { api } from '../services/api.js'
+import { useLanguage } from '../context/LanguageContext'
+import { useTheme } from '../context/ThemeContext'
+import { translations } from '../data/translations'
 
 function relTime(iso) {
   const m = Math.floor((Date.now() - new Date(iso)) / 60000)
@@ -141,6 +144,7 @@ function ProfileMenu() {
   const [referralCount, setReferralCount] = useState(0)
   const ref = useRef()
   const navigate = useNavigate()
+  const { lang } = useLanguage()
   const isAuth = !!localStorage.getItem('auth_token')
 
   useEffect(() => {
@@ -168,10 +172,10 @@ function ProfileMenu() {
   if (!isAuth) return null
 
   const LINKS = [
-    { to: '/my-applications', icon: <Briefcase size={14}/>, label: 'طلباتي' },
-    { to: '/saved',           icon: <Heart size={14}/>,     label: 'الوظائف المحفوظة' },
-    { to: '/alerts',          icon: <Bell size={14}/>,      label: 'التنبيهات' },
-    { to: '/profile',         icon: <User size={14}/>,      label: 'ملفي الشخصي' },
+    { to: '/my-applications', icon: <Briefcase size={14}/>, label: translations[lang].nav.my_apps },
+    { to: '/saved',           icon: <Heart size={14}/>,     label: translations[lang].nav.saved },
+    { to: '/alerts',          icon: <Bell size={14}/>,      label: translations[lang].nav.alerts },
+    { to: '/profile',         icon: <User size={14}/>,      label: translations[lang].nav.my_profile },
   ]
 
   return (
@@ -220,8 +224,8 @@ function ProfileMenu() {
               background:'var(--g50)', borderBottom:'1px solid var(--gray100)',
               fontSize:12, fontWeight:700, color:'var(--g700)',
             }}>
-              <span style={{ fontSize:15 }}>🎉</span>
-              دعوت {referralCount} {referralCount === 1 ? 'صديق' : 'أصدقاء'}
+              <span style={{ fontSize: 15 }}>🎉</span>
+              {translations[lang].nav.referral} {referralCount} {lang === 'ar' ? (referralCount === 1 ? 'صديق' : 'أصدقاء') : (referralCount === 1 ? 'friend' : 'friends')}
             </div>
           )}
           <button
@@ -235,7 +239,7 @@ function ProfileMenu() {
             onMouseEnter={e => e.currentTarget.style.background='rgba(220,38,38,0.05)'}
             onMouseLeave={e => e.currentTarget.style.background='#fff'}
           >
-            <LogOut size={14}/> تسجيل الخروج
+            <LogOut size={14}/> {translations[lang].nav.logout}
           </button>
         </div>
       )}
@@ -249,6 +253,9 @@ export default function Navbar() {
   const location  = useLocation()
   const isHome    = location.pathname === '/'
   const navigate  = useNavigate()
+  const { lang, toggleLang } = useLanguage()
+  const { theme, toggleTheme } = useTheme()
+  const t = translations[lang].nav
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20)
@@ -290,7 +297,7 @@ export default function Navbar() {
 
         {/* Desktop links */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }} className="desktop-nav">
-          {[['jobs', 'الوظائف'], ['services', 'خدماتنا'], ['how', 'كيف يعمل']].map(([id, label]) => (
+          {[['jobs', t.jobs], ['services', t.services], ['how', t.how]].map(([id, label]) => (
             <button key={id} onClick={() => scrollTo(id)} style={{ fontSize: 14, fontWeight: 500, color: 'var(--gray600)', padding: '7px 14px', borderRadius: 'var(--r-sm)', border: 'none', background: 'transparent', cursor: 'pointer', transition: 'all 0.2s' }}
               onMouseEnter={e => { e.target.style.background = 'var(--g50)'; e.target.style.color = 'var(--g800)' }}
               onMouseLeave={e => { e.target.style.background = 'transparent'; e.target.style.color = 'var(--gray600)' }}>
@@ -300,18 +307,31 @@ export default function Navbar() {
           <Link to="/tips" style={{ fontSize: 14, fontWeight: 500, color: 'var(--gray600)', padding: '7px 14px', borderRadius: 'var(--r-sm)', textDecoration: 'none', transition: 'all 0.2s' }}
             onMouseEnter={e => { e.currentTarget.style.background = 'var(--g50)'; e.currentTarget.style.color = 'var(--g800)' }}
             onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--gray600)' }}>
-            نصائح
+            {t.tips}
           </Link>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {/* Theme & Language Toggles */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginRight: 8, marginLeft: 8 }}>
+            <button onClick={toggleTheme} aria-label="Toggle Theme" style={{ width: 36, height: 36, borderRadius: '50%', border: 'none', background: 'var(--g50)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--g100)'} onMouseLeave={e => e.currentTarget.style.background = 'var(--g50)'}>
+              {theme === 'light' ? <Moon size={18} color="var(--g700)" /> : <Sun size={18} color="var(--g700)" />}
+            </button>
+            <button onClick={toggleLang} aria-label="Toggle Language" style={{ width: 36, height: 36, borderRadius: '50%', border: 'none', background: 'var(--g50)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--g100)'} onMouseLeave={e => e.currentTarget.style.background = 'var(--g50)'}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                <Globe size={18} color="var(--g700)" />
+                <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--g800)', fontFamily: 'var(--font-en)' }}>{lang === 'ar' ? 'EN' : 'AR'}</span>
+              </div>
+            </button>
+          </div>
+
           <NotifBell />
           <ProfileMenu />
           {!localStorage.getItem('auth_token') && (
             <Link to="/login" style={{ fontSize: 14, fontWeight: 700, color: 'var(--g900)', textDecoration: 'none', padding: '8px 16px', borderRadius: 8, transition: 'all 0.2s' }}
               onMouseEnter={e => e.currentTarget.style.background = 'var(--g50)'}
               onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-              تسجيل الدخول
+              {t.login}
             </Link>
           )}
           <Link to={localStorage.getItem('auth_token') ? "/resume-analyzer" : "/register"} className="resume-cta-desktop" style={{ background: 'linear-gradient(135deg,var(--g900) 0%,var(--g700) 100%)', color: 'var(--white)', padding: '9px 20px', borderRadius: 50, fontSize: 14, fontWeight: 700, textDecoration: 'none', transition: 'all 0.25s var(--ease-pop)', boxShadow: '0 4px 14px rgba(0,61,43,0.22)' }}
@@ -319,7 +339,7 @@ export default function Navbar() {
             onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 14px rgba(0,61,43,0.22)' }}
             onMouseDown={e => e.currentTarget.style.transform = 'translateY(0) scale(0.97)'}
             onMouseUp={e => e.currentTarget.style.transform = 'translateY(-1px) scale(1)'}>
-            {localStorage.getItem('auth_token') ? 'افحص سيرتك مجاناً ✦' : 'سجّل مجاناً'}
+            {localStorage.getItem('auth_token') ? t.analyze : t.register}
           </Link>
           <button onClick={() => setMenuOpen(!menuOpen)} style={{ display: 'none', background: 'none', border: 'none', padding: 8, borderRadius: 'var(--r-sm)', minWidth: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' }} className="hamburger-btn" aria-label="القائمة">
             {menuOpen ? <X size={22} color="var(--g900)" /> : <Menu size={22} color="var(--g900)" />}
@@ -331,7 +351,7 @@ export default function Navbar() {
       {/* Mobile menu */}
       {menuOpen && (
         <div style={{ position: 'fixed', top: 92, insetInline: 0, zIndex: 199, background: 'rgba(255,255,255,0.88)', backdropFilter: 'blur(20px) saturate(180%)', borderBottom: '1px solid var(--gray200)', padding: '1.5rem clamp(1rem,4vw,3rem)', display: 'flex', flexDirection: 'column', gap: 6, boxShadow: 'var(--shadow-lg)' }}>
-          {[['jobs', 'الوظائف'], ['services', 'خدماتنا'], ['how', 'كيف يعمل']].map(([id, label]) => (
+          {[['jobs', t.jobs], ['services', t.services], ['how', t.how]].map(([id, label]) => (
             <button key={id} onClick={() => scrollTo(id)} style={{ fontSize: 15, fontWeight: 500, color: 'var(--gray600)', padding: '12px 16px', borderRadius: 'var(--r-md)', border: 'none', background: 'transparent', textAlign: 'right', transition: 'all 0.2s', width: '100%' }}
               onMouseEnter={e => { e.target.style.background = 'var(--g50)'; e.target.style.color = 'var(--g800)' }}
               onMouseLeave={e => { e.target.style.background = 'transparent'; e.target.style.color = 'var(--gray600)' }}>
@@ -341,7 +361,7 @@ export default function Navbar() {
           <Link to="/tips" onClick={() => setMenuOpen(false)} style={{ fontSize: 15, fontWeight: 500, color: 'var(--gray600)', padding: '12px 16px', borderRadius: 'var(--r-md)', textDecoration: 'none', textAlign: 'right', display: 'block', transition: 'all 0.2s' }}
             onMouseEnter={e => { e.currentTarget.style.background = 'var(--g50)'; e.currentTarget.style.color = 'var(--g800)' }}
             onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--gray600)' }}>
-            نصائح
+            {t.tips}
           </Link>
           <Link to="/notifications" onClick={() => setMenuOpen(false)} style={{ fontSize: 15, fontWeight: 500, color: 'var(--gray600)', padding: '12px 16px', borderRadius: 'var(--r-md)', textDecoration: 'none', textAlign: 'right', display: 'block' }}>
             🔔 الإشعارات

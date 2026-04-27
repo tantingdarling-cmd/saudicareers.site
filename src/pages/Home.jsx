@@ -13,6 +13,8 @@ import { jobsApi, tipsApi, subscribersApi } from '../services/api'
 import { normalizeJob } from '../utils/normalizeJob.js'
 import { useFadeIn } from '../hooks/useFadeIn'
 import AnimatedNumber from '../components/AnimatedNumber.jsx'
+import { useLanguage } from '../context/LanguageContext'
+import { translations } from '../data/translations'
 
 
 function normalizeTip(tip) {
@@ -647,6 +649,8 @@ function useDebounce(value, delay) {
 }
 
 export default function Home() {
+  const { lang } = useLanguage()
+  const t = translations[lang].hero
   const [selectedJob, setSelectedJob] = useState(null)
   const [bottomSheetJob, setBottomSheetJob] = useState(null)
   const [jobs, setJobs] = useState(FALLBACK_JOBS)
@@ -820,19 +824,16 @@ export default function Home() {
               boxShadow:'0 1px 8px rgba(0,61,43,0.06), 0 0.5px 2px rgba(0,0,0,0.04)',
             }}>
               <span style={{ width:7, height:7, background:'var(--g600)', borderRadius:'50%', animation:'pulse 2s infinite', display:'block' }} />
-              وصول مبكر مجاني — سجّل الآن
+              {t.badge}
             </div>
 
             {/* Heading */}
             <h1 ref={heroHeadingRef} className="fade-in-section" style={{
               fontSize:'clamp(1.9rem,5.5vw,3.4rem)', fontWeight:700, lineHeight:1.22,
               color:'var(--g950)', marginBottom:20, letterSpacing:'-0.6px',
-              fontFamily:'var(--font-ar)',
+              fontFamily: lang === 'ar' ? 'var(--font-ar)' : 'var(--font-en)',
             }}>
-              ارفع مستواك في{' '}
-              <span style={{ background:'linear-gradient(135deg,var(--g700) 0%,var(--gold600) 100%)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', backgroundClip:'text' }}>
-                سوق العمل
-              </span>
+              {t.title}
             </h1>
 
             {/* Description */}
@@ -841,7 +842,7 @@ export default function Home() {
               maxWidth:480, marginBottom:36, lineHeight:2, fontWeight:400,
               letterSpacing:'0.01em',
             }}>
-              حلّل سيرتك الذاتية، اكتشف نقاط التحسين، وتنافس على أفضل الفرص في السوق السعودي.
+              {t.subtitle}
             </p>
 
             {/* CTAs */}
@@ -858,7 +859,7 @@ export default function Home() {
               onMouseLeave={e=>{e.currentTarget.style.transform='translateY(0)';e.currentTarget.style.boxShadow='0 6px 24px rgba(0,61,43,0.28), 0 2px 6px rgba(197,160,89,0.18)'}}
               onMouseDown={e=>e.currentTarget.style.transform='translateY(0) scale(0.97)'}
               onMouseUp={e=>e.currentTarget.style.transform='translateY(-2px) scale(1)'}>
-                افحص سيرتك الذاتية مجاناً ✦
+                {t.resume_cta}
               </Link>
               <button onClick={() => document.getElementById('jobs')?.scrollIntoView({ behavior:'smooth' })} style={{
                 background:'transparent', color:'var(--g900)',
@@ -872,7 +873,7 @@ export default function Home() {
               onMouseLeave={e=>{e.currentTarget.style.background='transparent';e.currentTarget.style.color='var(--g900)'}}
               onMouseDown={e=>e.currentTarget.style.transform='scale(0.97)'}
               onMouseUp={e=>e.currentTarget.style.transform='scale(1)'}>
-                استكشف مسارك المهني
+                {t.search_btn}
               </button>
             </div>
 
@@ -889,7 +890,7 @@ export default function Home() {
                   }}>{t}</div>
                 ))}
               </div>
-              <span>انضم أكثر من <strong style={{ color:'var(--g800)' }}>120+</strong> محترف</span>
+              <span>{lang === 'ar' ? 'انضم أكثر من ' : 'Join over '}<strong style={{ color:'var(--g800)' }}>120+</strong> {lang === 'ar' ? 'محترف' : 'professionals'}</span>
             </div>
           </div>
 
