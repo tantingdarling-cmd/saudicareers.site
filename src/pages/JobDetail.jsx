@@ -138,7 +138,6 @@ export default function JobDetail() {
     hiringOrganization: {
       '@type': 'Organization',
       name: job.company,
-      sameAs: 'https://saudicareers.site',
       ...(job.company_logo && { logo: job.company_logo }),
     },
     jobLocation: {
@@ -159,10 +158,9 @@ export default function JobDetail() {
     validThrough: (() => {
       const d = new Date(); d.setDate(d.getDate() + 30); return d.toISOString().split('T')[0]
     })(),
-    // §Google: directApply — يُظهر زر "تقدم الآن" في نتائج Google مباشرة
-    directApply: true,
-    // رابط التقديم المباشر للشركة إن وُجد
-    ...(job.apply_url && { url: job.apply_url }),
+    // directApply: true فقط عند وجود رابط خارجي — التقديم الداخلي يحتاج login
+    directApply: !!job.apply_url,
+    url: job.apply_url || `https://saudicareers.site/jobs/${job.slug || job.id}`,
     // §4: salary fields are nullable — only emit when present
     ...(job.salary_min && {
       baseSalary: {
@@ -200,8 +198,9 @@ export default function JobDetail() {
   // §4: استخدم بيانات SeoService من الـ API إذا توفرت، وإلا ابنِها محلياً (fallback)
   const pageTitle = seoMeta?.title    || `${job.title} | ${job.company} — سعودي كارييرز`
   const pageDesc  = seoMeta?.description || `${job.title} في ${job.company}، ${job.location}. ${job.description?.slice(0, 120) || ''}`
+  // canonical = slug إذا متوفر، وإلا id — يطابق sitemap تماماً
   const canonicalSlug = job.slug || id
-  const pageUrl   = `https://saudicareers.site/jobs/${canonicalSlug}`
+  const pageUrl = `https://saudicareers.site/jobs/${canonicalSlug}`
 
   // §5: JSON-LD — يُفضَّل مصدر SeoService (يتضمن salary_currency)؛ وإلا استخدم البناء المحلي
   const resolvedJsonLd = seoMeta?.json_ld ? safeJsonLd(seoMeta.json_ld) : jobLd

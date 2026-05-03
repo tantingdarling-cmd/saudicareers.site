@@ -15,7 +15,7 @@ class SitemapController extends Controller
     public function index()
     {
         $jobs = Job::where('is_active', true)
-            ->select(['id', 'title', 'updated_at'])
+            ->select(['id', 'slug', 'title', 'updated_at'])
             ->orderByDesc('updated_at')
             ->get();
 

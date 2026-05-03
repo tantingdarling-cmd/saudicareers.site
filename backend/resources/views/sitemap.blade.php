@@ -9,10 +9,10 @@
         <lastmod>{{ now()->toDateString() }}</lastmod>
     </url>
 
-    {{-- §3: Active jobs — /jobs/{id} + lastmod from updated_at --}}
+    {{-- §3: Active jobs — /jobs/{slug} canonical URLs for Google Jobs --}}
     @foreach ($jobs as $job)
     <url>
-        <loc>https://saudicareers.site/jobs/{{ $job->id }}</loc>
+        <loc>https://saudicareers.site/jobs/{{ $job->slug ?? $job->id }}</loc>
         <lastmod>{{ $job->updated_at->toDateString() }}</lastmod>
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>

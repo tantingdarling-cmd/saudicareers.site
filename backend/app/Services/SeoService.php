@@ -88,14 +88,13 @@ class SeoService
             'datePosted'  => optional($job->posted_at)->toIso8601String()
                               ?? $job->created_at->toIso8601String(),
             'validThrough' => now()->addDays(30)->toIso8601String(),
-            'hiringOrganization' => [
-                '@type'  => 'Organization',
-                'name'   => $job->company,
-                'sameAs' => self::SITE_URL,
-                'logo'   => $job->company_logo
+            'hiringOrganization' => array_filter([
+                '@type' => 'Organization',
+                'name'  => $job->company,
+                'logo'  => $job->company_logo
                     ? self::SITE_URL . '/storage/' . $job->company_logo
-                    : self::SITE_URL . '/saudi.png',
-            ],
+                    : null,
+            ]),
             'jobLocation' => [
                 '@type'   => 'Place',
                 'address' => [
@@ -106,9 +105,10 @@ class SeoService
             ],
             'employmentType'               => $this->mapEmploymentType($job->job_type),
             'applicantLocationRequirements' => ['@type' => 'Country', 'name' => 'Saudi Arabia'],
-            // §Google: directApply يُظهر زر "تقدم الآن" مباشرة في نتائج Google
-            'directApply' => true,
-            'url'         => self::SITE_URL . '/jobs/' . $job->slug,
+            // directApply: true فقط إذا كان apply_url خارجياً (لا يحتاج login)
+            // false عند التقديم عبر الموقع لأنه يتطلب تسجيل دخول
+            'directApply' => $job->apply_url ? true : false,
+            'url'         => self::SITE_URL . '/jobs/' . ($job->slug ?? $job->id),
         ];
 
         // وظيفة عن بعد → jobLocationType بدلاً من REMOTE (Google لا يدعمها كـ employmentType)

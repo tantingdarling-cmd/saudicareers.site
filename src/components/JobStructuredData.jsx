@@ -20,7 +20,7 @@ export default function JobStructuredData({ jobs }) {
       hiringOrganization: {
         '@type': 'Organization',
         name: job.company,
-        sameAs: 'https://saudicareers.site',
+        ...(job.company_logo && { logo: job.company_logo }),
       },
       jobLocation: {
         '@type': 'Place',
@@ -31,8 +31,12 @@ export default function JobStructuredData({ jobs }) {
         },
       },
       employmentType: mapEmploymentType(job.job_type || job.type),
+      // url canonical — يطابق الـ sitemap
+      url: `https://saudicareers.site/jobs/${job.slug || job.id}`,
       datePosted: job.created_at || new Date().toISOString().split('T')[0],
       validThrough: getValidThrough(),
+      // directApply فقط عند وجود رابط خارجي
+      directApply: job.apply_url ? true : false,
       ...(job.salary_min && {
         baseSalary: {
           '@type': 'MonetaryAmount',
