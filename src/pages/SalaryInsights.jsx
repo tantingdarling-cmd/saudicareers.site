@@ -106,118 +106,120 @@ export default function SalaryInsights() {
         <meta name="twitter:title"      content="رواتب سوق العمل السعودي 2026 | سعودي كارييرز" />
         <meta name="twitter:image"      content="https://saudicareers.site/og-image.png" />
       </Helmet>
+
       <div style={{ maxWidth: 960, margin: '0 auto', padding: '100px 24px 64px', direction: 'rtl' }}>
-      {/* Header */}
-      <div style={{ marginBottom: 36 }}>
-        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--gold600)', marginBottom: 8 }}>
-          📊 بيانات السوق
+        {/* Header */}
+        <div style={{ marginBottom: 36 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--gold600)', marginBottom: 8 }}>
+            📊 بيانات السوق
+          </div>
+          <h1 style={{ fontSize: 26, fontWeight: 800, color: 'var(--g950)', marginBottom: 8 }}>رواتب سوق العمل السعودي</h1>
+          <p style={{ color: 'var(--gray400)', fontSize: 14 }}>تحليل بيانات الرواتب من الوظائف المنشورة على المنصة</p>
         </div>
-        <h1 style={{ fontSize: 26, fontWeight: 800, color: 'var(--g950)', marginBottom: 8 }}>رواتب سوق العمل السعودي</h1>
-        <p style={{ color: 'var(--gray400)', fontSize: 14 }}>تحليل بيانات الرواتب من الوظائف المنشورة على المنصة</p>
-      </div>
 
-      {/* Filters */}
-      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 32 }}>
-        <select value={category} onChange={e => setCategory(e.target.value)} style={selectStyle}>
-          <option value="">كل التصنيفات</option>
-          {Object.entries(CATEGORY_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-        </select>
-        <input
-          value={location} onChange={e => setLocation(e.target.value)}
-          placeholder="المدينة..."
-          style={{ ...selectStyle, width: 160 }}
-        />
-      </div>
+        {/* Filters */}
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 32 }}>
+          <select value={category} onChange={e => setCategory(e.target.value)} style={selectStyle}>
+            <option value="">كل التصنيفات</option>
+            {Object.entries(CATEGORY_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+          </select>
+          <input
+            value={location} onChange={e => setLocation(e.target.value)}
+            placeholder="المدينة..."
+            style={{ ...selectStyle, width: 160 }}
+          />
+        </div>
 
-      {loading && (
-        <div style={{ textAlign: 'center', color: 'var(--gray400)', padding: 64 }}>جاري التحليل…</div>
-      )}
+        {loading && (
+          <div style={{ textAlign: 'center', color: 'var(--gray400)', padding: 64 }}>جاري التحليل…</div>
+        )}
 
-      {!loading && stats && (
-        <>
-          {/* Overall cards */}
-          {stats.overall ? (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, marginBottom: 36 }}>
-              {card('متوسط الراتب', fmt(stats.overall.avg) + ' ر.س', 'شهرياً')}
-              {card('الوسيط', fmt(stats.overall.median) + ' ر.س', 'شهرياً')}
-              {card('أعلى راتب', fmt(stats.overall.max) + ' ر.س', 'شهرياً')}
-              {card('عدد الوظائف', stats.overall.count, 'وظيفة براتب معلن')}
-            </div>
-          ) : (
-            <div style={{ textAlign: 'center', color: 'var(--gray400)', padding: 48 }}>لا توجد بيانات رواتب كافية</div>
-          )}
+        {!loading && stats && (
+          <>
+            {/* Overall cards */}
+            {stats.overall ? (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14, marginBottom: 36 }}>
+                {card('متوسط الراتب', fmt(stats.overall.avg) + ' ر.س', 'شهرياً')}
+                {card('الوسيط', fmt(stats.overall.median) + ' ر.س', 'شهرياً')}
+                {card('أعلى راتب', fmt(stats.overall.max) + ' ر.س', 'شهرياً')}
+                {card('عدد الوظائف', stats.overall.count, 'وظيفة براتب معلن')}
+              </div>
+            ) : (
+              <div style={{ textAlign: 'center', color: 'var(--gray400)', padding: 48 }}>لا توجد بيانات رواتب كافية</div>
+            )}
 
-          {chartLoaded && stats.overall && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 420px), 1fr))', gap: 24 }}>
-              {/* By category */}
-              {stats.by_category?.length > 0 && (
-                <div style={{ background: 'var(--white)', border: '1.5px solid var(--gray200)', borderRadius: 16, padding: 24 }}>
-                  <BarChart
-                    title="متوسط الراتب حسب التصنيف"
-                    labels={stats.by_category.map(r => CATEGORY_LABELS[r.category] || r.category)}
-                    data={stats.by_category.map(r => r.avg)}
-                    color="#003D2B"
-                  />
-                </div>
-              )}
+            {chartLoaded && stats.overall && (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 420px), 1fr))', gap: 24 }}>
+                {/* By category */}
+                {stats.by_category?.length > 0 && (
+                  <div style={{ background: 'var(--white)', border: '1.5px solid var(--gray200)', borderRadius: 16, padding: 24 }}>
+                    <BarChart
+                      title="متوسط الراتب حسب التصنيف"
+                      labels={stats.by_category.map(r => CATEGORY_LABELS[r.category] || r.category)}
+                      data={stats.by_category.map(r => r.avg)}
+                      color="#003D2B"
+                    />
+                  </div>
+                )}
 
-              {/* By experience */}
-              {stats.by_experience?.length > 0 && (
-                <div style={{ background: 'var(--white)', border: '1.5px solid var(--gray200)', borderRadius: 16, padding: 24 }}>
-                  <BarChart
-                    title="سلّم الراتب حسب الخبرة"
-                    labels={stats.by_experience.map(r => EXP_LABELS[r.level] || r.level)}
-                    data={stats.by_experience.map(r => r.avg)}
-                    color="#C5A059"
-                  />
-                </div>
-              )}
+                {/* By experience */}
+                {stats.by_experience?.length > 0 && (
+                  <div style={{ background: 'var(--white)', border: '1.5px solid var(--gray200)', borderRadius: 16, padding: 24 }}>
+                    <BarChart
+                      title="سلّم الراتب حسب الخبرة"
+                      labels={stats.by_experience.map(r => EXP_LABELS[r.level] || r.level)}
+                      data={stats.by_experience.map(r => r.avg)}
+                      color="#C5A059"
+                    />
+                  </div>
+                )}
 
-              {/* By location */}
-              {stats.by_location?.length > 0 && (
-                <div style={{ background: 'var(--white)', border: '1.5px solid var(--gray200)', borderRadius: 16, padding: 24, gridColumn: 'span 1' }}>
-                  <BarChart
-                    title="متوسط الراتب حسب المدينة (أعلى 8)"
-                    labels={stats.by_location.map(r => r.location)}
-                    data={stats.by_location.map(r => r.avg)}
-                    color="#1E4A63"
-                  />
-                </div>
-              )}
+                {/* By location */}
+                {stats.by_location?.length > 0 && (
+                  <div style={{ background: 'var(--white)', border: '1.5px solid var(--gray200)', borderRadius: 16, padding: 24, gridColumn: 'span 1' }}>
+                    <BarChart
+                      title="متوسط الراتب حسب المدينة (أعلى 8)"
+                      labels={stats.by_location.map(r => r.location)}
+                      data={stats.by_location.map(r => r.avg)}
+                      color="#1E4A63"
+                    />
+                  </div>
+                )}
 
-              {/* Experience table */}
-              {stats.by_experience?.length > 0 && (
-                <div style={{ background: 'var(--white)', border: '1.5px solid var(--gray200)', borderRadius: 16, padding: 24 }}>
-                  <h3 style={{ fontSize: 15, fontWeight: 700, color: 'var(--g950)', marginBottom: 16 }}>تفاصيل الخبرة</h3>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-                    <thead>
-                      <tr style={{ color: 'var(--gray400)', fontSize: 11 }}>
-                        {['المستوى', 'أدنى', 'متوسط', 'أعلى', 'عدد'].map(h => (
-                          <th key={h} style={{ textAlign: 'right', padding: '6px 8px', fontWeight: 600 }}>{h}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {stats.by_experience.map((r, i) => (
-                        <tr key={r.level} style={{ borderTop: '1px solid var(--gray100)', background: i % 2 ? 'var(--g50)' : 'transparent' }}>
-                          <td style={{ padding: '8px', fontWeight: 600, color: 'var(--g800)' }}>{EXP_LABELS[r.level] || r.level}</td>
-                          <td style={{ padding: '8px', color: 'var(--gray600)' }}>{fmt(r.min)}</td>
-                          <td style={{ padding: '8px', fontWeight: 700, color: 'var(--g900)' }}>{fmt(r.avg)}</td>
-                          <td style={{ padding: '8px', color: 'var(--gray600)' }}>{fmt(r.max)}</td>
-                          <td style={{ padding: '8px', color: 'var(--gray400)' }}>{r.count}</td>
+                {/* Experience table */}
+                {stats.by_experience?.length > 0 && (
+                  <div style={{ background: 'var(--white)', border: '1.5px solid var(--gray200)', borderRadius: 16, padding: 24 }}>
+                    <h3 style={{ fontSize: 15, fontWeight: 700, color: 'var(--g950)', marginBottom: 16 }}>تفاصيل الخبرة</h3>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                      <thead>
+                        <tr style={{ color: 'var(--gray400)', fontSize: 11 }}>
+                          {['المستوى', 'أدنى', 'متوسط', 'أعلى', 'عدد'].map(h => (
+                            <th key={h} style={{ textAlign: 'right', padding: '6px 8px', fontWeight: 600 }}>{h}</th>
+                          ))}
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          )}
+                      </thead>
+                      <tbody>
+                        {stats.by_experience.map((r, i) => (
+                          <tr key={r.level} style={{ borderTop: '1px solid var(--gray100)', background: i % 2 ? 'var(--g50)' : 'transparent' }}>
+                            <td style={{ padding: '8px', fontWeight: 600, color: 'var(--g800)' }}>{EXP_LABELS[r.level] || r.level}</td>
+                            <td style={{ padding: '8px', color: 'var(--gray600)' }}>{fmt(r.min)}</td>
+                            <td style={{ padding: '8px', fontWeight: 700, color: 'var(--g900)' }}>{fmt(r.avg)}</td>
+                            <td style={{ padding: '8px', color: 'var(--gray600)' }}>{fmt(r.max)}</td>
+                            <td style={{ padding: '8px', color: 'var(--gray400)' }}>{r.count}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
 
-          {!chartLoaded && stats.overall && (
-            <div style={{ textAlign: 'center', color: 'var(--gray400)', padding: 32 }}>جاري تحميل الرسوم البيانية…</div>
-          )}
-        </>
+            {!chartLoaded && stats.overall && (
+              <div style={{ textAlign: 'center', color: 'var(--gray400)', padding: 32 }}>جاري تحميل الرسوم البيانية…</div>
+            )}
+          </>
+        )}
       </div>
     </>
   )
