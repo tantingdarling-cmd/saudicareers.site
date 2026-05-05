@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { Helmet } from 'react-helmet-async'
 import { salaryApi } from '../services/api.js'
 
 const CATEGORY_LABELS = {
@@ -92,6 +93,20 @@ export default function SalaryInsights() {
 
   return (
     <div style={{ maxWidth: 960, margin: '0 auto', padding: '100px 24px 64px', direction: 'rtl' }}>
+      <Helmet>
+        <title>رواتب سوق العمل السعودي — إحصائيات ومقارنات | سعودي كارييرز</title>
+        <meta name="description" content="استكشف متوسطات الرواتب في السوق السعودي حسب التخصص والمدينة والخبرة. بيانات محدّثة من وظائف أرامكو ونيوم وصندوق الاستثمارات العامة." />
+        <link rel="canonical" href="https://saudicareers.site/salary-insights" />
+        <meta property="og:type"        content="website" />
+        <meta property="og:title"       content="رواتب سوق العمل السعودي | سعودي كارييرز" />
+        <meta property="og:description" content="متوسطات الرواتب في السعودية حسب التخصص والمدينة والخبرة — بيانات محدّثة." />
+        <meta property="og:url"         content="https://saudicareers.site/salary-insights" />
+        <meta property="og:image"       content="https://saudicareers.site/og-image.png" />
+        <meta property="og:image:type"  content="image/png" />
+        <meta name="twitter:card"       content="summary_large_image" />
+        <meta name="twitter:title"      content="رواتب سوق العمل السعودي | سعودي كارييرز" />
+        <meta name="twitter:image"      content="https://saudicareers.site/og-image.png" />
+      </Helmet>
       {/* Header */}
       <div style={{ marginBottom: 36 }}>
         <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--gold600)', marginBottom: 8 }}>
