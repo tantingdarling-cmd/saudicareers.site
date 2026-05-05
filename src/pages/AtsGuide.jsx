@@ -186,7 +186,8 @@ export default function AtsGuide() {
           </div>
         </nav>
 
-      </div>
-    </main>
+        </div>
+      </main>
+    </>
   )
 }

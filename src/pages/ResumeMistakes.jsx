@@ -166,5 +166,6 @@ export default function ResumeMistakes() {
 
       </div>
     </main>
-  )
+  </>
+)
 }
