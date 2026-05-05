@@ -236,6 +236,16 @@ export default function Tips() {
       <Helmet>
         <title>نصائح سوق العمل السعودي — سير ذاتية ومقابلات ورواتب | سعودي كارييرز</title>
         <meta name="description" content="نصائح عملية لسوق العمل في السعودية: كيف تكتب سيرة ذاتية احترافية، تجتاز المقابلات، وتحصل على راتب أعلى. مبنية على بيانات السوق السعودي." />
+        <link rel="canonical" href="https://saudicareers.site/tips" />
+        <meta property="og:type"        content="website" />
+        <meta property="og:title"       content="نصائح سوق العمل السعودي | سعودي كارييرز" />
+        <meta property="og:description" content="نصائح عملية لسوق العمل في السعودية: كيف تكتب سيرة ذاتية احترافية، تجتاز المقابلات، وتحصل على راتب أعلى." />
+        <meta property="og:url"         content="https://saudicareers.site/tips" />
+        <meta property="og:image"       content="https://saudicareers.site/og-image.png" />
+        <meta property="og:image:type"  content="image/png" />
+        <meta name="twitter:card"       content="summary_large_image" />
+        <meta name="twitter:title"      content="نصائح سوق العمل السعودي | سعودي كارييرز" />
+        <meta name="twitter:image"      content="https://saudicareers.site/og-image.png" />
         <script type="application/ld+json">{JSON.stringify(faqSchema)}</script>
       </Helmet>
 

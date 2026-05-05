@@ -196,6 +196,68 @@ class AuthController extends Controller
         ]);
     }
 
+    public function forgotPassword(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+        ]);
+
+        $user = User::where('email', $request->email)->first();
+
+        // Always return success to avoid user enumeration
+        if (!$user) {
+            return response()->json(['message' => 'إذا كان البريد مسجلاً، ستصلك رسالة بالرمز']);
+        }
+
+        $otp = rand(100000, 999999);
+        $expiresAt = Carbon::now()->addMinutes(15);
+
+        $user->update([
+            'password_reset_code' => hash('sha256', $otp),
+            'password_reset_expires_at' => $expiresAt,
+        ]);
+
+        try {
+            Mail::to($user->email)->send(new \App\Mail\PasswordResetMail($otp));
+        } catch (\Exception $e) {
+            Log::warning('Failed to send password reset email to '.$user->email.': '.$e->getMessage());
+            return response()->json(['error' => 'فشل إرسال البريد، حاول مجدداً'], 500);
+        }
+
+        return response()->json(['message' => 'إذا كان البريد مسجلاً، ستصلك رسالة بالرمز']);
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'email'                 => 'required|email',
+            'code'                  => 'required|string|size:6',
+            'password'              => 'required|string|min:8|confirmed',
+        ]);
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user || !$user->password_reset_code) {
+            return response()->json(['error' => 'الرمز غير صحيح أو منتهي الصلاحية'], 422);
+        }
+
+        if (Carbon::now()->isAfter($user->password_reset_expires_at)) {
+            return response()->json(['error' => 'انتهت صلاحية الرمز'], 422);
+        }
+
+        if (hash('sha256', $request->code) !== $user->password_reset_code) {
+            return response()->json(['error' => 'الرمز غير صحيح'], 422);
+        }
+
+        $user->update([
+            'password' => Hash::make($request->password),
+            'password_reset_code' => null,
+            'password_reset_expires_at' => null,
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'تم تغيير كلمة المرور بنجاح']);
+    }
+
     public function resendOtp(Request $request)
     {
         $user = $request->user();

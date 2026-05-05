@@ -95,8 +95,16 @@ export default function SalaryInsights() {
     <>
       <Helmet>
         <title>رواتب سوق العمل السعودي 2026 | سعودي كارييرز</title>
-        <meta name="description" content="اكتشف متوسط الرواتب في السعودية لعام 2026 حسب التخصص والخبرة والمدينة. بيانات دقيقة ومحدثة من سوق العمل السعودي." />
-        <meta name="keywords" content="رواتب السعودية, سلم الرواتب, رواتب المهندسين, رواتب المحاسبين, رواتب التقنية, سوق العمل السعودي" />
+        <meta name="description" content="استكشف متوسطات الرواتب في السوق السعودي لعام 2026 حسب التخصص والمدينة والخبرة. بيانات محدّثة وموثوقة لرواتب التقنية، الهندسة، وغيرها." />
+        <link rel="canonical" href="https://saudicareers.site/salary-insights" />
+        <meta property="og:type"        content="website" />
+        <meta property="og:title"       content="رواتب سوق العمل السعودي 2026 | سعودي كارييرز" />
+        <meta property="og:description" content="متوسطات الرواتب في السعودية لعام 2026 حسب التخصص والمدينة والخبرة — بيانات محدّثة من سوق العمل." />
+        <meta property="og:url"         content="https://saudicareers.site/salary-insights" />
+        <meta property="og:image"       content="https://saudicareers.site/og-image.png" />
+        <meta name="twitter:card"       content="summary_large_image" />
+        <meta name="twitter:title"      content="رواتب سوق العمل السعودي 2026 | سعودي كارييرز" />
+        <meta name="twitter:image"      content="https://saudicareers.site/og-image.png" />
       </Helmet>
       <div style={{ maxWidth: 960, margin: '0 auto', padding: '100px 24px 64px', direction: 'rtl' }}>
       {/* Header */}

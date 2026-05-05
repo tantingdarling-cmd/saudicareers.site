@@ -218,15 +218,15 @@ export default function JobDetail() {
         <meta property="og:description"  content={pageDesc} />
         <meta property="og:url"          content={pageUrl} />
         <meta property="og:site_name"    content="سعودي كارييرز" />
-        {/* og:image — صورة عامة بانتظار dynamic OG images */}
-        <meta property="og:image"        content="https://saudicareers.site/og-image.svg" />
-        <meta property="og:image:width"  content="1200" />
-        <meta property="og:image:height" content="630" />
+        <meta property="og:image"        content="https://saudicareers.site/og-image.png" />
+        <meta property="og:image:width"  content="1254" />
+        <meta property="og:image:height" content="1254" />
+        <meta property="og:image:type"   content="image/png" />
         {/* Twitter */}
         <meta name="twitter:card"        content="summary_large_image" />
         <meta name="twitter:title"       content={pageTitle} />
         <meta name="twitter:description" content={pageDesc} />
-        <meta name="twitter:image"       content="https://saudicareers.site/og-image.svg" />
+        <meta name="twitter:image"       content="https://saudicareers.site/og-image.png" />
         {/* BreadcrumbList — يُحسّن مسار التنقل في نتائج Google */}
         <script type="application/ld+json">{safeJsonLd({
           '@context': 'https://schema.org',

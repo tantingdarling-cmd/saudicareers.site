@@ -75,6 +75,14 @@ Route::prefix('v1')->group(function () {
     Route::post('/register', [AuthController::class, 'publicRegister'])
         ->middleware('throttle:5,1')
         ->name('register.public');
+
+    Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])
+        ->middleware('throttle:5,1')
+        ->name('password.forgot');
+
+    Route::post('/reset-password', [AuthController::class, 'resetPassword'])
+        ->middleware('throttle:5,1')
+        ->name('password.reset');
 });
 
 Route::prefix('v1')->middleware(['auth:sanctum', 'verified'])->group(function () {
