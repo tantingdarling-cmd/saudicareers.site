@@ -218,7 +218,7 @@ export default function SalaryInsights() {
             <div style={{ textAlign: 'center', color: 'var(--gray400)', padding: 32 }}>جاري تحميل الرسوم البيانية…</div>
           )}
         </>
-      )}
-    </div>
+      </div>
+    </>
   )
 }
