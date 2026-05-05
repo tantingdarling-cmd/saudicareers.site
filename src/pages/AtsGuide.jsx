@@ -1,5 +1,5 @@
-import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { Helmet } from 'react-helmet-async'
 
 const RELATED = [
   { to: '/cv-keywords',      label: 'الكلمات المفتاحية للسوق السعودي' },
@@ -65,30 +65,19 @@ const schema = {
 }
 
 export default function AtsGuide() {
-  useEffect(() => {
-    document.title = 'دليل السيرة المتوافقة مع ATS — اجتز الفلتر الآلي في السوق السعودي | سعودي كارييرز'
-    const setMeta = (name, val) => {
-      let el = document.querySelector(`meta[name="${name}"]`)
-      if (!el) { el = document.createElement('meta'); el.setAttribute('name', name); document.head.appendChild(el) }
-      el.setAttribute('content', val)
-    }
-    setMeta('description', 'تعلم كيف تكتب سيرة ذاتية تجتاز أنظمة ATS في الشركات السعودية. 7 خطوات عملية وقائمة تحقق جاهزة.')
-
-    const s = document.createElement('script')
-    s.type = 'application/ld+json'
-    s.id = 'ats-guide-schema'
-    s.text = JSON.stringify(schema)
-    document.head.appendChild(s)
-    return () => { document.getElementById('ats-guide-schema')?.remove() }
-  }, [])
-
   return (
-    <main style={{ minHeight: '100vh', background: 'var(--gray50)', paddingTop: 68 }}>
-      <header style={{
-        background: 'linear-gradient(160deg, var(--g950) 0%, var(--g900) 100%)',
-        padding: 'clamp(48px,8vw,72px) clamp(1rem,4vw,3rem)',
-        textAlign: 'center',
-      }}>
+    <>
+      <Helmet>
+        <title>دليل السيرة المتوافقة مع ATS — اجتز الفلتر الآلي في السوق السعودي | سعودي كارييرز</title>
+        <meta name="description" content="تعلم كيف تكتب سيرة ذاتية تجتاز أنظمة ATS في الشركات السعودية. 7 خطوات عملية وقائمة تحقق جاهزة." />
+        <script type="application/ld+json">{JSON.stringify(schema)}</script>
+      </Helmet>
+      <main style={{ minHeight: '100vh', background: 'var(--gray50)', paddingTop: 68 }}>
+        <header style={{
+          background: 'linear-gradient(160deg, var(--g950) 0%, var(--g900) 100%)',
+          padding: 'clamp(48px,8vw,72px) clamp(1rem,4vw,3rem)',
+          textAlign: 'center',
+        }}>
         <div style={{ maxWidth: 640, margin: '0 auto' }}>
           <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--gold400)', letterSpacing: '1.5px', marginBottom: 14 }}>
             دليل عملي

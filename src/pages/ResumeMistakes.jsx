@@ -1,5 +1,5 @@
-import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { Helmet } from 'react-helmet-async'
 
 const RELATED = [
   { to: '/cv-keywords',      label: 'الكلمات المفتاحية للسوق السعودي' },
@@ -55,25 +55,14 @@ const schema = {
 }
 
 export default function ResumeMistakes() {
-  useEffect(() => {
-    document.title = 'أخطاء السيرة الذاتية الشائعة وكيف تتجنبها — السوق السعودي | سعودي كارييرز'
-    const setMeta = (name, val) => {
-      let el = document.querySelector(`meta[name="${name}"]`)
-      if (!el) { el = document.createElement('meta'); el.setAttribute('name', name); document.head.appendChild(el) }
-      el.setAttribute('content', val)
-    }
-    setMeta('description', 'اكتشف أكثر 7 أخطاء شائعة تسبب رفض السير الذاتية في سوق العمل السعودي، مع حلول عملية وفورية.')
-
-    const s = document.createElement('script')
-    s.type = 'application/ld+json'
-    s.id = 'mistakes-schema'
-    s.text = JSON.stringify(schema)
-    document.head.appendChild(s)
-    return () => { document.getElementById('mistakes-schema')?.remove() }
-  }, [])
-
   return (
-    <main style={{ minHeight: '100vh', background: 'var(--gray50)', paddingTop: 68 }}>
+    <>
+      <Helmet>
+        <title>أخطاء السيرة الذاتية الشائعة وكيف تتجنبها — السوق السعودي | سعودي كارييرز</title>
+        <meta name="description" content="اكتشف أكثر 7 أخطاء شائعة تسبب رفض السير الذاتية في سوق العمل السعودي، مع حلول عملية وفورية." />
+        <script type="application/ld+json">{JSON.stringify(schema)}</script>
+      </Helmet>
+      <main style={{ minHeight: '100vh', background: 'var(--gray50)', paddingTop: 68 }}>
       <header style={{
         background: 'linear-gradient(160deg, var(--g950) 0%, var(--g900) 100%)',
         padding: 'clamp(48px,8vw,72px) clamp(1rem,4vw,3rem)',

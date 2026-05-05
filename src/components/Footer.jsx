@@ -30,10 +30,15 @@ export default function Footer() {
           <div>
             <div style={{ fontSize:12, fontWeight:700, color:'var(--white)', marginBottom:16, textTransform:'uppercase', letterSpacing:1 }}>روابط سريعة</div>
             <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-              {['الوظائف','خدماتنا','نصائح مهنية','التسجيل المجاني'].map(l => (
-                <a key={l} href="#" style={{ fontSize:14, color:'rgba(255,255,255,0.5)', transition:'color 0.2s' }}
-                  onMouseEnter={e => e.target.style.color='var(--gold400)'}
-                  onMouseLeave={e => e.target.style.color='rgba(255,255,255,0.5)'}>{l}</a>
+              {[
+                { label: 'الوظائف', to: '/#jobs' },
+                { label: 'فحص السيرة الذاتية', to: '/resume-analyzer' },
+                { label: 'نصائح مهنية', to: '/tips' },
+                { label: 'التسجيل المجاني', to: '/register' }
+              ].map(l => (
+                <Link key={l.label} to={l.to} style={{ fontSize:14, color:'rgba(255,255,255,0.5)', transition:'color 0.2s', textDecoration:'none' }}
+                  onMouseEnter={e => e.currentTarget.style.color='var(--gold400)'}
+                  onMouseLeave={e => e.currentTarget.style.color='rgba(255,255,255,0.5)'}>{l.label}</Link>
               ))}
             </div>
           </div>

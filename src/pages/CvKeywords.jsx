@@ -1,5 +1,5 @@
-import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { Helmet } from 'react-helmet-async'
 
 const RELATED = [
   { to: '/resume-mistakes',  label: 'أخطاء السيرة الذاتية الشائعة' },
@@ -26,25 +26,14 @@ const schema = {
 }
 
 export default function CvKeywords() {
-  useEffect(() => {
-    document.title = 'الكلمات المفتاحية للسيرة الذاتية — سوق العمل السعودي 2025 | سعودي كارييرز'
-    const setMeta = (name, val) => {
-      let el = document.querySelector(`meta[name="${name}"]`)
-      if (!el) { el = document.createElement('meta'); el.setAttribute('name', name); document.head.appendChild(el) }
-      el.setAttribute('content', val)
-    }
-    setMeta('description', 'قائمة الكلمات المفتاحية الأكثر طلباً في السير الذاتية السعودية لعام 2025. أضفها لسيرتك لاجتياز ATS وزيادة فرص القبول.')
-
-    const s = document.createElement('script')
-    s.type = 'application/ld+json'
-    s.id = 'cv-keywords-schema'
-    s.text = JSON.stringify(schema)
-    document.head.appendChild(s)
-    return () => { document.getElementById('cv-keywords-schema')?.remove() }
-  }, [])
-
   return (
-    <main style={{ minHeight: '100vh', background: 'var(--gray50)', paddingTop: 68 }}>
+    <>
+      <Helmet>
+        <title>الكلمات المفتاحية للسيرة الذاتية — سوق العمل السعودي 2025 | سعودي كارييرز</title>
+        <meta name="description" content="قائمة الكلمات المفتاحية الأكثر طلباً في السير الذاتية السعودية لعام 2025. أضفها لسيرتك لاجتياز ATS وزيادة فرص القبول." />
+        <script type="application/ld+json">{JSON.stringify(schema)}</script>
+      </Helmet>
+      <main style={{ minHeight: '100vh', background: 'var(--gray50)', paddingTop: 68 }}>
       {/* Hero */}
       <header style={{
         background: 'linear-gradient(160deg, var(--g950) 0%, var(--g900) 100%)',

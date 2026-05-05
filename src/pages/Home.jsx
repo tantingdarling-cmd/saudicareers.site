@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { Link, useLocation, useSearchParams } from 'react-router-dom'
+import { Helmet } from 'react-helmet-async'
 import { CheckCircle, FileText, Briefcase, Lightbulb, ArrowLeft, Clock } from 'lucide-react'
 import JobCard from '../components/JobCard.jsx'
 import GovJobCard from '../components/GovJobCard.jsx'
@@ -796,6 +797,12 @@ export default function Home() {
 
   return (
     <>
+      <Helmet>
+        <title>وظائف السعودية 2026 — وظائف أرامكو ونيوم وPIF | سعودي كارييرز</title>
+        <meta name="description" content="تصفّح أحدث وظائف السعودية من أرامكو، نيوم، وصندوق الاستثمارات العامة. حلل سيرتك الذاتية مجاناً بالذكاء الاصطناعي واحصل على وظيفتك في رؤية 2030." />
+        <meta name="keywords" content="وظائف السعودية 2026, وظائف أرامكو, وظائف نيوم, وظائف شاغرة, توظيف السعودية, رؤية 2030" />
+        <link rel="canonical" href="https://saudicareers.site" />
+      </Helmet>
       <ConsentBanner />
       {/* ── HERO ── */}
       <section className="hero-section" style={{

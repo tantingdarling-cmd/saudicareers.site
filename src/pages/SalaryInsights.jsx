@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { Helmet } from 'react-helmet-async'
 import { salaryApi } from '../services/api.js'
 
 const CATEGORY_LABELS = {
@@ -91,7 +92,13 @@ export default function SalaryInsights() {
   }
 
   return (
-    <div style={{ maxWidth: 960, margin: '0 auto', padding: '100px 24px 64px', direction: 'rtl' }}>
+    <>
+      <Helmet>
+        <title>رواتب سوق العمل السعودي 2026 | سعودي كارييرز</title>
+        <meta name="description" content="اكتشف متوسط الرواتب في السعودية لعام 2026 حسب التخصص والخبرة والمدينة. بيانات دقيقة ومحدثة من سوق العمل السعودي." />
+        <meta name="keywords" content="رواتب السعودية, سلم الرواتب, رواتب المهندسين, رواتب المحاسبين, رواتب التقنية, سوق العمل السعودي" />
+      </Helmet>
+      <div style={{ maxWidth: 960, margin: '0 auto', padding: '100px 24px 64px', direction: 'rtl' }}>
       {/* Header */}
       <div style={{ marginBottom: 36 }}>
         <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--gold600)', marginBottom: 8 }}>
