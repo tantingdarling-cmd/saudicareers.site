@@ -51,7 +51,7 @@ export default function Footer() {
                 { label:'saudicareers.site', href:'https://saudicareers.site' },
                 { label:'سياسة الخصوصية',   href:'/privacy',  internal:true },
                 { label:'شروط الاستخدام',   href:'/terms',    internal:true },
-                { label:'اتصل بنا',          href:'mailto:hello@saudicareers.site' },
+                { label:'اتصل بنا',          href:'/contact',  internal:true },
               ].map(({ label, href, internal }) =>
                 internal
                   ? <Link key={label} to={href} style={{ fontSize:14, color:'rgba(255,255,255,0.5)', transition:'color 0.2s', textDecoration:'none' }}
@@ -67,8 +67,12 @@ export default function Footer() {
 
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:12 }}>
           <p style={{ fontSize:13, color:'rgba(255,255,255,0.3)' }}>
-            © 2025 <a href="https://saudicareers.site" style={{ color:'rgba(255,255,255,0.5)' }}>SaudiCareers.site</a> — جميع الحقوق محفوظة
+            © 2026 <a href="https://saudicareers.site" style={{ color:'rgba(255,255,255,0.5)' }}>SaudiCareers.site</a> — جميع الحقوق محفوظة
           </p>
+          <div style={{ display:'flex', gap:16 }}>
+            <a href="https://t.me/SaudiCareers" target="_blank" rel="noopener noreferrer" style={{ color:'rgba(255,255,255,0.4)', fontSize:13, textDecoration:'none' }} onMouseEnter={e=>e.currentTarget.style.color='#0088cc'} onMouseLeave={e=>e.currentTarget.style.color='rgba(255,255,255,0.4)'}>Telegram</a>
+            <a href="https://x.com/SaudiCareers" target="_blank" rel="noopener noreferrer" style={{ color:'rgba(255,255,255,0.4)', fontSize:13, textDecoration:'none' }} onMouseEnter={e=>e.currentTarget.style.color='#fff'} onMouseLeave={e=>e.currentTarget.style.color='rgba(255,255,255,0.4)'}>X (Twitter)</a>
+          </div>
         </div>
       </div>
 

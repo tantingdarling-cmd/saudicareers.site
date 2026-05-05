@@ -118,3 +118,8 @@ Route::get('/robots.txt', function () {
         ->header('Content-Type', 'text/plain; charset=UTF-8')
         ->header('Cache-Control', 'public, max-age=86400');
 });
+
+// SPA Fallback — any route not handled above will serve the React index.html
+Route::fallback(function () {
+    return file_get_contents(public_path('index.html'));
+});

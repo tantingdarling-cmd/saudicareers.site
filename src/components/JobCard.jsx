@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { MapPin, Briefcase, Coins, ArrowLeft, Heart, Building2, Bell, Share2 } from 'lucide-react'
+import { MapPin, Briefcase, Coins, ArrowLeft, Heart, Building2, Bell, Share2, CheckCircle } from 'lucide-react'
 import { savedJobsApi, alertsApi } from '../services/api.js'
 
 /* توحيد أسلوب الأزرار — يُدمج مع أي خصائص إضافية */
@@ -166,10 +166,12 @@ export default function JobCard({ job, onApply, onDetails, onTagClick, delay = 0
         <div style={{ display:'flex', alignItems:'center', gap:8, flexShrink:0 }}>
           {isGov && (
             <span style={{
-              fontSize:11, fontWeight:700, padding:'4px 10px', borderRadius:50,
-              whiteSpace:'nowrap',
+              fontSize:10, fontWeight:700, padding:'4px 10px', borderRadius:50,
+              whiteSpace:'nowrap', display:'inline-flex', alignItems:'center', gap:4,
               background:'rgba(0,102,68,0.08)', color:'#006644', border:'1px solid rgba(0,102,68,0.2)',
-            }}>🏛️ حكومة</span>
+            }}>
+              <CheckCircle size={10} /> مصدر رسمي موثق
+            </span>
           )}
           {job.badge && (
             <span style={{

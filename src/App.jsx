@@ -35,6 +35,7 @@ const CvKeywords          = lazy(() => import('./pages/CvKeywords.jsx'))
 const ResumeMistakes      = lazy(() => import('./pages/ResumeMistakes.jsx'))
 const AtsGuide            = lazy(() => import('./pages/AtsGuide.jsx'))
 const ResumeRejection     = lazy(() => import('./pages/ResumeRejection.jsx'))
+const Contact             = lazy(() => import('./pages/Contact.jsx'))
 
 export default function App() {
   useEffect(() => {
@@ -80,6 +81,7 @@ export default function App() {
             <Route path="/my-applications"     element={<ProtectedRoute><MyApplications /></ProtectedRoute>} />
             <Route path="/employer/dashboard"            element={<ProtectedRoute><EmployerDashboard /></ProtectedRoute>} />
             <Route path="/employer/jobs/:id/applicants"  element={<ProtectedRoute><EmployerApplicants /></ProtectedRoute>} />
+            <Route path="/contact"             element={<Contact />} />
           </Routes>
         </Suspense>
       </main>

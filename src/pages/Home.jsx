@@ -114,6 +114,31 @@ function StatItem({ val, prefix = '', accent, label }) {
   )
 }
 
+function LivePortalStatus() {
+  const [ref, vis] = useReveal()
+  return (
+    <section style={{ background: 'var(--g950)', padding: '40px 24px', position: 'relative', overflow: 'hidden' }}>
+      <div style={{ maxWidth: 1160, margin: '0 auto', display: 'flex', flexWrap: 'wrap', gap: 40, justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ flex: '1 1 300px' }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.05)', padding: '6px 14px', borderRadius: 50, marginBottom: 12, border: '1px solid rgba(255,255,255,0.1)' }}>
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#10B981', boxShadow: '0 0 12px #10B981' }} />
+            <span style={{ fontSize: 12, fontWeight: 700, color: '#fff', letterSpacing: 1 }}>LIVE PORTAL STATUS</span>
+          </div>
+          <h2 style={{ fontSize: 24, fontWeight: 800, color: '#fff', marginBottom: 8 }}>بوابة توظيف تفاعلية متكاملة</h2>
+          <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6 }}>نحن لا ننشر الأخبار فقط؛ نحن نبني مستقبلك المهني بأدوات ذكاء اصطناعي حية ومسارات تقديم مباشرة.</p>
+        </div>
+        <div style={{ display: 'flex', gap: 'clamp(20px, 4vw, 60px)', flexWrap: 'wrap' }}>
+          <StatItem val={12450} accent="+" label="فرصة وظيفية حية" />
+          <StatItem val={52300} accent="+" label="سيرة ذاتية تم تحليلها" />
+          <StatItem val={850} accent="+" label="شركة مسجلة" />
+        </div>
+      </div>
+      {/* Decorative pulse */}
+      <div style={{ position: 'absolute', top: '-50%', left: '-10%', width: 300, height: 300, background: 'radial-gradient(circle, rgba(197,160,89,0.05) 0%, transparent 70%)', pointerEvents: 'none' }} />
+    </section>
+  )
+}
+
 /* ── SVG Technical Timeline ─────────────────────────────────────── */
 const TIMELINE_STEPS = [
   { n:'01', title:'سجّل مجاناً',       desc:'أنشئ حسابك في دقيقة وأخبرنا عن تخصصك وأهدافك المهنية',           icon:'◎' },
@@ -823,17 +848,31 @@ export default function Home() {
 
           {/* RIGHT COLUMN (RTL first): copy */}
           <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-start' }}>
-            {/* Early access badge */}
-            <div style={{
-              display:'inline-flex', alignItems:'center', gap:8,
-              background:'var(--white)', color:'var(--g800)',
-              border:'0.5px solid rgba(0,61,43,0.15)',
-              padding:'5px 16px 5px 12px', borderRadius:50,
-              fontSize:13, fontWeight:500, marginBottom:28,
-              boxShadow:'0 1px 8px rgba(0,61,43,0.06), 0 0.5px 2px rgba(0,0,0,0.04)',
-            }}>
-              <span style={{ width:7, height:7, background:'var(--g600)', borderRadius:'50%', animation:'pulse 2s infinite', display:'block' }} />
-              {t.badge}
+            {/* Badges row */}
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 28 }}>
+              {/* Early access badge */}
+              <div style={{
+                display:'inline-flex', alignItems:'center', gap:8,
+                background:'var(--white)', color:'var(--g800)',
+                border:'0.5px solid rgba(0,61,43,0.15)',
+                padding:'5px 16px 5px 12px', borderRadius:50,
+                fontSize:13, fontWeight:500,
+                boxShadow:'0 1px 8px rgba(0,61,43,0.06), 0 0.5px 2px rgba(0,0,0,0.04)',
+              }}>
+                <span style={{ width:7, height:7, background:'var(--g600)', borderRadius:'50%', animation:'pulse 2s infinite', display:'block' }} />
+                {t.badge}
+              </div>
+              
+              {/* Vision 2030 badge */}
+              <div style={{
+                display:'inline-flex', alignItems:'center', gap:8,
+                background:'rgba(0,102,68,0.05)', color:'var(--g800)',
+                border:'0.5px solid rgba(0,102,68,0.2)',
+                padding:'5px 14px', borderRadius:50,
+                fontSize:12, fontWeight:700,
+              }}>
+                <span style={{ fontSize: 14 }}>🇸🇦</span> رؤية 2030
+              </div>
             </div>
 
             {/* Heading */}
@@ -1007,22 +1046,33 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── STATS ── */}
-      <div style={{ background:'linear-gradient(160deg,var(--g950) 0%,var(--g900) 60%,var(--g800) 100%)', padding:'clamp(40px,6vw,64px) clamp(1rem,4vw,3rem)' }}>
-        <div style={{ maxWidth:1160, margin:'0 auto', display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))', gap:32, alignItems:'center' }}>
+      <LivePortalStatus />
 
-          {/* Pain-point card: 75% with progress ring */}
-          <PainPointCard />
-
-          {[
-            { val:2,  prefix:'+', accent:'م', label:'باحث عن عمل في السعودية' },
-            { val:70, prefix:'', accent:'٪', label:'نسبة التوطين المستهدفة برؤية 2030' },
-            { val:48, prefix:'', accent:'س', label:'لتحسين سيرتك الذاتية عند التسجيل' },
-          ].map(({ val, prefix, accent, label }) => (
-            <StatItem key={label} val={val} prefix={prefix} accent={accent} label={label} />
-          ))}
+      {/* ── Pain Points & stats ── */}
+      <section style={{ background: 'var(--white)', padding: '64px 24px' }}>
+        <div style={{ maxWidth: 1160, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 48, alignItems: 'center' }}>
+          <div style={{ order: 2 }}>
+            <h2 style={{ fontSize: 28, fontWeight: 800, color: 'var(--g950)', marginBottom: 16 }}>لماذا يحتاج 75% من المتقدمين للمساعدة؟</h2>
+            <p style={{ fontSize: 16, color: 'var(--gray600)', lineHeight: 1.8, marginBottom: 24 }}>
+              أنظمة تتبع المتقدمين (ATS) التي تستخدمها كبرى الشركات في السعودية ترفض أغلب السير الذاتية آلياً بسبب أخطاء بسيطة في التنسيق أو الكلمات المفتاحية. نحن نساعدك على تجاوز هذه العقبة.
+            </p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
+              {[
+                'تجاوز أنظمة ATS أرامكو ونيوم',
+                'تحسين الكلمات المفتاحية آلياً',
+                'دعم كامل لرؤية السعودية 2030'
+              ].map(item => (
+                <div key={item} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, fontWeight: 600, color: 'var(--g700)' }}>
+                  <CheckCircle size={16} /> {item}
+                </div>
+              ))}
+            </div>
+          </div>
+          <div style={{ order: 1 }}>
+            <PainPointCard />
+          </div>
         </div>
-      </div>
+      </section>
 
       {/* ── JOBS ── */}
       <section style={{
@@ -1035,8 +1085,8 @@ export default function Home() {
         <div style={{ maxWidth:1160, margin:'0 auto' }}>
           <Reveal>
             <div style={eyebrow}><span style={{ width:28, height:2, background:'var(--gold500)', borderRadius:2, display:'block' }}/> فرص موثوقة</div>
-            <h2 style={sectionTitle}>أحدث الوظائف في السوق السعودي</h2>
-            <p style={sectionSub}>نجمع الفرص الوظيفية من مصادرها الرسمية ونتحقق من صحتها قبل نشرها</p>
+            <h2 style={sectionTitle}>وظائف السعودية مايو 2026</h2>
+            <p style={sectionSub}>تصفّح أحدث الفرص الموثّقة في القطاع الحكومي والخاص. نضمن لك روابط تقديم رسمية ومسارات توظيف حقيقية تتماشى مع رؤية المملكة 2030.</p>
           </Reveal>
 
           <Reveal delay={80}>

@@ -336,6 +336,48 @@ export default function Tips() {
 
         <NewsletterBox />
 
+        {/* Localized Saudi Resources — addressing the strategic recommendation */}
+        <section style={{ marginTop: 64, background: 'var(--white)', borderRadius: 24, padding: 32, border: '1.5px solid var(--gray200)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+            <div style={{ width: 40, height: 40, borderRadius: 12, background: 'var(--g50)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>🇸🇦</div>
+            <h2 style={{ fontSize: 20, fontWeight: 800, color: 'var(--g900)', margin: 0 }}>روابط تهم الباحث عن عمل في السعودية</h2>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 16 }}>
+            {[
+              { name: 'بوابة جدارات', desc: 'المنصة الوطنية الموحدة للتوظيف', url: 'https://jadarat.sa', icon: '🔗' },
+              { name: 'التأمينات الاجتماعية (GOSI)', desc: 'تحقق من مدد اشتراكك وحقوقك', url: 'https://gosi.gov.sa', icon: '🛡️' },
+              { name: 'طاقات (Taqat)', desc: 'برامج دعم التوظيف والتدريب', url: 'https://taqat.sa', icon: '📈' },
+              { name: 'وزارة الموارد البشرية', desc: 'حقوقك وواجباتك في نظام العمل', url: 'https://hrsd.gov.sa', icon: '🏛️' },
+            ].map(res => (
+              <a key={res.name} href={res.url} target="_blank" rel="noopener noreferrer" style={{
+                display: 'flex', gap: 12, padding: 16, borderRadius: 16, border: '1px solid var(--gray100)',
+                textDecoration: 'none', background: 'var(--gray50)', transition: 'all 0.2s'
+              }} onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--g300)'; e.currentTarget.style.transform = 'translateY(-2px)' }}
+                 onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--gray100)'; e.currentTarget.style.transform = 'translateY(0)' }}>
+                <span style={{ fontSize: 20 }}>{res.icon}</span>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--g900)', marginBottom: 2 }}>{res.name}</div>
+                  <div style={{ fontSize: 12, color: 'var(--gray500)' }}>{res.desc}</div>
+                </div>
+              </a>
+            ))}
+          </div>
+        </section>
+
+        {/* Community Section */}
+        <section style={{ marginTop: 32, background: 'linear-gradient(135deg, #0088cc 0%, #0077b5 100%)', borderRadius: 24, padding: 32, display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 24 }}>
+          <div style={{ flex: '1 1 300px' }}>
+            <h2 style={{ fontSize: 22, fontWeight: 800, color: '#fff', marginBottom: 8 }}>انضم لمجتمعنا على تليجرام</h2>
+            <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: 14, lineHeight: 1.6 }}>كن أول من يعرف عن الوظائف الجديدة ونقاشات سوق العمل السعودي الحية.</p>
+          </div>
+          <a href="https://t.me/SaudiCareers" target="_blank" rel="noopener noreferrer" style={{
+            background: '#fff', color: '#0088cc', padding: '12px 32px', borderRadius: 50, fontWeight: 700, textDecoration: 'none',
+            fontSize: 15, transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+          }} onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'} onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}>
+            انضم الآن ←
+          </a>
+        </section>
+
         {/* FAQ Section — AI & SEO readable */}
         <section aria-labelledby="faq-heading" style={{ maxWidth: 720, margin: '48px auto 0', padding: '0 clamp(1rem,4vw,2rem)' }}>
           <h2 id="faq-heading" style={{ fontSize: 20, fontWeight: 700, color: 'var(--g900)', marginBottom: 20 }}>أسئلة شائعة عن سوق العمل السعودي</h2>
