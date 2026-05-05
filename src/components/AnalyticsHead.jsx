@@ -13,31 +13,45 @@ const PUBLIC_SETTINGS_URL =
  */
 export default function AnalyticsHead() {
   const [ids, setIds] = useState({ ga: null, gtm: null, pixel: null })
+  const [siteSchema, setSiteSchema] = useState(null)
 
   useEffect(() => {
     // تحقق من الـ cache المحلي أولاً (TTL: 1 ساعة)
     const cached = sessionStorage.getItem('sc_analytics')
     if (cached) {
-      try { setIds(JSON.parse(cached)); return } catch (_) {}
+      try { 
+        const parsed = JSON.parse(cached)
+        setIds(parsed)
+        if (parsed.siteSchema) setSiteSchema(parsed.siteSchema)
+        return 
+      } catch (_) {}
     }
 
     fetch(PUBLIC_SETTINGS_URL)
       .then(r => r.ok ? r.json() : null)
       .then(data => {
         if (!data) return
-        const ids = {
+        const newIds = {
           ga:    data['analytics.ga_id']    || null,
           gtm:   data['analytics.gtm_id']   || null,
           pixel: data['analytics.fb_pixel'] || null,
+          siteSchema: data['site_schema']   || null,
         }
-        setIds(ids)
-        sessionStorage.setItem('sc_analytics', JSON.stringify(ids))
+        setIds(newIds)
+        setSiteSchema(newIds.siteSchema)
+        sessionStorage.setItem('sc_analytics', JSON.stringify(newIds))
       })
       .catch(() => {})
   }, [])
 
   return (
     <Helmet>
+      {/* ── §Google: Site-wide Structured Data (Organization + WebSite) ── */}
+      {siteSchema && (
+        <script type="application/ld+json">
+          {JSON.stringify(siteSchema).replace(/<\/script>/gi, '<\\/script>')}
+        </script>
+      )}
       {/* ── Google Tag Manager ──────────────────────────────────── */}
       {ids.gtm && (
         <script>{`

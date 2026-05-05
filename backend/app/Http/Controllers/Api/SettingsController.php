@@ -13,12 +13,15 @@ class SettingsController extends Controller
     // Public: يعيد فقط الإعدادات ذات is_public=true
     // يُستخدم من الـ frontend لحقن GA/GTM/Pixel بدون Sanctum
 
-    public function public(): JsonResponse
+    public function public(\App\Services\SeoService $seo): JsonResponse
     {
         $settings = Setting::where('is_public', true)
             ->get(['key', 'value', 'type', 'group'])
             ->keyBy('key')
             ->map(fn ($s) => $s->casted_value);
+
+        // أضف بيانات Schema.org العامة للموقع
+        $settings['site_schema'] = $seo->siteSchema();
 
         return response()->json($settings);
     }

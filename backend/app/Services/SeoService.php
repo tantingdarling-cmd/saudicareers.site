@@ -124,6 +124,13 @@ class SeoService
             ];
         }
 
+        // أضف المتطلبات والمسؤوليات إذا وجدت
+        if ($job->requirements) {
+            $reqs = explode("\n", $job->requirements);
+            $schema['qualifications'] = array_slice(array_filter($reqs), 0, 10);
+            $schema['skills'] = array_slice(array_filter($reqs), 0, 5);
+        }
+
         // أضف نطاق الراتب فقط إذا كانت القيم موجودة (Google Jobs يُفضّله)
         if ($job->salary_min || $job->salary_max) {
             $schema['baseSalary'] = [
@@ -139,6 +146,46 @@ class SeoService
         }
 
         return $schema;
+    }
+
+    /**
+     * بيانات الموقع العامة (Organization + WebSite) لتعزيز هوية المنصة في قوقل.
+     */
+    public function siteSchema(): array
+    {
+        return [
+            '@context' => 'https://schema.org',
+            '@graph' => [
+                [
+                    '@type' => 'Organization',
+                    '@id'   => self::SITE_URL . '/#organization',
+                    'name'  => self::SITE_NAME,
+                    'url'   => self::SITE_URL,
+                    'logo'  => self::SITE_URL . '/logo.png',
+                    'sameAs' => [
+                        'https://twitter.com/saudicareers',
+                        'https://linkedin.com/company/saudicareers'
+                    ],
+                    'contactPoint' => [
+                        '@type' => 'ContactPoint',
+                        'contactType' => 'customer support',
+                        'email' => 'support@saudicareers.site'
+                    ]
+                ],
+                [
+                    '@type' => 'WebSite',
+                    '@id'   => self::SITE_URL . '/#website',
+                    'url'   => self::SITE_URL,
+                    'name'  => self::SITE_NAME,
+                    'publisher' => ['@id' => self::SITE_URL . '/#organization'],
+                    'potentialAction' => [
+                        '@type' => 'SearchAction',
+                        'target' => self::SITE_URL . '/?q={search_term_string}',
+                        'query-input' => 'required name=search_term_string'
+                    ]
+                ]
+            ]
+        ];
     }
 
     /**
