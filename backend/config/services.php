@@ -18,7 +18,8 @@ return [
     ],
 
     'radar' => [
-        'url' => env('RADAR_WORKER_URL', ''),
+        'url'    => env('RADAR_WORKER_URL', ''),
+        'secret' => env('RADAR_WEBHOOK_SECRET', ''),
     ],
 
 ];

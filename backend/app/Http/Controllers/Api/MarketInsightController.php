@@ -31,7 +31,7 @@ class MarketInsightController extends Controller
 
     public function webhook(Request $request): JsonResponse
     {
-        $secret = env('RADAR_WEBHOOK_SECRET');
+        $secret = config('services.radar.secret');
         $signature = $request->header('X-Radar-Signature');
         $payload = $request->getContent();
 
