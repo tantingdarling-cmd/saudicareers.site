@@ -26,6 +26,7 @@ use App\Http\Controllers\Api\AnalyticsController;
 use App\Http\Controllers\Api\ReferralController;
 use App\Http\Controllers\Api\AdminDashboardController;
 use App\Http\Controllers\Api\SiteSectionController;
+use App\Http\Controllers\Api\MarketInsightController;
 
 // §6: Sitemap — public, no auth, outside v1 prefix.
 // Accessible at /api/sitemap.xml. For static /sitemap.xml run: php artisan sitemap:generate
@@ -66,6 +67,10 @@ Route::prefix('v1')->group(function () {
         ->name('resume.tailor');
 
     Route::get('/sections', [SiteSectionController::class, 'index']);
+
+    Route::get('/market-insights', [MarketInsightController::class, 'index']);
+    Route::get('/market-insights/{insight}/similar', [MarketInsightController::class, 'similar']);
+    Route::post('/webhooks/radar',  [MarketInsightController::class, 'webhook']);
 
     // Rate limited to 5 attempts per minute per IP
     Route::post('/login', [AuthController::class, 'login'])

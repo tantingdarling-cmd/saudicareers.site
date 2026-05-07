@@ -17,4 +17,8 @@ return [
         'key' => env('RESEND_API_KEY'),
     ],
 
+    'radar' => [
+        'url' => env('RADAR_WORKER_URL', ''),
+    ],
+
 ];
