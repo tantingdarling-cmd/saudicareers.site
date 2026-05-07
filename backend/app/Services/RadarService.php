@@ -17,7 +17,7 @@ class RadarService
 
     public function getSimilarJobs(string $vectorId): array
     {
-        return Cache::remember("similar:{$vectorId}", now()->addHours(6), function () use ($vectorId) {
+        return Cache::store('file')->remember("similar:{$vectorId}", now()->addHours(6), function () use ($vectorId) {
             $response = Http::timeout(5)->get("{$this->baseUrl}/similar/{$vectorId}");
 
             if ($response->failed()) {
@@ -34,6 +34,6 @@ class RadarService
 
     public function forgetSimilar(string $vectorId): void
     {
-        Cache::forget("similar:{$vectorId}");
+        Cache::store('file')->forget("similar:{$vectorId}");
     }
 }

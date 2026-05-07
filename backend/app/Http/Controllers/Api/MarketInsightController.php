@@ -74,7 +74,11 @@ class MarketInsightController extends Controller
         ]);
 
         if ($insight->radar_vector_id) {
-            InvalidateSimilarCache::dispatch($insight->radar_vector_id);
+            try {
+                InvalidateSimilarCache::dispatch($insight->radar_vector_id);
+            } catch (\Throwable $e) {
+                \Log::warning('InvalidateSimilarCache dispatch failed: ' . $e->getMessage());
+            }
         }
 
         return response()->json($insight, 201);
