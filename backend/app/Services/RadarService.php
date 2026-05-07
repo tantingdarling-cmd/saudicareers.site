@@ -26,15 +26,17 @@ class RadarService
             $numericId = preg_replace('/^content-/', '', $vectorId);
 
             try {
-                $response = Http::timeout(5)->get("{$this->baseUrl}/similar/{$numericId}");
+                $response = Http::timeout(10)->withoutVerifying()->get("{$this->baseUrl}/similar/{$numericId}");
             } catch (\Throwable $e) {
-                Log::warning('RadarService: HTTP request failed', ['error' => $e->getMessage()]);
+                Log::warning('RadarService: HTTP request failed', ['error' => $e->getMessage(), 'url' => "{$this->baseUrl}/similar/{$numericId}"]);
                 return [];
             }
 
             if ($response->failed()) {
                 Log::warning('RadarService: similar request failed', [
                     'vector_id' => $vectorId,
+                    'numeric_id' => $numericId,
+                    'base_url'  => $this->baseUrl,
                     'status'    => $response->status(),
                 ]);
                 return [];
